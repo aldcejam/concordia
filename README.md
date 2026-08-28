@@ -13,7 +13,7 @@ Monorepositório da aplicação Concordia.
 - Node.js 20.19 ou superior
 - Java 21
 - Maven 3.8 ou superior
-- PostgreSQL
+- Docker com Docker Compose
 
 ## Frontend
 
@@ -31,14 +31,19 @@ npm run generate:api
 
 ## Backend
 
-Defina as variáveis de conexão com o PostgreSQL e inicie a aplicação:
+Inicie o PostgreSQL na raiz do projeto:
+
+```bash
+docker compose up -d postgres
+```
+
+Em seguida, inicie a aplicação:
 
 ```bash
 cd api
-export DB_URL=jdbc:postgresql://localhost:5432/concordia
-export DB_USERNAME=postgres
-export DB_PASSWORD=postgres
 mvn spring-boot:run
 ```
+
+Por padrão, o banco usa `concordia` como nome e `postgres` como usuário e senha. Esses valores podem ser alterados pelas variáveis `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` e `POSTGRES_PORT`; ajuste também `DB_URL`, `DB_USERNAME` e `DB_PASSWORD` ao iniciar a API.
 
 A documentação Swagger estará disponível em `http://localhost:8080/swagger-ui.html`.
