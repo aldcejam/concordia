@@ -5,6 +5,7 @@
 /web/dist/
 /web/coverage/
 /web/src/api/generated/
+*.tsbuildinfo
 
 # Backend
 /api/target/
