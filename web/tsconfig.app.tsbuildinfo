@@ -1,0 +1,1 @@
+{"root":["./src/main.tsx","./src/router.tsx","./src/theme.ts","./src/api/generated/health/health.ts","./src/api/generated/models/healthResponse.ts","./src/api/generated/models/index.ts","./src/pages/HomePage.test.tsx","./src/pages/HomePage.tsx","./src/test/setup.ts"],"version":"5.9.3"}

@@ -1,1 +1,16 @@
 /tmp/
+
+# Frontend
+/web/node_modules/
+/web/dist/
+/web/coverage/
+/web/src/api/generated/
+
+# Backend
+/api/target/
+
+# IDE and local environment
+.idea/
+.vscode/
+.env
+*.iml

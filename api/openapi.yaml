@@ -1,0 +1,32 @@
+openapi: 3.0.3
+info:
+  title: Concordia API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: Health
+paths:
+  /api/health:
+    get:
+      tags:
+        - Health
+      operationId: getHealth
+      summary: Verifica a disponibilidade da API
+      responses:
+        '200':
+          description: API disponível
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: UP
