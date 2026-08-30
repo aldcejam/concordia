@@ -25,7 +25,7 @@ export function HomePage() {
             </Typography>
             <Button
               variant="contained"
-              href="http://localhost:8080/swagger-ui.html"
+              href="http://localhost:8080/swagger"
             >
               Abrir documentação da API
             </Button>
