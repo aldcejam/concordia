@@ -46,4 +46,4 @@ mvn spring-boot:run
 
 Por padrão, o banco usa `concordia` como nome e `postgres` como usuário e senha. Esses valores podem ser alterados pelas variáveis `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` e `POSTGRES_PORT`; ajuste também `DB_URL`, `DB_USERNAME` e `DB_PASSWORD` ao iniciar a API.
 
-A documentação Swagger estará disponível em `http://localhost:8080/swagger-ui.html`.
+A documentação Swagger estará disponível em `http://localhost:8080/swagger`.
