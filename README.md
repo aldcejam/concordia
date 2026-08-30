@@ -5,13 +5,13 @@ Monorepositório da aplicação Concordia.
 ## Estrutura
 
 - `web`: React, TypeScript, Vite, Material UI, TanStack Query e Orval.
-- `api`: Java 21, Spring Boot, Spring Web MVC, Spring Data JPA, Spring Security e PostgreSQL.
+- `api`: Java 25, Spring Boot, Spring Web MVC, Spring Data JPA, Spring Security e PostgreSQL.
 - `tmp`: versão anterior preservada localmente e ignorada pelo Git.
 
 ## Pré-requisitos
 
 - Node.js 20.19 ou superior
-- Java 21
+- Java 25
 - Maven 3.8 ou superior
 - Docker com Docker Compose
 
