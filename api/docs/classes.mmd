@@ -1,11 +1,19 @@
 classDiagram
-    Recurso <|-- InsumoObra
-    Recurso <|-- ComposicaoObra
-    Obra *-- NodoEap
-    Obra o-- EtapaObra
-    Insumo <-- InsumoObra
-    Composicao <-- ComposicaoObra
-    Obra o-- Empresa
+    Obra *-- NodoEap : contém raiz
+    Obra o-- EtapaObra : possui
+    Obra o-- Empresa : contratada
+
+    OrcamentoInsumo --> Insumo : referencia
+    OrcamentoComposicao --> Composicao : referencia
+
+    OrcamentoInsumo --|> Orcamento : é um
+    OrcamentoComposicao --|> Orcamento : é um
+
+    EtapaObra *-- Orcamento : possui
+
+    Composicao *-- ItemComposicao : possui
+    ItemComposicao o-- Insumo : pode ser
+    ItemComposicao o-- Composicao : pode ser auxiliar
 
         class Obra{
             -String descricao
@@ -31,11 +39,7 @@ classDiagram
             -DateTime fim
             -Period prazoEsperado
             -List~EtapaObra~ preRequisitos
-            -List~Recurso~ recursos
-        }
-
-        class Recurso {
-            <<Abstract>>
+            -List~Orcamento~ orcamentos
         }
 
         class Insumo {
@@ -52,18 +56,29 @@ classDiagram
             -String descricao
             -UnidadeMedida unidade
             -Decimal preco
+            -List~ItemComposicao~ itens
+        }
+
+        class ItemComposicao {
+            -Decimal coeficiente
+            -Insumo insumo
+            -Composicao composicaoAuxiliar
         }
 
         class UnidadeMedida {
         <<enumeration>>
         }
 
-        class InsumoObra {
+        class Orcamento {
+            <<abstract>>
+        }
+
+        class OrcamentoInsumo {
             -Insumo tipo
             -Decimal quantidade
         }
 
-        class ComposicaoObra {
+        class OrcamentoComposicao {
             -Composicao tipo
             -Decimal quantidade
         }
