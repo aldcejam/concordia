@@ -6,7 +6,7 @@ classDiagram
     Insumo <-- InsumoObra
     Composicao <-- ComposicaoObra
     Obra o-- Empresa
-    namespace Concordia.Obra {
+
         class Obra{
             -String descricao
             -Status status
@@ -71,9 +71,6 @@ classDiagram
         class UnidadeFederativa {
             <<enumeration>>
         }
-    }
 
-    namespace Concordia.Empresa {
         class Empresa{
         }
-    }
