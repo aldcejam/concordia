@@ -1,0 +1,79 @@
+classDiagram
+    Recurso <|-- InsumoObra
+    Recurso <|-- ComposicaoObra
+    Obra *-- NodoEap
+    Obra o-- EtapaObra
+    Insumo <-- InsumoObra
+    Composicao <-- ComposicaoObra
+    Obra o-- Empresa
+    namespace Concordia.Obra {
+        class Obra{
+            -String descricao
+            -Status status
+            -Empresa empresa
+            -UnidadeFederativa uf
+            -ZoneId fusoHorario
+            -NodoEap arvoreEap
+            -List~EtapaObra~ etapas
+            -Stack~EtapaObra~ historicoEtapas
+        }
+
+        class NodoEap {
+            -String nome
+            -NodoEap pai
+            -List~NodoEap~ filhos
+            -EtapaObra etapa
+        }
+
+        class EtapaObra{
+            -String descricao
+            -DateTime inicio
+            -DateTime fim
+            -Period prazoEsperado
+            -List~EtapaObra~ preRequisitos
+            -List~Recurso~ recursos
+        }
+
+        class Recurso {
+            <<Abstract>>
+        }
+
+        class Insumo {
+            -UUID id
+            -String codigo
+            -String descricao
+            -UnidadeMedida unidade
+            -Decimal preco
+        }
+
+        class Composicao {
+            -UUID id
+            -String codigo
+            -String descricao
+            -UnidadeMedida unidade
+            -Decimal preco
+        }
+
+        class UnidadeMedida {
+        <<enumeration>>
+        }
+
+        class InsumoObra {
+            -Insumo tipo
+            -Decimal quantidade
+        }
+
+        class ComposicaoObra {
+            -Composicao tipo
+            -Decimal quantidade
+        }
+
+        class UnidadeFederativa {
+            <<enumeration>>
+        }
+    }
+
+    namespace Concordia.Empresa {
+        class Empresa{
+        }
+    }
