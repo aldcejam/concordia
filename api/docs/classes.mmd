@@ -12,8 +12,11 @@ classDiagram
     EtapaObra *-- Orcamento : possui
 
     Composicao *-- ItemComposicao : possui
-    ItemComposicao o-- Insumo : pode ser
-    ItemComposicao o-- Composicao : pode ser auxiliar
+    ItemComposicaoInsumo --|> ItemComposicao : é um
+    ItemComposicaoAuxiliar --|> ItemComposicao : é um
+
+    ItemComposicaoInsumo --> Insumo : referencia
+    ItemComposicaoAuxiliar --> Composicao : referencia
 
         class Obra{
             -String descricao
@@ -60,8 +63,15 @@ classDiagram
         }
 
         class ItemComposicao {
+            <<abstract>>
             -Decimal coeficiente
+        }
+
+        class ItemComposicaoInsumo {
             -Insumo insumo
+        }
+
+        class ItemComposicaoAuxiliar {
             -Composicao composicaoAuxiliar
         }
 
