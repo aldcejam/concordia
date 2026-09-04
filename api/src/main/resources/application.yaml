@@ -3,3 +3,8 @@ spring:
     name: concordia-api
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:prod}
+
+management:
+  endpoint:
+    health:
+      access: read_only
