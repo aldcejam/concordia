@@ -24,7 +24,11 @@ public class ItemComposicao {
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     private UUID id;
 
-    @Column(precision = 15, scale = 7, nullable = false)
+    @Column(
+            precision = 15,
+            scale = 7,
+            nullable = false,
+            check = @CheckConstraint(name = "chk_item_composicao_coeficiente_positivo", constraint = "coeficiente > 0"))
     @Positive(message = "O coeficiente deve ser maior que zero.")
     private BigDecimal coeficiente;
 
@@ -41,22 +45,4 @@ public class ItemComposicao {
     @JoinColumn(name = "id_composicao_auxiliar")
     @Nullable
     private Composicao composicaoAuxiliar;
-
-    public static ItemComposicao deInsumo(
-            @NonNull BigDecimal coeficiente, @NonNull Insumo insumo, @NonNull Composicao pai) {
-        ItemComposicao item = new ItemComposicao();
-        item.coeficiente = coeficiente;
-        item.insumo = insumo;
-        item.composicaoPai = pai;
-        return item;
-    }
-
-    public static ItemComposicao deAuxiliar(
-            @NonNull BigDecimal coeficiente, @NonNull Composicao auxiliar, @NonNull Composicao pai) {
-        ItemComposicao item = new ItemComposicao();
-        item.coeficiente = coeficiente;
-        item.composicaoAuxiliar = auxiliar;
-        item.composicaoPai = pai;
-        return item;
-    }
 }
