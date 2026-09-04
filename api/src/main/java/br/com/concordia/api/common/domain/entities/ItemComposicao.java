@@ -1,18 +1,16 @@
 package br.com.concordia.api.common.domain.entities;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.util.UUID;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
 @Entity
 @Getter
-@Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
         name = "item_composicao",
         check =
@@ -27,7 +25,7 @@ public class ItemComposicao {
     private UUID id;
 
     @Column(precision = 15, scale = 7, nullable = false)
-    @Positive(message = "O coeficiente deve ser estritamente maior que zero.")
+    @Positive(message = "O coeficiente deve ser maior que zero.")
     private BigDecimal coeficiente;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -36,13 +34,16 @@ public class ItemComposicao {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_insumo")
+    @Nullable
     private Insumo insumo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_composicao_auxiliar")
+    @Nullable
     private Composicao composicaoAuxiliar;
 
-    public static ItemComposicao deInsumo(BigDecimal coeficiente, Insumo insumo, Composicao pai) {
+    public static ItemComposicao deInsumo(
+            @NonNull BigDecimal coeficiente, @NonNull Insumo insumo, @NonNull Composicao pai) {
         ItemComposicao item = new ItemComposicao();
         item.coeficiente = coeficiente;
         item.insumo = insumo;
@@ -50,7 +51,8 @@ public class ItemComposicao {
         return item;
     }
 
-    public static ItemComposicao deAuxiliar(BigDecimal coeficiente, Composicao auxiliar, Composicao pai) {
+    public static ItemComposicao deAuxiliar(
+            @NonNull BigDecimal coeficiente, @NonNull Composicao auxiliar, @NonNull Composicao pai) {
         ItemComposicao item = new ItemComposicao();
         item.coeficiente = coeficiente;
         item.composicaoAuxiliar = auxiliar;
