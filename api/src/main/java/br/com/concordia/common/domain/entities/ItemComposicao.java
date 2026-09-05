@@ -1,4 +1,4 @@
-package br.com.concordia.api.common.domain.entities;
+package br.com.concordia.common.domain.entities;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;

@@ -1,7 +1,7 @@
-package br.com.concordia.api.common.domain.entities;
+package br.com.concordia.common.domain.entities;
 
-import br.com.concordia.api.common.domain.enums.StatusObra;
-import br.com.concordia.api.common.domain.enums.UnidadeFederativa;
+import br.com.concordia.common.domain.enums.StatusObra;
+import br.com.concordia.common.domain.enums.UnidadeFederativa;
 import jakarta.persistence.*;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -10,6 +10,7 @@ import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import org.hibernate.annotations.UuidGenerator;
 
 @Entity
@@ -30,7 +31,7 @@ public class Obra {
     private StatusObra status;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_empresa", nullable = false)
+    @JoinColumn(name = "id_empresa")
     private Empresa empresa;
 
     @Enumerated(EnumType.STRING)
@@ -42,8 +43,17 @@ public class Obra {
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "id_obra")
-    private List<EtapaObra> etapas;
+    private List<EtapaObra> etapas = new ArrayList<>();
 
     @OneToMany(mappedBy = "obra", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<NodoEap> nodosEap = new ArrayList<>();
+    private List<ItemEap> eap = new ArrayList<>();
+
+    public Obra(
+            @NonNull String descricao, @NonNull UnidadeFederativa uf, @NonNull ZoneId fusoHorario, Empresa empresa) {
+        this.descricao = descricao;
+        this.empresa = empresa;
+        this.uf = uf;
+        this.fusoHorario = fusoHorario;
+        this.status = StatusObra.EM_PLANEJAMENTO;
+    }
 }

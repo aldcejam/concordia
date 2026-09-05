@@ -1,11 +1,11 @@
 classDiagram
-    Obra "1" *-- "1..*" NodoEap : contém raiz
+    Obra "1" *-- "1..*" ItemEap : contém raiz
     Obra "1" o-- "0..*" EtapaObra : possui
     Obra "*" o-- "1" Empresa : contratada
     Obra "*" --> "1" UnidadeFederativa : uf
 
-    NodoEap "1" o-- "0..1" EtapaObra : associa-se
-    NodoEap "0..1" *-- "0..*" NodoEap : hierarquia (pai/filhos)
+    ItemEap "1" o-- "0..1" EtapaObra : associa-se
+    ItemEap "0..1" *-- "0..*" ItemEap : hierarquia (pai/filhos)
 
     EtapaObra "1" *-- "0..*" ItemOrcamento : possui
     EtapaObra "*" <--> "*" EtapaObra : dependência CPM (predecessores/sucessores)
@@ -29,16 +29,16 @@ classDiagram
         -Empresa empresa
         -UnidadeFederativa uf
         -ZoneId fusoHorario
-        -List~NodoEap~ nodosEap
+        -List~ItemEap~ nodosEap
         -List~EtapaObra~ etapas
     }
 
-    class NodoEap {
+    class ItemEap {
         -String nome
         -Obra obra
         -Double posicao
-        -NodoEap pai
-        -List~NodoEap~ filhos
+        -ItemEap pai
+        -List~ItemEap~ filhos
         -EtapaObra etapa
     }
 

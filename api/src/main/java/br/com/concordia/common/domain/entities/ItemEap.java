@@ -1,4 +1,4 @@
-package br.com.concordia.api.common.domain.entities;
+package br.com.concordia.common.domain.entities;
 
 import jakarta.persistence.*;
 import java.util.ArrayList;
@@ -14,7 +14,7 @@ import org.hibernate.annotations.UuidGenerator;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "nodo_eap")
-public class NodoEap {
+public class ItemEap {
     @Id
     @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
@@ -32,16 +32,16 @@ public class NodoEap {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_nodo_pai")
-    private NodoEap pai;
+    private ItemEap pai;
 
     @OneToMany(mappedBy = "pai", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<NodoEap> filhos = new ArrayList<>();
+    private List<ItemEap> filhos = new ArrayList<>();
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_etapa_obra", unique = true)
     private EtapaObra etapa;
 
-    public NodoEap(@NonNull Obra obra, @NonNull String nome, @NonNull NodoEap pai, Double posicao) {
+    public ItemEap(@NonNull Obra obra, @NonNull String nome, @NonNull ItemEap pai, Double posicao) {
         this.nome = nome;
         this.pai = pai;
         this.obra = obra;
@@ -50,7 +50,7 @@ public class NodoEap {
         }
     }
 
-    public NodoEap(Obra obra, String nome, NodoEap pai, Double posicao, @NonNull EtapaObra etapa) {
+    public ItemEap(Obra obra, String nome, ItemEap pai, Double posicao, @NonNull EtapaObra etapa) {
         this(obra, nome, pai, posicao);
         this.etapa = etapa;
     }

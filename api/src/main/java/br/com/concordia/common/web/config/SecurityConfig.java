@@ -1,4 +1,4 @@
-package br.com.concordia.api.common.config;
+package br.com.concordia.common.web.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

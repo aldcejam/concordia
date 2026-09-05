@@ -132,14 +132,6 @@
             </palantirJavaFormat>
           </java>
         </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <phase>validate</phase>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>

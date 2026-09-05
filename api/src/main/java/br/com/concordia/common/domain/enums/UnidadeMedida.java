@@ -1,4 +1,4 @@
-package br.com.concordia.api.common.domain.enums;
+package br.com.concordia.common.domain.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;

@@ -1,4 +1,4 @@
-package br.com.concordia.api;
+package br.com.concordia;
 
 import jakarta.annotation.PostConstruct;
 import java.util.TimeZone;

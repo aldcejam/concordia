@@ -1,4 +1,4 @@
-package br.com.concordia.api.common.domain.enums;
+package br.com.concordia.common.domain.enums;
 
 public enum UnidadeFederativa {
     AC,

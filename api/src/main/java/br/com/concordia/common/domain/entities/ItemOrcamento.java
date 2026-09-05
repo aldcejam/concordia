@@ -1,4 +1,4 @@
-package br.com.concordia.api.common.domain.entities;
+package br.com.concordia.common.domain.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
