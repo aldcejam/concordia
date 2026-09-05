@@ -1,6 +1,6 @@
 package br.com.concordia.features.obras.criarobra;
 
-import br.com.concordia.common.application.exceptions.RegraDeNegocioException;
+import br.com.concordia.common.application.exceptions.RecursoNaoEncontradoException;
 import br.com.concordia.common.domain.entities.Empresa;
 import br.com.concordia.common.domain.entities.Obra;
 import br.com.concordia.common.infrastructure.repositories.EmpresaRepository;
@@ -12,10 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class CriarObraService {
     private final ObraRepository obraRepository;
     private final EmpresaRepository empresaRepository;
+    private final CriarObraMapper mapper;
 
-    public CriarObraService(ObraRepository repository, EmpresaRepository empresaRepository) {
+    public CriarObraService(ObraRepository repository, EmpresaRepository empresaRepository, CriarObraMapper mapper) {
         this.obraRepository = repository;
         this.empresaRepository = empresaRepository;
+        this.mapper = mapper;
     }
 
     @Transactional
@@ -24,10 +26,10 @@ public class CriarObraService {
         if (request.id_empresa() != null) {
             empresa = empresaRepository
                     .findById(request.id_empresa())
-                    .orElseThrow(() -> new RegraDeNegocioException(
+                    .orElseThrow(() -> new RecursoNaoEncontradoException(
                             "Empresa com ID %s não foi encontrada no banco".formatted(request.id_empresa())));
         }
-        var obra = new Obra(request.descricao(), request.uf(), request.fusoHorario(), empresa);
+        var obra = mapper.toEntity(request, empresa);
         return obraRepository.save(obra);
     }
 }
