@@ -1,5 +1,6 @@
 package br.com.concordia.features.obras.consultarobra;
 
+import br.com.concordia.features.obras.common.ObraResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -20,7 +21,7 @@ public class ConsultarObraController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ConsultarObraResponse> consultarObra(@PathVariable @Valid UUID id) {
+    public ResponseEntity<ObraResponse> consultarObra(@PathVariable @Valid UUID id) {
         return ResponseEntity.ok(service.consultarObra(id));
     }
 }
