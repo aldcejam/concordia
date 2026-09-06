@@ -1,14 +1,14 @@
-package br.com.concordia.features.obras.criarobra;
+package br.com.concordia.features.obras.common;
 
 import br.com.concordia.common.domain.entities.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
-public interface CriarObraMapper {
+public interface ObraMapper {
     @Mapping(target = "eap", ignore = true)
     @Mapping(target = "etapas", ignore = true)
-    Obra toEntity(CriarObraRequest request, Empresa empresa);
+    Obra toEntity(ObraRequest request, Empresa empresa);
 
-    CriarObraResponse toResponseDto(Obra obra);
+    ObraResponse toResponseDto(Obra obra);
 }

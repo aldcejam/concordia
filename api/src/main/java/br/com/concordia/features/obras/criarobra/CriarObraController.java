@@ -1,5 +1,7 @@
 package br.com.concordia.features.obras.criarobra;
 
+import br.com.concordia.features.obras.common.ObraRequest;
+import br.com.concordia.features.obras.common.ObraResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -21,8 +23,8 @@ public class CriarObraController {
     }
 
     @PostMapping
-    public ResponseEntity<CriarObraResponse> criarObra(
-            @RequestBody @Valid CriarObraRequest request, UriComponentsBuilder uriBuilder) {
+    public ResponseEntity<ObraResponse> criarObra(
+            @RequestBody @Valid ObraRequest request, UriComponentsBuilder uriBuilder) {
         var response = service.criarObra(request);
 
         URI uri = uriBuilder
