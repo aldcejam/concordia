@@ -2,15 +2,13 @@ package br.com.concordia.common.domain.entities;
 
 import br.com.concordia.common.domain.enums.StatusObra;
 import br.com.concordia.common.domain.enums.UnidadeFederativa;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
 @Entity
@@ -55,5 +53,35 @@ public class Obra {
         this.uf = uf;
         this.fusoHorario = fusoHorario;
         this.status = StatusObra.EM_PLANEJAMENTO;
+    }
+
+    public void atualizar(
+            @NonNull String descricao,
+            @NonNull UnidadeFederativa uf,
+            @NonNull ZoneId fusoHorario,
+            @Nullable Empresa empresa) {
+        this.descricao = descricao;
+        this.uf = uf;
+        this.fusoHorario = fusoHorario;
+        this.empresa = empresa;
+    }
+
+    public void atualizarParcial(
+            @Nullable String descricao,
+            @Nullable UnidadeFederativa uf,
+            @Nullable ZoneId fusoHorario,
+            @Nullable Empresa empresa) {
+        if (descricao != null) {
+            this.descricao = descricao;
+        }
+        if (uf != null) {
+            this.uf = uf;
+        }
+        if (fusoHorario != null) {
+            this.fusoHorario = fusoHorario;
+        }
+        if (empresa != null) {
+            this.empresa = empresa;
+        }
     }
 }
