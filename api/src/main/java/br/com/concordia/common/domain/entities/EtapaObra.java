@@ -1,5 +1,6 @@
 package br.com.concordia.common.domain.entities;
 
+import br.com.concordia.common.domain.valueobjects.CpmInfo;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -32,23 +33,8 @@ public class EtapaObra {
     @Column(name = "prazo_esperado_dias")
     private Integer prazoEsperadoDias;
 
-    @Column(name = "early_start")
-    private OffsetDateTime earlyStart;
-
-    @Column(name = "early_finish")
-    private OffsetDateTime earlyFinish;
-
-    @Column(name = "late_start")
-    private OffsetDateTime lateStart;
-
-    @Column(name = "late_finish")
-    private OffsetDateTime lateFinish;
-
-    @Column(name = "folga_dias")
-    private Integer folgaDias;
-
-    @Column(name = "caminho_critico", nullable = false)
-    private Boolean caminhoCritico = false;
+    @Embedded
+    private CpmInfo cpm = new CpmInfo();
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
