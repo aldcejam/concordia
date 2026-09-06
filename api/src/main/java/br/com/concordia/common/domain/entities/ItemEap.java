@@ -13,7 +13,7 @@ import org.hibernate.annotations.UuidGenerator;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "nodo_eap")
+@Table(name = "item_eap")
 public class ItemEap {
     @Id
     @GeneratedValue
