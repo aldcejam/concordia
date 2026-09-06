@@ -2,6 +2,8 @@ package br.com.concordia.common.domain.entities;
 
 import jakarta.persistence.*;
 import java.util.UUID;
+
+import jakarta.validation.constraints.Pattern;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +12,7 @@ import org.hibernate.annotations.UuidGenerator;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "id_empresa")
+@Table(name = "empresa")
 public class Empresa {
     @Id
     @GeneratedValue
@@ -20,7 +22,8 @@ public class Empresa {
     @Column(nullable = false)
     private String nome;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
+    @Pattern(regexp = "^[A-Z0-9]{12}\\d{2}$", message = "O CNPJ deve ser válido.")
     private String cnpj;
 
     @Column(nullable = false)

@@ -22,7 +22,7 @@ public class Composicao {
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     private UUID id;
 
-    @Pattern(regexp = "^\\d{6}$", message = "O código deve conter entre 6 dígitos numéricos.")
+    @Pattern(regexp = "^\\d{6}$", message = "O código deve conter 6 dígitos numéricos.")
     @Column(
             nullable = false,
             unique = true,

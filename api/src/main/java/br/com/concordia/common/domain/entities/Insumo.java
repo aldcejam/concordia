@@ -24,7 +24,7 @@ public class Insumo {
             unique = true,
             length = 20,
             check = @CheckConstraint(name = "chk_insumo_codigo_formato", constraint = "codigo SIMILAR TO '[0-9]{6}'"))
-    @Pattern(regexp = "^\\d{6}$", message = "O código deve conter entre 6 dígitos numéricos.")
+    @Pattern(regexp = "^\\d{6}$", message = "O código deve conter 6 dígitos numéricos.")
     private String codigo;
 
     @Column(nullable = false)
