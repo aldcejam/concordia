@@ -1,5 +1,7 @@
 package br.com.concordia.features.empresas.criarempresa;
 
+import br.com.concordia.features.empresas.common.EmpresaRequest;
+import br.com.concordia.features.empresas.common.EmpresaResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +22,8 @@ public class CriarEmpresaController {
     }
 
     @PostMapping
-    public ResponseEntity<CriarEmpresaResponse> criarEmpresa(
-            @RequestBody @Valid CriarEmpresaRequest request, UriComponentsBuilder uriBuilder) {
+    public ResponseEntity<EmpresaResponse> criarEmpresa(
+            @RequestBody @Valid EmpresaRequest request, UriComponentsBuilder uriBuilder) {
         var response = service.criarEmpresa(request);
 
         var uri = uriBuilder
