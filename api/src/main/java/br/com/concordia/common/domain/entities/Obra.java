@@ -56,11 +56,4 @@ public class Obra {
         this.fusoHorario = fusoHorario;
         this.status = StatusObra.EM_PLANEJAMENTO;
     }
-
-    public UUID getIdEmpresa() {
-        if (empresa == null) {
-            return null;
-        }
-        return empresa.getId();
-    }
 }
