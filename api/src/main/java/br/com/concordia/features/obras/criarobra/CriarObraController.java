@@ -22,16 +22,16 @@ public class CriarObraController {
     }
 
     @PostMapping
-    public ResponseEntity<Obra> criarObra(
+    public ResponseEntity<CriarObraResponse> criarObra(
             @RequestBody @Valid CriarObraRequest request, UriComponentsBuilder uriBuilder) {
-        Obra obra = service.criarObra(request);
+        var response = service.criarObra(request);
 
         URI uri = uriBuilder
                 .path("/api/obras/{id}")
-                .buildAndExpand(obra.getId())
+                .buildAndExpand(response.id())
                 .encode()
                 .toUri();
 
-        return ResponseEntity.created(uri).body(obra);
+        return ResponseEntity.created(uri).body(response);
     }
 }

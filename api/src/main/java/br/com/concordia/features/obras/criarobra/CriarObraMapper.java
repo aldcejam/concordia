@@ -10,4 +10,5 @@ public interface CriarObraMapper {
     @Mapping(target = "eap", ignore = true)
     @Mapping(target = "etapas", ignore = true)
     Obra toEntity(CriarObraRequest request, Empresa empresa);
+    CriarObraResponse toResponseDto(Obra obra);
 }

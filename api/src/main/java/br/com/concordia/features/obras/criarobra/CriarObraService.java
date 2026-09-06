@@ -21,7 +21,7 @@ public class CriarObraService {
     }
 
     @Transactional
-    public Obra criarObra(CriarObraRequest request) {
+    public CriarObraResponse criarObra(CriarObraRequest request) {
         Empresa empresa = null;
         if (request.id_empresa() != null) {
             empresa = empresaRepository
@@ -30,6 +30,6 @@ public class CriarObraService {
                             "Empresa com ID %s não foi encontrada no banco".formatted(request.id_empresa())));
         }
         var obra = mapper.toEntity(request, empresa);
-        return obraRepository.save(obra);
+        return mapper.toResponseDto(obraRepository.save(obra));
     }
 }
