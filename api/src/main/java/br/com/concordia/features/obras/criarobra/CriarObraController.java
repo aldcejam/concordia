@@ -1,6 +1,5 @@
 package br.com.concordia.features.obras.criarobra;
 
-import br.com.concordia.common.domain.entities.Obra;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;

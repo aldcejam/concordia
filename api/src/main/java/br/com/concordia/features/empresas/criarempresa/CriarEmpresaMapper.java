@@ -6,5 +6,6 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring")
 public interface CriarEmpresaMapper {
     Empresa toEntity(CriarEmpresaRequest request);
+
     CriarEmpresaResponse toResponseDto(Empresa empresa);
 }

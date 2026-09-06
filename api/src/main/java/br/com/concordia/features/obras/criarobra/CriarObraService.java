@@ -2,7 +2,6 @@ package br.com.concordia.features.obras.criarobra;
 
 import br.com.concordia.common.application.exceptions.RecursoNaoEncontradoException;
 import br.com.concordia.common.domain.entities.Empresa;
-import br.com.concordia.common.domain.entities.Obra;
 import br.com.concordia.common.infrastructure.repositories.EmpresaRepository;
 import br.com.concordia.common.infrastructure.repositories.ObraRepository;
 import org.springframework.stereotype.Service;

@@ -20,7 +20,8 @@ public class CriarEmpresaController {
     }
 
     @PostMapping
-    public ResponseEntity<CriarEmpresaResponse> criarEmpresa(@RequestBody @Valid CriarEmpresaRequest request, UriComponentsBuilder uriBuilder) {
+    public ResponseEntity<CriarEmpresaResponse> criarEmpresa(
+            @RequestBody @Valid CriarEmpresaRequest request, UriComponentsBuilder uriBuilder) {
         var response = service.criarEmpresa(request);
 
         var uri = uriBuilder
