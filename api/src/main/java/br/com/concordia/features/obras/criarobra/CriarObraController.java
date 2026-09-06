@@ -31,6 +31,7 @@ public class CriarObraController {
                 .buildAndExpand(obra.getId())
                 .encode()
                 .toUri();
+
         return ResponseEntity.created(uri).body(obra);
     }
 }
