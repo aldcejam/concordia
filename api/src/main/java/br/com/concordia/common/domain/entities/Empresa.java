@@ -1,7 +1,6 @@
 package br.com.concordia.common.domain.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Pattern;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -22,7 +21,6 @@ public class Empresa {
     private String nome;
 
     @Column(nullable = false, unique = true)
-    @Pattern(regexp = "^[A-Z0-9]{12}\\d{2}$", message = "O CNPJ deve ser válido.")
     private String cnpj;
 
     @Column(nullable = false)

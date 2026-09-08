@@ -51,9 +51,6 @@ public class EtapaObra {
     private List<ItemOrcamento> orcamentos = new ArrayList<>();
 
     public EtapaObra(@NonNull String descricao, @NonNull OffsetDateTime inicio, @NonNull Integer prazoEsperadoDias) {
-        if (prazoEsperadoDias <= 0) {
-            throw new IllegalArgumentException("O prazo esperado em dias deve ser maior que zero.");
-        }
         this.descricao = descricao;
         this.inicio = inicio;
         this.prazoEsperadoDias = prazoEsperadoDias;
