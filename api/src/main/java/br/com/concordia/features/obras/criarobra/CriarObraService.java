@@ -2,8 +2,6 @@ package br.com.concordia.features.obras.criarobra;
 
 import br.com.concordia.common.application.exceptions.RecursoNaoEncontradoException;
 import br.com.concordia.common.domain.entities.Empresa;
-import br.com.concordia.common.infrastructure.repositories.EmpresaRepository;
-import br.com.concordia.common.infrastructure.repositories.ObraRepository;
 import br.com.concordia.features.obras.common.ObraMapper;
 import br.com.concordia.features.obras.common.ObraRequest;
 import br.com.concordia.features.obras.common.ObraResponse;
@@ -12,11 +10,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CriarObraService {
-    private final ObraRepository obraRepository;
-    private final EmpresaRepository empresaRepository;
+    private final CriarObraRepository obraRepository;
+    private final CriarObraEmpresaRepository empresaRepository;
     private final ObraMapper mapper;
 
-    public CriarObraService(ObraRepository repository, EmpresaRepository empresaRepository, ObraMapper mapper) {
+    public CriarObraService(
+            CriarObraRepository repository, CriarObraEmpresaRepository empresaRepository, ObraMapper mapper) {
         this.obraRepository = repository;
         this.empresaRepository = empresaRepository;
         this.mapper = mapper;

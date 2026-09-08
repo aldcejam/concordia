@@ -1,16 +1,15 @@
 package br.com.concordia.features.obras.deletarobra;
 
 import br.com.concordia.common.application.exceptions.RecursoNaoEncontradoException;
-import br.com.concordia.common.infrastructure.repositories.ObraRepository;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class DeletarObraService {
-    private final ObraRepository repository;
+    private final DeletarObraRepository repository;
 
-    public DeletarObraService(ObraRepository repository) {
+    public DeletarObraService(DeletarObraRepository repository) {
         this.repository = repository;
     }
 

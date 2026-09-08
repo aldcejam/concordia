@@ -1,9 +1,8 @@
 package br.com.concordia.common.domain.entities;
 
 import jakarta.persistence.*;
-import java.util.UUID;
-
 import jakarta.validation.constraints.Pattern;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

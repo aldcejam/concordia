@@ -1,22 +1,23 @@
 package br.com.concordia.features.obras.listarobras;
 
-import br.com.concordia.common.infrastructure.repositories.ObraRepository;
+import br.com.concordia.features.obras.common.ObraMapper;
+import br.com.concordia.features.obras.common.ObraResponse;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ListarObrasService {
-    private final ObraRepository repository;
-    private final ListarObrasMapper mapper;
+    private final ListarObrasRepository repository;
+    private final ObraMapper mapper;
 
-    public ListarObrasService(ObraRepository repository, ListarObrasMapper mapper) {
+    public ListarObrasService(ListarObrasRepository repository, ObraMapper mapper) {
         this.repository = repository;
         this.mapper = mapper;
     }
 
     @Transactional(readOnly = true)
-    public List<ListarObrasResponse> listarObras() {
+    public List<ObraResponse> listarObras() {
         var obra = repository.findAll();
         return mapper.toResponseDto(obra);
     }

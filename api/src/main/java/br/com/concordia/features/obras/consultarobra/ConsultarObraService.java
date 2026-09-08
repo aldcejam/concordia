@@ -1,20 +1,18 @@
 package br.com.concordia.features.obras.consultarobra;
 
 import br.com.concordia.common.application.exceptions.RecursoNaoEncontradoException;
-import br.com.concordia.common.infrastructure.repositories.ObraRepository;
-import java.util.UUID;
-
 import br.com.concordia.features.obras.common.ObraMapper;
 import br.com.concordia.features.obras.common.ObraResponse;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ConsultarObraService {
-    private final ObraRepository repository;
+    private final ConsultarObraRepository repository;
     private final ObraMapper mapper;
 
-    public ConsultarObraService(ObraRepository repository, ObraMapper mapper) {
+    public ConsultarObraService(ConsultarObraRepository repository, ObraMapper mapper) {
         this.repository = repository;
         this.mapper = mapper;
     }

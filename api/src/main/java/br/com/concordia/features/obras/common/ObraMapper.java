@@ -1,6 +1,7 @@
 package br.com.concordia.features.obras.common;
 
 import br.com.concordia.common.domain.entities.*;
+import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -11,4 +12,6 @@ public interface ObraMapper {
     Obra toEntity(ObraRequest request, Empresa empresa);
 
     ObraResponse toResponseDto(Obra obra);
+
+    List<ObraResponse> toResponseDto(List<Obra> obras);
 }

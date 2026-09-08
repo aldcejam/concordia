@@ -2,8 +2,6 @@ package br.com.concordia.features.obras.atualizarobra;
 
 import br.com.concordia.common.application.exceptions.RecursoNaoEncontradoException;
 import br.com.concordia.common.domain.entities.Empresa;
-import br.com.concordia.common.infrastructure.repositories.EmpresaRepository;
-import br.com.concordia.common.infrastructure.repositories.ObraRepository;
 import br.com.concordia.features.obras.common.ObraMapper;
 import br.com.concordia.features.obras.common.ObraParcialRequest;
 import br.com.concordia.features.obras.common.ObraRequest;
@@ -15,11 +13,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AtualizarObraService {
-    private final ObraRepository obraRepository;
-    private final EmpresaRepository empresaRepository;
+    private final AtualizarObraRepository obraRepository;
+    private final AtualizarObraEmpresaRepository empresaRepository;
     private final ObraMapper mapper;
 
-    public AtualizarObraService(ObraRepository obraRepository, EmpresaRepository empresaRepository, ObraMapper mapper) {
+    public AtualizarObraService(
+            AtualizarObraRepository obraRepository,
+            AtualizarObraEmpresaRepository empresaRepository,
+            ObraMapper mapper) {
         this.obraRepository = obraRepository;
         this.empresaRepository = empresaRepository;
         this.mapper = mapper;
