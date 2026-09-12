@@ -1,10 +1,12 @@
 package br.com.concordia.common.domain.entities;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import org.hibernate.annotations.UuidGenerator;
 
 @Entity
@@ -30,5 +32,23 @@ public class Empresa {
         this.nome = nome;
         this.cnpj = cnpj;
         this.razaoSocial = razaoSocial;
+    }
+
+    public void atualizar(@NonNull String nome, @NonNull String cnpj, @NonNull String razaoSocial) {
+        this.nome = nome;
+        this.cnpj = cnpj;
+        this.razaoSocial = razaoSocial;
+    }
+
+    public void atualizarParcial(@Nullable String nome, @Nullable String cnpj, @Nullable String razaoSocial) {
+        if (nome != null) {
+            this.nome = nome;
+        }
+        if (cnpj != null) {
+            this.cnpj = cnpj;
+        }
+        if (razaoSocial != null) {
+            this.razaoSocial = razaoSocial;
+        }
     }
 }
