@@ -17,7 +17,7 @@ public class CriarEmpresaService {
     }
 
     @Transactional
-    public EmpresaResponse criarEmpresa(EmpresaRequest request) {
+    public EmpresaResponse criar(EmpresaRequest request) {
         var empresa = mapper.toEntity(request);
         return mapper.toResponseDto(repository.save(empresa));
     }

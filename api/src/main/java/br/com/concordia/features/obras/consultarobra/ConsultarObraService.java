@@ -18,7 +18,7 @@ public class ConsultarObraService {
     }
 
     @Transactional(readOnly = true)
-    public ObraResponse consultarObra(UUID id) {
+    public ObraResponse consultar(UUID id) {
         var obra = repository
                 .findById(id)
                 .orElseThrow(

@@ -19,7 +19,7 @@ public class ListarObrasController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ObraResponse>> listarObras() {
-        return ResponseEntity.ok(service.listarObras());
+    public ResponseEntity<List<ObraResponse>> listar() {
+        return ResponseEntity.ok(service.listar());
     }
 }

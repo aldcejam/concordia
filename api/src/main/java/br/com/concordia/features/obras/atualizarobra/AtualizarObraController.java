@@ -20,14 +20,14 @@ public class AtualizarObraController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ObraResponse> atualizarObra(
+    public ResponseEntity<ObraResponse> atualizar(
             @PathVariable @Valid UUID id, @RequestBody @Valid ObraRequest request) {
-        return ResponseEntity.ok(service.atualizarObra(id, request));
+        return ResponseEntity.ok(service.atualizar(id, request));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<ObraResponse> atualizarParcialObra(
+    public ResponseEntity<ObraResponse> atualizarParcial(
             @PathVariable @Valid UUID id, @RequestBody @Valid ObraParcialRequest request) {
-        return ResponseEntity.ok(service.atualizarParcialObra(id, request));
+        return ResponseEntity.ok(service.atualizarParcial(id, request));
     }
 }

@@ -23,9 +23,9 @@ public class CriarObraController {
     }
 
     @PostMapping
-    public ResponseEntity<ObraResponse> criarObra(
+    public ResponseEntity<ObraResponse> criar(
             @RequestBody @Valid ObraRequest request, UriComponentsBuilder uriBuilder) {
-        var response = service.criarObra(request);
+        var response = service.criar(request);
 
         URI uri = uriBuilder
                 .path("/api/obras/{id}")

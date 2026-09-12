@@ -15,7 +15,7 @@ public class ListarEmpresasService {
         this.mapper = mapper;
     }
 
-    public List<EmpresaResponse> listarEmpresas() {
+    public List<EmpresaResponse> listar() {
         var empresas = repository.findAll();
         return mapper.toResponseDto(empresas);
     }

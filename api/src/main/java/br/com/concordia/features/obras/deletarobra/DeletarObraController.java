@@ -19,8 +19,8 @@ public class DeletarObraController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarObra(@PathVariable UUID id) {
-        service.deletarObra(id);
+    public ResponseEntity<Void> deletar(@PathVariable UUID id) {
+        service.deletar(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -16,7 +16,7 @@ public class ConsultarEmpresaService {
         this.mapper = mapper;
     }
 
-    public EmpresaResponse consultarEmpresa(UUID id) {
+    public EmpresaResponse consultar(UUID id) {
         var empresa = repository
                 .findById(id)
                 .orElseThrow(

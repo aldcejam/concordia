@@ -2,11 +2,14 @@ package br.com.concordia.features.obras.atualizarobra;
 
 import br.com.concordia.common.application.exceptions.RecursoNaoEncontradoException;
 import br.com.concordia.common.domain.entities.Empresa;
+import br.com.concordia.common.domain.entities.Obra;
 import br.com.concordia.features.obras.common.ObraMapper;
 import br.com.concordia.features.obras.common.ObraParcialRequest;
 import br.com.concordia.features.obras.common.ObraRequest;
 import br.com.concordia.features.obras.common.ObraResponse;
 import java.util.UUID;
+
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,30 +30,31 @@ public class AtualizarObraService {
     }
 
     @Transactional
-    public ObraResponse atualizarObra(UUID id, ObraRequest request) {
-        var obra = obraRepository
-                .findById(id)
-                .orElseThrow(
-                        () -> new RecursoNaoEncontradoException("Obra com ID %s não foi encontrada".formatted(id)));
-        Empresa empresa = getEmpresa(request.idEmpresa());
+    public ObraResponse atualizar(UUID id, ObraRequest request) {
+        var obra = obterObra(id);
+        Empresa empresa = obterEmpresa(request.idEmpresa());
         obra.atualizar(request.descricao(), request.uf(), request.fusoHorario(), empresa);
 
         return mapper.toResponseDto(obra);
     }
 
     @Transactional
-    public ObraResponse atualizarParcialObra(UUID id, ObraParcialRequest request) {
-        var obra = obraRepository
-                .findById(id)
-                .orElseThrow(
-                        () -> new RecursoNaoEncontradoException("Obra com ID %s não foi encontrada".formatted(id)));
-        Empresa empresa = getEmpresa(request.idEmpresa());
+    public ObraResponse atualizarParcial(UUID id, ObraParcialRequest request) {
+        var obra = obterObra(id);
+        Empresa empresa = obterEmpresa(request.idEmpresa());
         obra.atualizarParcial(request.descricao(), request.uf(), request.fusoHorario(), empresa);
 
         return mapper.toResponseDto(obra);
     }
 
-    private @Nullable Empresa getEmpresa(UUID id) {
+    private @NonNull Obra obterObra(UUID id) {
+        return obraRepository
+                .findById(id)
+                .orElseThrow(
+                        () -> new RecursoNaoEncontradoException("Obra com ID %s não foi encontrada".formatted(id)));
+    }
+
+    private @Nullable Empresa obterEmpresa(UUID id) {
         Empresa empresa = null;
         if (id != null) {
             empresa = empresaRepository

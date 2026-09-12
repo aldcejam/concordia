@@ -21,7 +21,7 @@ public class ConsultarObraController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ObraResponse> consultarObra(@PathVariable @Valid UUID id) {
-        return ResponseEntity.ok(service.consultarObra(id));
+    public ResponseEntity<ObraResponse> consultar(@PathVariable @Valid UUID id) {
+        return ResponseEntity.ok(service.consultar(id));
     }
 }

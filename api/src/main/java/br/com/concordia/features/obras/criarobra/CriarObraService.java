@@ -22,7 +22,7 @@ public class CriarObraService {
     }
 
     @Transactional
-    public ObraResponse criarObra(ObraRequest request) {
+    public ObraResponse criar(ObraRequest request) {
         Empresa empresa = null;
         if (request.idEmpresa() != null) {
             empresa = empresaRepository

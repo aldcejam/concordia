@@ -19,7 +19,7 @@ public class ListarEmpresasController {
     }
 
     @GetMapping
-    public ResponseEntity<List<EmpresaResponse>> listarEmpresas() {
-        return ResponseEntity.ok(service.listarEmpresas());
+    public ResponseEntity<List<EmpresaResponse>> listar() {
+        return ResponseEntity.ok(service.listar());
     }
 }

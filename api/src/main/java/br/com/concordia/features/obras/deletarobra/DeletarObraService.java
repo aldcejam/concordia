@@ -14,7 +14,7 @@ public class DeletarObraService {
     }
 
     @Transactional
-    public void deletarObra(UUID id) {
+    public void deletar(UUID id) {
         var obra = repository
                 .findById(id)
                 .orElseThrow(
