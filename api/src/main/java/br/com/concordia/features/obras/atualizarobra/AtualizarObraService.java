@@ -8,7 +8,6 @@ import br.com.concordia.features.obras.common.ObraParcialRequest;
 import br.com.concordia.features.obras.common.ObraRequest;
 import br.com.concordia.features.obras.common.ObraResponse;
 import java.util.UUID;
-
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
