@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.data.repository.Repository;
 
-@org.springframework.stereotype.Repository
 public interface ListarObrasRepository extends Repository<Obra, UUID> {
     List<Obra> findAll();
 }

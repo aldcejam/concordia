@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.repository.Repository;
 
-@org.springframework.stereotype.Repository
 public interface AtualizarObraRepository extends Repository<Obra, UUID> {
     Optional<Obra> findById(UUID id);
 }
