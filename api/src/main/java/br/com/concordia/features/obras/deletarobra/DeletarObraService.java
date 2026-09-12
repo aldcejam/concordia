@@ -15,11 +15,9 @@ public class DeletarObraService {
 
     @Transactional
     public void deletar(UUID id) {
-        var obra = repository
-                .findById(id)
-                .orElseThrow(
-                        () -> new RecursoNaoEncontradoException("Obra com ID %s não foi encontrada".formatted(id)));
-
-        repository.delete(obra);
+        if (!repository.existsById(id)) {
+            throw new RecursoNaoEncontradoException("Obra com ID %s não foi encontrada".formatted(id));
+        }
+        repository.deleteById(id);
     }
 }
