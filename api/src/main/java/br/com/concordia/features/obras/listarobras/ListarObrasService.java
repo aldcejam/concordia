@@ -18,7 +18,7 @@ public class ListarObrasService {
 
     @Transactional(readOnly = true)
     public List<ObraResponse> listarObras() {
-        var obra = repository.findAll();
-        return mapper.toResponseDto(obra);
+        var obras = repository.findAll();
+        return mapper.toResponseDto(obras);
     }
 }
