@@ -1,12 +1,13 @@
 package br.com.concordia.features.empresas.atualizarempresa;
 
-import br.com.concordia.common.application.exceptions.RecursoNaoEncontradoException;
 import br.com.concordia.common.domain.entities.Empresa;
 import br.com.concordia.features.empresas.common.EmpresaMapper;
 import br.com.concordia.features.empresas.common.EmpresaParcialRequest;
 import br.com.concordia.features.empresas.common.EmpresaRequest;
 import br.com.concordia.features.empresas.common.EmpresaResponse;
 import java.util.UUID;
+
+import jakarta.persistence.EntityNotFoundException;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,6 @@ public class AtualizarEmpresaService {
         return repository
                 .findById(id)
                 .orElseThrow(
-                        () -> new RecursoNaoEncontradoException("Empresa com ID %s não foi encontrada".formatted(id)));
+                        () -> new EntityNotFoundException("Empresa com ID %s não foi encontrada".formatted(id)));
     }
 }

@@ -1,6 +1,6 @@
 classDiagram
     Obra "1" *-- "1..*" ItemEap : contém raiz
-    Obra "1" o-- "0..*" EtapaObra : possui
+    Obra "1" *-- "0..*" EtapaObra : possui
     Obra "*" o-- "1" Empresa : contratada
     Obra "*" --> "1" UnidadeFederativa : uf
 

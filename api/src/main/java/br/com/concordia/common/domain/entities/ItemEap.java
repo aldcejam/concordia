@@ -31,7 +31,7 @@ public class ItemEap {
     private Double posicao = 1000.0;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_nodo_pai")
+    @JoinColumn(name = "id_item_pai")
     private ItemEap pai;
 
     @OneToMany(mappedBy = "pai", cascade = CascadeType.ALL, orphanRemoval = true)

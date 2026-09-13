@@ -1,6 +1,5 @@
 package br.com.concordia.features.obras.atualizarobra;
 
-import br.com.concordia.common.application.exceptions.RecursoNaoEncontradoException;
 import br.com.concordia.common.domain.entities.Empresa;
 import br.com.concordia.common.domain.entities.Obra;
 import br.com.concordia.features.obras.common.ObraMapper;
@@ -8,6 +7,8 @@ import br.com.concordia.features.obras.common.ObraParcialRequest;
 import br.com.concordia.features.obras.common.ObraRequest;
 import br.com.concordia.features.obras.common.ObraResponse;
 import java.util.UUID;
+
+import jakarta.persistence.EntityNotFoundException;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
@@ -50,7 +51,7 @@ public class AtualizarObraService {
         return obraRepository
                 .findById(id)
                 .orElseThrow(
-                        () -> new RecursoNaoEncontradoException("Obra com ID %s não foi encontrada".formatted(id)));
+                        () -> new EntityNotFoundException("Obra com ID %s não foi encontrada".formatted(id)));
     }
 
     private @Nullable Empresa obterEmpresa(UUID id) {
@@ -58,7 +59,7 @@ public class AtualizarObraService {
         if (id != null) {
             empresa = empresaRepository
                     .findById(id)
-                    .orElseThrow(() -> new RecursoNaoEncontradoException(
+                    .orElseThrow(() -> new EntityNotFoundException(
                             "Empresa com ID %s não foi encontrada no banco".formatted(id)));
         }
         return empresa;
