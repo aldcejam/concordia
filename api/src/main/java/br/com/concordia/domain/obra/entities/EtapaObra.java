@@ -1,6 +1,6 @@
 package br.com.concordia.domain.obra.entities;
 
-import br.com.concordia.domain.obra.entities.valueobjects.CpmInfo;
+import br.com.concordia.domain.obra.valueobjects.CpmInfo;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;

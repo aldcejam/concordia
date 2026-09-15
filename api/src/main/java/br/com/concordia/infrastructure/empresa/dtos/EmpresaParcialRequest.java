@@ -1,4 +1,4 @@
-package br.com.concordia.infrastructure.controller.dto.empresa;
+package br.com.concordia.infrastructure.empresa.dtos;
 
 import jakarta.validation.constraints.Pattern;
 

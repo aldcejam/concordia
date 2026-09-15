@@ -1,4 +1,4 @@
-package br.com.concordia.infrastructure.repository.obra;
+package br.com.concordia.infrastructure.obra.repositories;
 
 import br.com.concordia.domain.obra.ObraRepository;
 import br.com.concordia.domain.obra.entities.Obra;

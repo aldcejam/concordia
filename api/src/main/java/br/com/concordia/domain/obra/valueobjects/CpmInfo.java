@@ -1,4 +1,4 @@
-package br.com.concordia.domain.obra.entities.valueobjects;
+package br.com.concordia.domain.obra.valueobjects;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

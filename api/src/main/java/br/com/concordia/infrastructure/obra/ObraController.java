@@ -1,9 +1,9 @@
-package br.com.concordia.infrastructure.controller;
+package br.com.concordia.infrastructure.obra;
 
 import br.com.concordia.domain.obra.ObraService;
-import br.com.concordia.infrastructure.controller.dto.obra.ObraParcialRequest;
-import br.com.concordia.infrastructure.controller.dto.obra.ObraRequest;
-import br.com.concordia.infrastructure.controller.dto.obra.ObraResponse;
+import br.com.concordia.infrastructure.obra.dtos.ObraParcialRequest;
+import br.com.concordia.infrastructure.obra.dtos.ObraRequest;
+import br.com.concordia.infrastructure.obra.dtos.ObraResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -26,40 +26,42 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class ObraController {
 
     private final ObraService service;
+    private final ObraInfraMapper mapper;
 
-    public ObraController(ObraService service) {
+    public ObraController(ObraService service, ObraInfraMapper mapper) {
         this.service = service;
+        this.mapper = mapper;
     }
 
     @PostMapping
     public ResponseEntity<ObraResponse> criar(
             @RequestBody @Valid ObraRequest request, UriComponentsBuilder uriBuilder) {
-        var response = service.criar(request);
+        var output = service.criar(mapper.toInputDto(request));
 
         var uri = uriBuilder
                 .path("/api/obras/{id}")
-                .buildAndExpand(response.id())
+                .buildAndExpand(output.id())
                 .encode()
                 .toUri();
 
-        return ResponseEntity.created(uri).body(response);
+        return ResponseEntity.created(uri).body(mapper.toResponseDto(output));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ObraResponse> consultar(@PathVariable @Valid UUID id) {
-        return ResponseEntity.ok(service.consultar(id));
+        return ResponseEntity.ok(mapper.toResponseDto(service.consultar(id)));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ObraResponse> atualizar(
             @PathVariable @Valid UUID id, @RequestBody @Valid ObraRequest request) {
-        return ResponseEntity.ok(service.atualizar(id, request));
+        return ResponseEntity.ok(mapper.toResponseDto(service.atualizar(id, mapper.toInputDto(request))));
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<ObraResponse> atualizarParcial(
             @PathVariable @Valid UUID id, @RequestBody @Valid ObraParcialRequest request) {
-        return ResponseEntity.ok(service.atualizarParcial(id, request));
+        return ResponseEntity.ok(mapper.toResponseDto(service.atualizarParcial(id, mapper.toInputDto(request))));
     }
 
     @DeleteMapping("/{id}")
@@ -70,6 +72,6 @@ public class ObraController {
 
     @GetMapping
     public ResponseEntity<List<ObraResponse>> listar() {
-        return ResponseEntity.ok(service.listar());
+        return ResponseEntity.ok(mapper.toResponseDto(service.listar()));
     }
 }

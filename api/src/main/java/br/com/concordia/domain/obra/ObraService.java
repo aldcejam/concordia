@@ -2,11 +2,9 @@ package br.com.concordia.domain.obra;
 
 import br.com.concordia.domain.empresa.EmpresaRepository;
 import br.com.concordia.domain.empresa.entities.Empresa;
+import br.com.concordia.domain.obra.dtos.ObraInput;
+import br.com.concordia.domain.obra.dtos.ObraOutput;
 import br.com.concordia.domain.obra.entities.Obra;
-import br.com.concordia.infrastructure.controller.dto.obra.ObraMapper;
-import br.com.concordia.infrastructure.controller.dto.obra.ObraParcialRequest;
-import br.com.concordia.infrastructure.controller.dto.obra.ObraRequest;
-import br.com.concordia.infrastructure.controller.dto.obra.ObraResponse;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
@@ -29,7 +27,7 @@ public class ObraService {
     }
 
     @Transactional
-    public ObraResponse criar(ObraRequest request) {
+    public ObraOutput criar(ObraInput request) {
         Empresa empresa = null;
         if (request.idEmpresa() != null) {
             empresa = empresaRepository
@@ -38,33 +36,33 @@ public class ObraService {
                             "Empresa com ID %s não foi encontrada no banco".formatted(request.idEmpresa())));
         }
         var obra = mapper.toEntity(request, empresa);
-        return mapper.toResponseDto(obraRepository.save(obra));
+        return mapper.toOutputDto(obraRepository.save(obra));
     }
 
     @Transactional(readOnly = true)
-    public ObraResponse consultar(UUID id) {
+    public ObraOutput consultar(UUID id) {
         var obra = obraRepository
                 .findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Obra com ID %s não foi encontrada".formatted(id)));
-        return mapper.toResponseDto(obra);
+        return mapper.toOutputDto(obra);
     }
 
     @Transactional
-    public ObraResponse atualizar(UUID id, ObraRequest request) {
+    public ObraOutput atualizar(UUID id, ObraInput request) {
         var obra = obterObra(id);
         Empresa empresa = obterEmpresa(request.idEmpresa());
         obra.atualizar(request.descricao(), request.uf(), request.fusoHorario(), empresa);
 
-        return mapper.toResponseDto(obra);
+        return mapper.toOutputDto(obra);
     }
 
     @Transactional
-    public ObraResponse atualizarParcial(UUID id, ObraParcialRequest request) {
+    public ObraOutput atualizarParcial(UUID id, ObraInput request) {
         var obra = obterObra(id);
         Empresa empresa = obterEmpresa(request.idEmpresa());
         obra.atualizarParcial(request.descricao(), request.uf(), request.fusoHorario(), empresa);
 
-        return mapper.toResponseDto(obra);
+        return mapper.toOutputDto(obra);
     }
 
     @Transactional
@@ -76,9 +74,9 @@ public class ObraService {
     }
 
     @Transactional(readOnly = true)
-    public List<ObraResponse> listar() {
+    public List<ObraOutput> listar() {
         var obras = obraRepository.findAll();
-        return mapper.toResponseDto(obras);
+        return mapper.toOutputDto(obras);
     }
 
     private @NonNull Obra obterObra(UUID id) {

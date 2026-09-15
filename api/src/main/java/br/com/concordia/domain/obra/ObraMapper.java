@@ -1,6 +1,8 @@
-package br.com.concordia.infrastructure.controller.dto.obra;
+package br.com.concordia.domain.obra;
 
 import br.com.concordia.domain.empresa.entities.Empresa;
+import br.com.concordia.domain.obra.dtos.ObraInput;
+import br.com.concordia.domain.obra.dtos.ObraOutput;
 import br.com.concordia.domain.obra.entities.Obra;
 import java.util.List;
 import org.mapstruct.Mapper;
@@ -12,9 +14,9 @@ public interface ObraMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "etapas", ignore = true)
     @Mapping(target = "eap", ignore = true)
-    Obra toEntity(ObraRequest request, Empresa empresa);
+    Obra toEntity(ObraInput request, Empresa empresa);
 
-    ObraResponse toResponseDto(Obra obra);
+    ObraOutput toOutputDto(Obra obra);
 
-    List<ObraResponse> toResponseDto(List<Obra> obras);
+    List<ObraOutput> toOutputDto(List<Obra> obras);
 }

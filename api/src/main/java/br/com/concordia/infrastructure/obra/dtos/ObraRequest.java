@@ -1,4 +1,4 @@
-package br.com.concordia.infrastructure.controller.dto.obra;
+package br.com.concordia.infrastructure.obra.dtos;
 
 import br.com.concordia.domain.obra.enums.UnidadeFederativa;
 import jakarta.annotation.Nullable;

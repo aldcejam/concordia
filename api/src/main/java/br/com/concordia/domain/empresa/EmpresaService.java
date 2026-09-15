@@ -1,10 +1,8 @@
 package br.com.concordia.domain.empresa;
 
+import br.com.concordia.domain.empresa.dtos.EmpresaInput;
+import br.com.concordia.domain.empresa.dtos.EmpresaOutput;
 import br.com.concordia.domain.empresa.entities.Empresa;
-import br.com.concordia.infrastructure.controller.dto.empresa.EmpresaMapper;
-import br.com.concordia.infrastructure.controller.dto.empresa.EmpresaParcialRequest;
-import br.com.concordia.infrastructure.controller.dto.empresa.EmpresaRequest;
-import br.com.concordia.infrastructure.controller.dto.empresa.EmpresaResponse;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
@@ -24,30 +22,30 @@ public class EmpresaService {
     }
 
     @Transactional
-    public EmpresaResponse criar(EmpresaRequest request) {
-        var empresa = mapper.toEntity(request);
-        return mapper.toResponseDto(repository.save(empresa));
+    public EmpresaOutput criar(EmpresaInput input) {
+        var empresa = mapper.toEntity(input);
+        return mapper.toOutputDto(repository.save(empresa));
     }
 
-    public EmpresaResponse consultar(UUID id) {
+    public EmpresaOutput consultar(UUID id) {
         var empresa = repository
                 .findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Empresa com ID %s não foi encontrada".formatted(id)));
-        return mapper.toResponseDto(empresa);
+        return mapper.toOutputDto(empresa);
     }
 
     @Transactional
-    public EmpresaResponse atualizar(UUID id, EmpresaRequest request) {
+    public EmpresaOutput atualizar(UUID id, EmpresaInput input) {
         var empresa = findEmpresa(id);
-        empresa.atualizar(request.nome(), request.cnpj(), request.razaoSocial());
-        return mapper.toResponseDto(empresa);
+        empresa.atualizar(input.nome(), input.cnpj(), input.razaoSocial());
+        return mapper.toOutputDto(empresa);
     }
 
     @Transactional
-    public EmpresaResponse atualizarParcial(UUID id, EmpresaParcialRequest request) {
+    public EmpresaOutput atualizarParcial(UUID id, EmpresaInput input) {
         var empresa = findEmpresa(id);
-        empresa.atualizarParcial(request.nome(), request.cnpj(), request.razaoSocial());
-        return mapper.toResponseDto(empresa);
+        empresa.atualizarParcial(input.nome(), input.cnpj(), input.razaoSocial());
+        return mapper.toOutputDto(empresa);
     }
 
     @Transactional
@@ -58,9 +56,9 @@ public class EmpresaService {
         repository.deleteById(id);
     }
 
-    public List<EmpresaResponse> listar() {
+    public List<EmpresaOutput> listar() {
         var empresas = repository.findAll();
-        return mapper.toResponseDto(empresas);
+        return mapper.toOutputDto(empresas);
     }
 
     private @NonNull Empresa findEmpresa(UUID id) {
