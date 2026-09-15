@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Arquitetura em Camadas e Pacotes - Concordia API</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 32px 24px;
+    }
+
+    header {
+      max-width: 1600px;
+      margin: 0 auto 24px auto;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e2e8f0;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .title-group h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .title-group p {
+      font-size: 14px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    .badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 6px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      color: #475569;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .badge.highlight {
+      background: #f0f9ff;
+      border-color: #bae6fd;
+      color: #0284c7;
+    }
+
+    .diagram-container {
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+      padding: 36px 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: auto;
+    }
+
+    #diagram {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    #diagram svg {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
+    foreignObject {
+      overflow: visible !important;
+    }
+
+    .node foreignObject div {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 4px 8px;
+    }
+
+    .legend-box {
+      max-width: 1600px;
+      margin: 24px auto 0 auto;
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 13px;
+      color: #475569;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .legend-pill {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1px solid;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title-group">
+      <h1>🏛️ Arquitetura em Camadas e Pacotes — Concordia API</h1>
+      <p>Estrutura C4 Component & Package (Fatias Verticais de Casos de Uso com Domínio Compartilhado)</p>
+    </div>
+    <div class="badges">
+      <span class="badge highlight">Padrão C4 Enterprise</span>
+      <span class="badge">Branch: main</span>
+      <span class="badge">Spring Boot 3.4 & Java 25</span>
+    </div>
+  </header>
+
+  <main class="diagram-container">
+    <div id="diagram">
+      <div style="color: #64748b; font-size: 14px; padding: 20px;">Renderizando arquitetura técnica...</div>
+    </div>
+  </main>
+
+  <footer class="legend-box">
+    <div class="legend-item">
+      <span class="legend-pill" style="background: #eff6ff; border-color: #3b82f6;"></span>
+      <span><strong>features.empresas</strong> (Slices de Negócio de Empresa)</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-pill" style="background: #f0fdf4; border-color: #10b981;"></span>
+      <span><strong>features.obras</strong> (Slices de Negócio de Obra)</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-pill" style="background: #faf5ff; border-color: #a855f7;"></span>
+      <span><strong>common.web</strong> (Segurança, Swagger & Exception Handling)</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-pill" style="background: #fffbeb; border-color: #f59e0b;"></span>
+      <span><strong>common.domain</strong> (Entidades de Domínio, Enums & VOs)</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-pill" style="background: #f8fafc; border-color: #64748b;"></span>
+      <span><strong>infrastructure</strong> (PostgreSQL Database)</span>
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'base',
+      flowchart: {
+        useMaxWidth: false,
+        htmlLabels: true,
+        curve: 'basis',
+        nodeSpacing: 50,
+        rankSpacing: 60
+      },
+      themeVariables: {
+        fontFamily: 'Inter, -apple-system, sans-serif',
+        fontSize: '13px',
+        textColor: '#0f172a',
+        mainBkg: '#ffffff',
+        nodeBorder: '#cbd5e1',
+        lineColor: '#64748b',
+        clusterBkg: '#f8fafc',
+        clusterBorder: '#cbd5e1',
+        edgeLabelBackground: '#ffffff',
+        tertiaryTextColor: '#475569'
+      }
+    });
+
+    const diagramDefinition = `
+graph TB
+  classDef default fill:#ffffff,stroke:#cbd5e1,stroke-width:1.5px,color:#0f172a,rx:6px,ry:6px;
+  classDef clientNode fill:#f8fafc,stroke:#475569,stroke-width:2px,color:#0f172a,rx:8px,ry:8px;
+  classDef appNode fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px,color:#0f172a,rx:6px,ry:6px;
+  classDef webNode fill:#faf5ff,stroke:#a855f7,stroke-width:1.5px,color:#581c87,rx:6px,ry:6px;
+  classDef empresaNode fill:#eff6ff,stroke:#3b82f6,stroke-width:1.5px,color:#1e3a8a,rx:6px,ry:6px;
+  classDef obraNode fill:#f0fdf4,stroke:#10b981,stroke-width:1.5px,color:#064e3b,rx:6px,ry:6px;
+  classDef domainNode fill:#fffbeb,stroke:#f59e0b,stroke-width:1.5px,color:#78350f,rx:6px,ry:6px;
+  classDef dbNode fill:#f8fafc,stroke:#64748b,stroke-width:2px,color:#0f172a,rx:6px,ry:6px;
+
+  Client["🌐 <b>Clientes Externos</b><br/><span style='font-size:11px;color:#64748b;'>Navegador / App Mobile / Postman</span>"]:::clientNode
+
+  subgraph PresentationTier ["1. CAMADA DE APRESENTAÇÃO & INFRAESTRUTURA WEB"]
+    direction TB
+    ConcordiaApp["<b>ConcordiaApiApplication</b><br/><span style='font-size:11px;color:#64748b;'>@SpringBootApplication • br.com.concordia</span>"]:::appNode
+
+    subgraph CommonWeb ["📦 br.com.concordia.common.web"]
+      direction LR
+      SecConfig["<b>SecurityConfig</b><br/><span style='font-size:11px;color:#64748b;'>SecurityFilterChain, CORS & CSRF</span>"]:::webNode
+      SwagConfig["<b>SwaggerConfig</b><br/><span style='font-size:11px;color:#64748b;'>OpenAPI 3.0 / Swagger UI Docs</span>"]:::webNode
+      GlobalHandler["<b>GlobalExceptionHandler</b><br/><span style='font-size:11px;color:#64748b;'>@ControllerAdvice • RFC 7807 Standard</span>"]:::webNode
+    end
+  end
+
+  subgraph ApplicationTier ["2. CAMADA DE APLICAÇÃO (VERTICAL SLICES / CASOS DE USO)"]
+    direction TB
+
+    subgraph FeatureEmpresas ["📦 br.com.concordia.features.empresas"]
+      direction TB
+      EmpresaDTOs["<b>DTOs & Mappers (common)</b><br/><span style='font-size:11px;color:#64748b;'>EmpresaRequest, EmpresaResponse, EmpresaParcialRequest, EmpresaMapper</span>"]:::empresaNode
+      CtrlEmpresas["<b>REST Controllers (@RestController)</b><br/><span style='font-size:11px;color:#64748b;'>Criar / Consultar / Atualizar / Deletar / Listar</span>"]:::empresaNode
+      SvcEmpresas["<b>Services de Aplicação (@Service)</b><br/><span style='font-size:11px;color:#64748b;'>Validações de CNPJ, unicidade e orquestração</span>"]:::empresaNode
+      RepoEmpresas["<b>Spring Data Repositories (@Repository)</b><br/><span style='font-size:11px;color:#64748b;'>Operações CRUD dedicadas por caso de uso</span>"]:::empresaNode
+    end
+
+    subgraph FeatureObras ["📦 br.com.concordia.features.obras"]
+      direction TB
+      ObraDTOs["<b>DTOs & Mappers (common)</b><br/><span style='font-size:11px;color:#64748b;'>ObraRequest, ObraResponse, ObraParcialRequest, EmpresaDto, ObraMapper</span>"]:::obraNode
+      CtrlObras["<b>REST Controllers (@RestController)</b><br/><span style='font-size:11px;color:#64748b;'>Criar / Consultar / Atualizar / Deletar / Listar</span>"]:::obraNode
+      SvcObras["<b>Services de Aplicação (@Service)</b><br/><span style='font-size:11px;color:#64748b;'>Regras de datas, status e vínculo de empresa</span>"]:::obraNode
+      RepoObras["<b>Spring Data Repositories (@Repository)</b><br/><span style='font-size:11px;color:#64748b;'>ObraRepository & ObraEmpresaRepository</span>"]:::obraNode
+    end
+  end
+
+  subgraph DomainTier ["3. CAMADA DE DOMÍNIO COMPARTILHADO (CORE DDD)"]
+    direction TB
+    subgraph EntitiesGroup ["📦 br.com.concordia.common.domain.entities"]
+      EntEmpresa["<b>Empresa</b><br/><span style='font-size:11px;color:#64748b;'>Entidade Raiz JPA</span>"]:::domainNode
+      EntObra["<b>Obra</b><br/><span style='font-size:11px;color:#64748b;'>Entidade Raiz JPA</span>"]:::domainNode
+      EntEstrutura["<b>Estrutura da Obra (EAP & CPU)</b><br/><span style='font-size:11px;color:#64748b;'>EtapaObra • ItemEap • ItemOrcamento • Composicao • Insumo</span>"]:::domainNode
+    end
+
+    subgraph AuxGroup ["📦 enums & valueobjects"]
+      EnumsVO["<b>Tipos de Domínio & VOs</b><br/><span style='font-size:11px;color:#64748b;'>StatusObra, UnidadeFederativa, UnidadeMedida, CpmInfo</span>"]:::domainNode
+    end
+  end
+
+  subgraph InfrastructureTier ["4. CAMADA DE PERSISTÊNCIA & BANCO DE DADOS"]
+    Database[("🐘 <b>PostgreSQL Database</b><br/><span style='font-size:11px;color:#64748b;'>Tabelas: empresa, obra, etapa_obra, item_eap, etc.</span>")]:::dbNode
+  end
+
+  Client -->|Chamadas HTTP /api/v1/empresas| CtrlEmpresas
+  Client -->|Chamadas HTTP /api/v1/obras| CtrlObras
+  SecConfig -.->|Filtra & Autentica| Client
+  GlobalHandler -.->|Intercepta Falhas| Client
+
+  CtrlEmpresas -->|Delega para| SvcEmpresas
+  SvcEmpresas -->|Converte com| EmpresaDTOs
+  SvcEmpresas -->|Persiste com| RepoEmpresas
+
+  CtrlObras -->|Delega para| SvcObras
+  SvcObras -->|Converte com| ObraDTOs
+  SvcObras -->|Persiste com| RepoObras
+
+  RepoEmpresas -->|Mapeia| EntEmpresa
+  RepoObras -->|Mapeia| EntObra
+  RepoObras -->|Valida Vínculo| EntEmpresa
+
+  EntObra -->|Agrega| EntEstrutura
+  EntObra -.-> EnumsVO
+
+  RepoEmpresas -->|SQL via Spring Data JPA| Database
+  RepoObras -->|SQL via Spring Data JPA| Database
+`;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const { svg } = await mermaid.render('concordiaArchSvg', diagramDefinition);
+        document.getElementById('diagram').innerHTML = svg;
+      } catch (err) {
+        console.error('Falha ao renderizar diagrama Mermaid:', err);
+        document.getElementById('diagram').innerHTML = '<div style="color: #dc2626; padding: 16px;">Erro ao renderizar diagrama: ' + err.message + '</div>';
+      }
+    });
+  </script>
+</body>
+</html>

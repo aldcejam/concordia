@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Diagrama de Classes do Domínio (DDD) — Concordia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 32px 24px;
+    }
+
+    header {
+      max-width: 1600px;
+      margin: 0 auto 24px auto;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e2e8f0;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .title-group h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .title-group p {
+      font-size: 14px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    .badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 6px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      color: #475569;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .badge.highlight {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+      color: #15803d;
+    }
+
+    .diagram-container {
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+      padding: 36px 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: auto;
+    }
+
+    #diagram {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    #diagram svg {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
+    foreignObject {
+      overflow: visible !important;
+    }
+
+    .node foreignObject div {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      text-align: left;
+      padding: 8px 12px;
+    }
+
+    .class-header {
+      width: 100%;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      padding-bottom: 4px;
+      margin-bottom: 4px;
+      text-align: center !important;
+    }
+
+    .class-stereotype {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      margin-bottom: 2px;
+    }
+
+    .class-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .class-attrs {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #334155;
+    }
+
+    .legend-box {
+      max-width: 1600px;
+      margin: 24px auto 0 auto;
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 13px;
+      color: #475569;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .legend-pill {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1px solid;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title-group">
+      <h1>🏛️ Diagrama de Classes do Domínio — Concordia</h1>
+      <p>Modelagem DDD (Domain-Driven Design) com Agregados, Entidades JPA, Herança e Value Objects</p>
+    </div>
+    <div class="badges">
+      <span class="badge highlight">DDD Aggregate Architecture</span>
+      <span class="badge">Nível de Domínio</span>
+      <span class="badge">JPA 3.1 & Hibernate</span>
+    </div>
+  </header>
+
+  <main class="diagram-container">
+    <div id="diagram">
+      <div style="color: #64748b; font-size: 14px; padding: 20px;">Renderizando modelo de domínio...</div>
+    </div>
+  </main>
+
+  <footer class="legend-box">
+    <div class="legend-item">
+      <span class="legend-pill" style="background: #eff6ff; border-color: #3b82f6;"></span>
+      <span><strong>Agregado Empresa</strong> (Raiz: Empresa)</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-pill" style="background: #f0fdf4; border-color: #10b981;"></span>
+      <span><strong>Agregado Obra</strong> (Raiz: Obra, EtapaObra, ItemEap)</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-pill" style="background: #fffbeb; border-color: #f59e0b;"></span>
+      <span><strong>Orçamento & Insumos</strong> (Composição, Insumo, ItemOrcamento)</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-pill" style="background: #f8fafc; border-color: #64748b;"></span>
+      <span><strong>Value Objects & Enums</strong> (CpmInfo, StatusObra, etc.)</span>
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'base',
+      flowchart: {
+        useMaxWidth: false,
+        htmlLabels: true,
+        curve: 'basis',
+        nodeSpacing: 45,
+        rankSpacing: 55
+      },
+      themeVariables: {
+        fontFamily: 'Inter, -apple-system, sans-serif',
+        fontSize: '13px',
+        textColor: '#0f172a',
+        mainBkg: '#ffffff',
+        nodeBorder: '#cbd5e1',
+        lineColor: '#64748b',
+        clusterBkg: '#f8fafc',
+        clusterBorder: '#cbd5e1',
+        edgeLabelBackground: '#ffffff',
+        tertiaryTextColor: '#475569'
+      }
+    });
+
+    const diagramDefinition = `
+graph TB
+  classDef aggregateRoot fill:#eff6ff,stroke:#2563eb,stroke-width:2px,color:#1e3a8a,rx:6px,ry:6px;
+  classDef obraRoot fill:#f0fdf4,stroke:#059669,stroke-width:2px,color:#064e3b,rx:6px,ry:6px;
+  classDef entity fill:#ffffff,stroke:#cbd5e1,stroke-width:1.5px,color:#0f172a,rx:6px,ry:6px;
+  classDef orcamentoNode fill:#fffbeb,stroke:#d97706,stroke-width:1.5px,color:#78350f,rx:6px,ry:6px;
+  classDef voNode fill:#f8fafc,stroke:#64748b,stroke-width:1.5px,color:#334155,rx:6px,ry:6px;
+
+  subgraph AggregateEmpresa ["🏢 AGREGADO EMPRESA (Bounded Context Core)"]
+    direction TB
+    Empresa["<div class='class-header'><div class='class-stereotype'>&laquo;Aggregate Root&raquo;</div><div class='class-name'>Empresa</div></div><div class='class-attrs'>• id: UUID<br/>• nome: String<br/>• razaoSocial: String<br/>• cnpj: String (Unique)</div>"]:::aggregateRoot
+  end
+
+  subgraph AggregateObra ["🏗️ AGREGADO OBRA (EAP & Cronograma Físico)"]
+    direction TB
+    Obra["<div class='class-header'><div class='class-stereotype'>&laquo;Aggregate Root&raquo;</div><div class='class-name'>Obra</div></div><div class='class-attrs'>• id: UUID<br/>• descricao: String<br/>• status: StatusObra<br/>• uf: UnidadeFederativa<br/>• fusoHorario: ZoneId</div>"]:::obraRoot
+
+    ItemEap["<div class='class-header'><div class='class-stereotype'>&laquo;Entity&raquo;</div><div class='class-name'>ItemEap</div></div><div class='class-attrs'>• id: UUID<br/>• nome: String<br/>• posicao: Double</div>"]:::entity
+
+    EtapaObra["<div class='class-header'><div class='class-stereotype'>&laquo;Entity&raquo;</div><div class='class-name'>EtapaObra</div></div><div class='class-attrs'>• id: UUID<br/>• descricao: String<br/>• inicio: OffsetDateTime<br/>• fim: OffsetDateTime<br/>• prazoEsperadoDias: Integer</div>"]:::entity
+
+    CpmInfo["<div class='class-header'><div class='class-stereotype'>&laquo;Value Object&raquo;</div><div class='class-name'>CpmInfo</div></div><div class='class-attrs'>• earlyStart: OffsetDateTime<br/>• lateFinish: OffsetDateTime<br/>• folgaDias: Integer<br/>• caminhoCritico: Boolean</div>"]:::voNode
+  end
+
+  subgraph ModuleOrcamento ["💰 MÓDULO DE ORÇAMENTO & COMPOSIÇÕES (CPU)"]
+    direction TB
+    ItemOrcamento["<div class='class-header'><div class='class-stereotype'>&laquo;Abstract Entity&raquo;</div><div class='class-name'>ItemOrcamento</div></div><div class='class-attrs'>• id: UUID<br/>• quantidade: BigDecimal</div>"]:::orcamentoNode
+
+    ItemOrcamentoComposicao["<div class='class-header'><div class='class-stereotype'>&laquo;Entity Herança&raquo;</div><div class='class-name'>ItemOrcamentoComposicao</div></div><div class='class-attrs'>• composicao: Composicao</div>"]:::orcamentoNode
+
+    ItemOrcamentoInsumo["<div class='class-header'><div class='class-stereotype'>&laquo;Entity Herança&raquo;</div><div class='class-name'>ItemOrcamentoInsumo</div></div><div class='class-attrs'>• insumo: Insumo</div>"]:::orcamentoNode
+
+    Composicao["<div class='class-header'><div class='class-stereotype'>&laquo;Entity&raquo;</div><div class='class-name'>Composicao</div></div><div class='class-attrs'>• id: UUID<br/>• codigo: String<br/>• descricao: String<br/>• unidade: UnidadeMedida<br/>• preco: BigDecimal</div>"]:::orcamentoNode
+
+    ItemComposicao["<div class='class-header'><div class='class-stereotype'>&laquo;Entity&raquo;</div><div class='class-name'>ItemComposicao</div></div><div class='class-attrs'>• id: UUID<br/>• coeficiente: BigDecimal</div>"]:::orcamentoNode
+
+    Insumo["<div class='class-header'><div class='class-stereotype'>&laquo;Entity&raquo;</div><div class='class-name'>Insumo</div></div><div class='class-attrs'>• id: UUID<br/>• codigo: String<br/>• descricao: String<br/>• unidade: UnidadeMedida<br/>• preco: BigDecimal</div>"]:::orcamentoNode
+  end
+
+  subgraph EnumsVO ["🏷️ ENUMS & TIPOS AUXILIARES"]
+    direction TB
+    StatusObra["<div class='class-header'><div class='class-stereotype'>&laquo;Enumeration&raquo;</div><div class='class-name'>StatusObra</div></div><div class='class-attrs'>• EM_PLANEJAMENTO<br/>• EM_ANDAMENTO<br/>• PARALISADA<br/>• CONCLUIDA</div>"]:::voNode
+    Unidades["<div class='class-header'><div class='class-stereotype'>&laquo;Enumerations&raquo;</div><div class='class-name'>UF & UnidadeMedida</div></div><div class='class-attrs'>• UnidadeFederativa (AC..TO)<br/>• UnidadeMedida (M, M2, M3, KG, UN...)</div>"]:::voNode
+  end
+
+  %% Relacionamentos entre Agregados e Entidades
+  Obra -->|0..* pertence_a 1| Empresa
+  Obra -->|1 compõe 0..*| ItemEap
+  Obra -->|1 compõe 0..*| EtapaObra
+  ItemEap -->|filhos de 0..1 pai| ItemEap
+  ItemEap -.->|vincula 0..1| EtapaObra
+  EtapaObra -->|1 contém 1| CpmInfo
+  EtapaObra -.->|dependência CPM| EtapaObra
+
+  EtapaObra -->|1 detalha 0..*| ItemOrcamento
+  ItemOrcamentoComposicao -- herança --> ItemOrcamento
+  ItemOrcamentoInsumo -- herança --> ItemOrcamento
+
+  ItemOrcamentoComposicao -->|referencia 1| Composicao
+  ItemOrcamentoInsumo -->|referencia 1| Insumo
+  Composicao -->|1 possui 0..*| ItemComposicao
+  ItemComposicao -->|consome 0..1| Insumo
+  ItemComposicao -.->|subcomposição 0..1| Composicao
+
+  Obra -.-> StatusObra
+  Composicao -.-> Unidades
+  Insumo -.-> Unidades
+`;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const { svg } = await mermaid.render('concordiaDomainSvg', diagramDefinition);
+        document.getElementById('diagram').innerHTML = svg;
+      } catch (err) {
+        console.error('Falha ao renderizar diagrama Mermaid:', err);
+        document.getElementById('diagram').innerHTML = '<div style="color: #dc2626; padding: 16px;">Erro ao renderizar diagrama: ' + err.message + '</div>';
+      }
+    });
+  </script>
+</body>
+</html>
