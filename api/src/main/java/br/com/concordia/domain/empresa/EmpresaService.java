@@ -27,6 +27,7 @@ public class EmpresaService {
         return mapper.toOutputDto(repository.save(empresa));
     }
 
+    @Transactional(readOnly = true)
     public EmpresaOutput consultar(UUID id) {
         var empresa = repository
                 .findById(id)
@@ -56,6 +57,7 @@ public class EmpresaService {
         repository.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
     public List<EmpresaOutput> listar() {
         var empresas = repository.findAll();
         return mapper.toOutputDto(empresas);
