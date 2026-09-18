@@ -1,5 +1,6 @@
 package br.com.concordia.domain.obra.entities;
 
+import br.com.concordia.domain.insumo.Insumo;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;

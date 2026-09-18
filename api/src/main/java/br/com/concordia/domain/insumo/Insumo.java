@@ -1,4 +1,4 @@
-package br.com.concordia.domain.obra.entities;
+package br.com.concordia.domain.insumo;
 
 import br.com.concordia.domain.obra.enums.UnidadeMedida;
 import jakarta.persistence.*;
@@ -39,5 +39,27 @@ public class Insumo {
         this.descricao = descricao;
         this.unidade = unidade;
         this.preco = preco;
+    }
+
+    public void atualizar(String codigo, String descricao, UnidadeMedida unidade, BigDecimal preco) {
+        this.codigo = codigo;
+        this.descricao = descricao;
+        this.unidade = unidade;
+        this.preco = preco;
+    }
+
+    public void atualizarParcial(String codigo, String descricao, UnidadeMedida unidade, BigDecimal preco) {
+        if (codigo != null) {
+            this.codigo = codigo;
+        }
+        if (descricao != null) {
+            this.descricao = descricao;
+        }
+        if (unidade != null) {
+            this.unidade = unidade;
+        }
+        if (preco != null) {
+            this.preco = preco;
+        }
     }
 }
