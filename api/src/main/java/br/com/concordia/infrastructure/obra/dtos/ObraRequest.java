@@ -1,6 +1,6 @@
 package br.com.concordia.infrastructure.obra.dtos;
 
-import br.com.concordia.domain.obra.enums.UnidadeFederativa;
+import br.com.concordia.domain.common.enums.UnidadeFederativa;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

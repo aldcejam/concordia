@@ -1,6 +1,6 @@
 package br.com.concordia.infrastructure.insumo.dtos;
 
-import br.com.concordia.domain.obra.enums.UnidadeMedida;
+import br.com.concordia.domain.common.enums.UnidadeMedida;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
