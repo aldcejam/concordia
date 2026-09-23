@@ -1,6 +1,6 @@
 package br.com.concordia.infrastructure.insumo.dtos;
 
-import br.com.concordia.domain.obra.enums.UnidadeMedida;
+import br.com.concordia.domain.common.enums.UnidadeMedida;
 import java.math.BigDecimal;
 import java.util.UUID;
 
