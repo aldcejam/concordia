@@ -73,7 +73,8 @@ public class ComposicaoController {
     }
 
     @DeleteMapping("/{idComposicao}/itens")
-    public ResponseEntity<ComposicaoResponse> removerItem(@PathVariable @Valid UUID idComposicao, @Valid UUID idItem) {
-        return ResponseEntity.ok(mapper.toResponseDto(service.removerItem(idComposicao, idItem)));
+    public ResponseEntity<ComposicaoResponse> deletarItem(@PathVariable @Valid UUID idComposicao, @Valid UUID idItem) {
+        service.deletarItem(idComposicao, idItem);
+        return ResponseEntity.noContent().build();
     }
 }

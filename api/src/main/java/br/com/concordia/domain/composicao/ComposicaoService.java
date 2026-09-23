@@ -71,10 +71,10 @@ public class ComposicaoService {
     }
 
     @Transactional
-    public ComposicaoOutput removerItem(UUID idComposicao, UUID idItem) {
+    public void deletarItem(UUID idComposicao, UUID idItem) {
         var composicao = findComposicao(idComposicao);
         var item = findItemComposicao(idItem);
-        return mapper.toOutputDto(composicao.removerItem(item));
+        composicao.removerItem(item);
     }
 
     private @NonNull Composicao findComposicao(UUID id) {

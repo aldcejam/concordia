@@ -33,9 +33,8 @@ public class Composicao extends ItemComposicao {
         return this;
     }
 
-    public Composicao removerItem(ItemComposicao item) {
+    public void removerItem(ItemComposicao item) {
         itens.remove(item);
         item.setComposicaoPai(null);
-        return this;
     }
 }
