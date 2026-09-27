@@ -1,15 +1,17 @@
-import { defineConfig } from 'orval'
+import { defineConfig } from 'orval';
 
 export default defineConfig({
   concordia: {
-    input: '../api/openapi.yaml',
+    input: {
+      target: 'http://localhost:8080/v3/api-docs',
+    },
     output: {
       target: './src/api/generated/concordia.ts',
       schemas: './src/api/generated/models',
       client: 'react-query',
-      httpClient: 'axios',
+      httpClient: 'fetch',
       mode: 'tags-split',
       clean: true,
     },
   },
-})
+});

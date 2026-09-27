@@ -15,3 +15,8 @@
 .vscode/
 .env
 *.iml
+
+*storybook.log
+storybook-static
+web/.domscribe/
+web/test-results/

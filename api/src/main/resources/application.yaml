@@ -10,3 +10,7 @@ management:
   endpoint:
     health:
       access: read_only
+
+springdoc:
+  default-produces-media-type: application/json
+  use-fqn: true

@@ -1,0 +1,121 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+/*
+ * Concordia theme contract
+ *
+ * Components consume semantic variables instead of hard-coded palette values.
+ * Tailwind maps these variables in tailwind.config.ts and Storybook loads the
+ * same file through src/styles.css, keeping the application and System Design
+ * preview in sync.
+ */
+@layer base {
+  :root {
+    /* Shape and typography */
+    --radius: 0.5rem;
+    --font-sans: 'Manrope', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+
+    /* Product scales: spacing follows Tailwind's 4px base. */
+    --space-unit: 0.25rem;
+    --control-min-height: 2.75rem;
+    --control-min-height-touch: 3rem;
+    --layer-header: 40;
+    --layer-floating-action: 30;
+    --layer-popover: 50;
+    --layer-drawer: 60;
+    --motion-fast: 150ms;
+    --motion-standard: 220ms;
+    --motion-slow: 400ms;
+
+    /* Surfaces and content */
+    --background: oklch(0.965 0.006 155);
+    --foreground: oklch(0.24 0.025 155);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.24 0.025 155);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.24 0.025 155);
+    --muted: oklch(0.935 0.008 155);
+    --muted-foreground: oklch(0.5 0.026 155);
+    --border: oklch(0.84 0.012 155);
+    --input: oklch(0.84 0.012 155);
+    --ring: oklch(0.5 0.08 164);
+    --accent: oklch(0.93 0.012 155);
+    --accent-foreground: oklch(0.31 0.04 160);
+
+    /* Concordia brand: forest, field and blueprint */
+    --primary: oklch(0.43 0.067 164);
+    --primary-deep: oklch(0.33 0.057 164);
+    --primary-soft: oklch(0.5 0.08 164);
+    --primary-foreground: oklch(0.99 0.005 155);
+    --secondary: oklch(0.93 0.012 155);
+    --secondary-foreground: oklch(0.31 0.04 160);
+    --blueprint: oklch(0.73 0.025 170);
+
+    /* Actions and operational signals */
+    --action: oklch(0.61 0.11 56);
+    --action-soft: oklch(0.67 0.12 57);
+    --action-deep: oklch(0.49 0.1 54);
+    --action-foreground: oklch(0.99 0.008 70);
+    --destructive: oklch(0.58 0.22 28);
+    --destructive-foreground: oklch(0.984 0.003 247.858);
+    --warning: oklch(0.58 0.22 28);
+    --warning-soft: oklch(0.94 0.04 28);
+    --gold: oklch(0.75 0.17 74);
+    --gold-soft: oklch(0.93 0.09 85);
+    --concrete: oklch(0.68 0.025 248);
+
+    /* Tactile elevation */
+    --shadow-tactile: 0 4px 0 var(--primary-deep),
+      0 8px 18px color-mix(in oklab, var(--primary) 18%, transparent);
+    --shadow-action: 0 4px 0 var(--action-deep),
+      0 8px 18px color-mix(in oklab, var(--action) 18%, transparent);
+  }
+
+  .dark {
+    --background: oklch(0.16 0.035 170);
+    --foreground: oklch(0.96 0.015 155);
+    --card: oklch(0.22 0.04 170);
+    --card-foreground: oklch(0.96 0.015 155);
+    --popover: oklch(0.22 0.04 170);
+    --popover-foreground: oklch(0.96 0.015 155);
+    --muted: oklch(0.28 0.035 170);
+    --muted-foreground: oklch(0.73 0.025 170);
+    --border: oklch(0.96 0.015 155 / 16%);
+    --input: oklch(0.96 0.015 155 / 22%);
+    --ring: oklch(0.72 0.1 164);
+    --accent: oklch(0.31 0.04 170);
+    --accent-foreground: oklch(0.96 0.015 155);
+    --primary: oklch(0.68 0.1 164);
+    --primary-deep: oklch(0.43 0.067 164);
+    --primary-soft: oklch(0.76 0.11 164);
+    --primary-foreground: oklch(0.16 0.035 170);
+    --secondary: oklch(0.31 0.04 170);
+    --secondary-foreground: oklch(0.96 0.015 155);
+    --blueprint: oklch(0.68 0.045 170);
+    --action: oklch(0.7 0.13 56);
+    --action-soft: oklch(0.76 0.14 57);
+    --action-deep: oklch(0.48 0.1 54);
+    --action-foreground: oklch(0.16 0.035 170);
+    --destructive: oklch(0.68 0.18 28);
+    --destructive-foreground: oklch(0.99 0.005 155);
+    --warning: oklch(0.74 0.18 62);
+    --warning-soft: oklch(0.3 0.08 45);
+    --gold: oklch(0.8 0.16 74);
+    --gold-soft: oklch(0.34 0.09 74);
+    --concrete: oklch(0.62 0.035 248);
+  }
+
+  *,
+  *::before,
+  *::after {
+    border-color: var(--border);
+  }
+
+  body {
+    min-width: 320px;
+    margin: 0;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+  }
+}
