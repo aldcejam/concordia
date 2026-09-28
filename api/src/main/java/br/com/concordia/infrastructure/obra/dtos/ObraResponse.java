@@ -1,7 +1,7 @@
 package br.com.concordia.infrastructure.obra.dtos;
 
+import br.com.concordia.domain.common.enums.UnidadeFederativa;
 import br.com.concordia.domain.obra.enums.StatusObra;
-import br.com.concordia.domain.obra.enums.UnidadeFederativa;
 import java.time.ZoneId;
 import java.util.UUID;
 

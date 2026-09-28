@@ -1,8 +1,8 @@
 package br.com.concordia.domain.obra.entities;
 
+import br.com.concordia.domain.common.enums.UnidadeFederativa;
 import br.com.concordia.domain.empresa.entities.Empresa;
 import br.com.concordia.domain.obra.enums.StatusObra;
-import br.com.concordia.domain.obra.enums.UnidadeFederativa;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import java.time.ZoneId;
