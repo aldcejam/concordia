@@ -16,7 +16,7 @@ const meta = {
   argTypes: {
     status: {
       control: 'select',
-      options: ['completed', 'in_progress', 'delayed', 'accelerate', 'locked', 'milestone'],
+      options: ['completed', 'in_progress', 'delayed', 'accelerate', 'locked', 'planned', 'milestone'],
     },
     size: {
       control: 'select',
@@ -39,6 +39,7 @@ export const StatusGallery: Story = {
       <div className="space-y-3 text-center text-xs font-bold text-muted-foreground"><TactileNode status="delayed" /><p>ATRASADA</p></div>
       <div className="space-y-3 text-center text-xs font-bold text-muted-foreground"><TactileNode status="accelerate" /><p>ADIANTÁVEL</p></div>
       <div className="space-y-3 text-center text-xs font-bold text-muted-foreground"><TactileNode status="locked" /><p>BLOQUEADA</p></div>
+      <div className="space-y-3 text-center text-xs font-bold text-muted-foreground"><TactileNode status="planned" /><p>ORÇADA • SEM MEDIÇÃO</p></div>
       <div className="space-y-3 text-center text-xs font-bold text-muted-foreground"><TactileNode status="milestone" size="lg" progress={43} /><p>MARCO</p></div>
     </div>
   ),

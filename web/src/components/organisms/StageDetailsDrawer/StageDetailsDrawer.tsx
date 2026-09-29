@@ -120,10 +120,10 @@ export const StageDetailsDrawer: React.FC<StageDetailsDrawerProps> = ({
   const budgetedNum =
     typeof node.budgetedQuantity === 'number'
       ? node.budgetedQuantity
-      : parseFloat(String(node.budgetedQuantity || '0').replace(',', '.')) || 100;
+      : parseFloat(String(node.budgetedQuantity || '0').replace(',', '.')) || 0;
 
   const currentExecutedQty = (budgetedNum * (sliderProgress / 100)).toFixed(1);
-  const unitStr = node.unit ?? 'un';
+  const unitStr = node.unit ?? '';
 
   const formattedBudgetedValue =
     typeof node.budgetedValue === 'number'
@@ -199,7 +199,7 @@ export const StageDetailsDrawer: React.FC<StageDetailsDrawerProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="stage-drawer-title"
-      aria-describedby="stage-drawer-description"
+      aria-describedby={node.technicalDescription ? 'stage-drawer-description' : undefined}
     >
       <div
         className={`relative flex h-full w-full max-w-lg flex-col bg-card shadow-2xl border-l border-border transition-transform duration-300 ease-out overflow-y-auto ${className}`}
@@ -213,7 +213,7 @@ export const StageDetailsDrawer: React.FC<StageDetailsDrawerProps> = ({
                 <span className="font-mono">
                   {node.status === 'milestone'
                     ? 'MARCO CONTRATUAL'
-                    : node.sinapiCode || 'Composição Própria'}
+                    : node.sinapiCode || 'Código de composição não informado'}
                 </span>
                 <span className="opacity-40">•</span>
                 <span className="font-mono">EAP {node.eapCode}</span>
@@ -224,13 +224,13 @@ export const StageDetailsDrawer: React.FC<StageDetailsDrawerProps> = ({
               >
                 {node.title}
               </h2>
-              <p
+              {node.technicalDescription && <p
                 id="stage-drawer-description"
                 className="mt-1.5 text-xs text-primary-foreground/80 leading-relaxed"
               >
-                {node.technicalDescription ||
-                  'Serviço técnico integrante do cronograma executivo da obra com controle de avanço físico e conformidade.'}
-              </p>
+                {node.technicalDescription}
+              </p>}
+              {node.compositionType && <p className="mt-1 text-[10px] font-mono text-primary-foreground/70">{node.compositionType}</p>}
             </div>
 
             <TactileButton
@@ -260,7 +260,7 @@ export const StageDetailsDrawer: React.FC<StageDetailsDrawerProps> = ({
                 Referência Orçamentária
               </span>
               <span className="mt-1 font-mono text-xs font-extrabold text-foreground block">
-                {node.sinapiCode || 'Composição Própria'}
+                {node.sinapiCode || 'Código não informado'}
               </span>
             </div>
 
@@ -297,7 +297,7 @@ export const StageDetailsDrawer: React.FC<StageDetailsDrawerProps> = ({
                 Impedimento Crítico Registrado
               </div>
               <p className="mt-1 text-xs text-red-900 font-medium leading-relaxed">
-                {node.impedimentReason || 'Serviço paralisado ou atrasado por restrições de insumo/canteiro.'}
+                {node.impedimentReason}
               </p>
             </div>
           )}
@@ -310,8 +310,7 @@ export const StageDetailsDrawer: React.FC<StageDetailsDrawerProps> = ({
                 Oportunidade: Ponte Dourada
               </div>
               <p className="mt-1 text-xs text-amber-950 font-medium leading-relaxed">
-                {node.accelerationOpportunity ||
-                  'Esta frente de serviço é independente e pode ser iniciada imediatamente para mitigar desvios.'}
+                {node.accelerationOpportunity}
               </p>
               <div className="mt-3">
                 <TactileButton

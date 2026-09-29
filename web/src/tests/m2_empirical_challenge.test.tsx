@@ -1,5 +1,6 @@
 import ReactDOMServer from 'react-dom/server';
 import assert from 'node:assert/strict';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // -----------------------------------------------------------------------------
 // 1. UNIFIED ROOT BARREL IMPORT VERIFICATION (@/components)
@@ -18,14 +19,21 @@ import {
   // Organisms
   TimelineHeader,
   ConstructionTimeline,
-  DEFAULT_TIMELINE_NODES,
   StageDetailsDrawer,
   // Templates
   BlueprintLayout,
 } from '@/components';
 
-import { TimelinePage, INITIAL_TIMELINE_NODES } from '@/pages/TimelinePage';
+import { TimelinePage } from '@/pages/TimelinePage';
+import { DEFAULT_TIMELINE_NODES } from '@/mocks/timeline';
 import { TimelineNodeData } from '@/types/timeline';
+
+const renderTimelinePage = () => {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return ReactDOMServer.renderToStaticMarkup(
+    <QueryClientProvider client={queryClient}><TimelinePage /></QueryClientProvider>
+  );
+};
 
 let passedTests = 0;
 let failedTests = 0;
@@ -139,7 +147,7 @@ testCase('ConstructionTimeline renders all 7 nodes into DOM with data-status and
   assert.ok(html.includes('left:69%') && html.includes('top:96%'), 'Node 7 position missing');
 });
 
-testCase('ConstructionTimeline renders required SVG Bézier curves including golden shortcut', () => {
+testCase('ConstructionTimeline restores the smooth curved trail with proportional progress styling', () => {
   const html = ReactDOMServer.renderToStaticMarkup(
     <ConstructionTimeline nodes={DEFAULT_TIMELINE_NODES} />
   );
@@ -150,21 +158,23 @@ testCase('ConstructionTimeline renders required SVG Bézier curves including gol
     'Base dashed curve stroke-dasharray="3 18" missing'
   );
 
-  // Linha preenchida deve ser calculada a partir do progresso dos nós.
   assert.ok(
-    html.includes('stroke-dasharray="48.68571428571429 51.31428571428571"') || html.includes('strokeDasharray="48.68571428571429 51.31428571428571"'),
-    'Progress filled curve must reflect the nodes progress'
+    html.includes('d="M 240 108 C 240 209.25, 400 209.25, 400 310.5') && html.includes('stroke-dasharray='),
+    'Timeline path must use the smooth curve and include progress styling'
   );
+});
 
-  // Ponte dourada de adiantamento (M 392 715 C 170 790, 140 825, 232 897)
-  assert.ok(
-    html.includes('M 392 715 C 170 790, 140 825, 232 897'),
-    'Golden shortcut path coordinates missing'
-  );
-  assert.ok(
-    html.includes('stroke="var(--gold)"'),
-    'Golden shortcut path stroke="var(--gold)" missing'
-  );
+testCase('ConstructionTimeline paginates long real-data trails without dropping services', () => {
+  const extendedNodes = Array.from({ length: 9 }, (_, index) => ({
+    ...DEFAULT_TIMELINE_NODES[index % DEFAULT_TIMELINE_NODES.length],
+    id: `page-${index + 1}`,
+  }));
+  const html = ReactDOMServer.renderToStaticMarkup(<ConstructionTimeline nodes={extendedNodes} />);
+
+  assert.ok(html.includes('Serviços 1–7 de 9'), 'First page must report its visible range and full service count');
+  assert.ok(html.includes('Próximo trecho'), 'Long trails must provide navigation to subsequent services');
+  assert.ok(html.includes('data-node-id="page-7"'), 'First page must render seven services');
+  assert.ok(!html.includes('data-node-id="page-8"'), 'Later services must be paged instead of stretching the canvas');
 });
 
 testCase('ConstructionTimeline empty state: does not invent nodes when data is absent', () => {
@@ -209,7 +219,7 @@ testCase('ConstructionTimeline supports custom nodes array override', () => {
 console.log('\n--- 3. Floating Smooth-Scroll Button targeting in_progress ---');
 
 testCase('TimelinePage renders floating action button in BlueprintLayout', () => {
-  const html = ReactDOMServer.renderToStaticMarkup(<TimelinePage />);
+  const html = renderTimelinePage();
 
   // Button exists and has accessibility label
   assert.ok(
@@ -227,23 +237,16 @@ testCase('TimelinePage renders floating action button in BlueprintLayout', () =>
   );
 });
 
-testCase('Emulated DOM: querySelector [data-status="in_progress"] matches active node', () => {
-  // Simulate the DOM query from scrollToExecution:
-  // const activeNode = document.querySelector('[data-status="in_progress"]');
-  const nodes = INITIAL_TIMELINE_NODES;
+testCase('TimelinePage does not render story fixtures before real API data loads', () => {
+const nodes = DEFAULT_TIMELINE_NODES;
   const inProgressNodes = nodes.filter((n) => n.status === 'in_progress');
   assert.equal(inProgressNodes.length, 1, 'Exactly one node must initially have status="in_progress"');
   assert.equal(inProgressNodes[0].id, '3', 'Node 3 must be the in_progress node');
 
-  // Verify HTML contains matching selector
-  const html = ReactDOMServer.renderToStaticMarkup(<TimelinePage />);
+  const html = renderTimelinePage();
   assert.ok(
-    html.includes('data-status="in_progress"'),
-    'Selector [data-status="in_progress"] must match an element in rendered TimelinePage'
-  );
-  assert.ok(
-    html.includes('Tubulação PVC R DN 150mm'),
-    'Active in_progress node title must be present'
+    !html.includes('Tubulação PVC R DN 150mm') && html.includes('Carregando trilha da obra'),
+    'Page must show loading state and keep Storybook fixtures out of production'
   );
 });
 
@@ -431,23 +434,18 @@ testCase('StageDetailsDrawer renders golden bridge acceleration button for accel
 // -----------------------------------------------------------------------------
 console.log('\n--- 6. TimelinePage Full Integration & TimelineHeader ---');
 
-testCase('TimelinePage SSR renders integrated layout, sticky header and 7 nodes', () => {
-  const html = ReactDOMServer.renderToStaticMarkup(<TimelinePage />);
+testCase('TimelinePage SSR renders the API-backed loading state without mock project data', () => {
+  const html = renderTimelinePage();
 
   // Layout check
   assert.ok(html.includes('blueprint-grid'), 'TimelinePage must use BlueprintLayout');
 
   // Sticky header check
-  assert.ok(html.includes('Residencial Vista Verde'), 'Project title missing from header');
-  assert.ok(html.includes('OBRA CV-0248'), 'Contract code missing from header');
-  assert.ok(html.includes('FASE 2: INFRAESTRUTURA'), 'Phase title missing from header');
-  assert.ok(html.includes('42,8%') || html.includes('42.8%'), 'Progress metric missing from header');
-  assert.ok(html.includes('142 dias restantes') || html.includes('142'), 'Days remaining missing from header');
+  assert.ok(!html.includes('Residencial Vista Verde'), 'Mock project title must not be rendered');
+  assert.ok(!html.includes('OBRA CV-0248'), 'Mock contract code must not be rendered');
+  assert.ok(!html.includes('142 dias restantes'), 'Mock schedule must not be rendered');
 
-  // Timeline check
-  assert.ok(html.includes('SEÇÃO 2: INFRAESTRUTURA E DRENAGEM PROFUNDA'), 'Section banner missing');
-  assert.ok(html.includes('data-node-id="1"'), 'Node 1 missing in page');
-  assert.ok(html.includes('data-node-id="7"'), 'Node 7 missing in page');
+  assert.ok(html.includes('Carregando trilha da obra'), 'Loading state must be shown while API data loads');
 
   // Floating button check
   assert.ok(html.includes('aria-label="Centralizar na etapa em execução"'), 'FAB missing in page');

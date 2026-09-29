@@ -114,7 +114,7 @@ export const TimelineNodeItem: React.FC<TimelineNodeItemProps> = ({
         isSelected={isSelected || isPopoverOpen}
       />
 
-      <span className="mt-4 max-w-52 text-center text-sm font-extrabold leading-tight text-foreground transition-colors group-hover:text-primary sm:text-base">
+      <span title={node.title} className="mt-4 min-h-[2.5em] max-w-44 line-clamp-2 text-center text-sm font-extrabold leading-tight text-foreground transition-colors group-hover:text-primary sm:max-w-52 sm:text-base">
         {node.title}
       </span>
 

@@ -141,7 +141,7 @@ async function runTests() {
     }
   });
 
-  await testCase('renders fallback "Composição Própria" with font-mono when sinapiCode is omitted', () => {
+  await testCase('renders an explicit missing-code label when sinapiCode is omitted', () => {
     const nodeWithoutSinapi: TimelineNodeData = {
       ...MOCK_BASE_NODE,
       sinapiCode: '',
@@ -155,16 +155,16 @@ async function runTests() {
     );
     try {
       const sinapiElement = Array.from(container.querySelectorAll('span')).find((s) =>
-        s.textContent?.includes('Composição Própria')
+        s.textContent?.includes('Código de composição não informado')
       );
-      assert.ok(sinapiElement, 'Fallback Composição Própria must exist');
+      assert.ok(sinapiElement, 'Missing composition code label must exist');
       assert.ok(sinapiElement.classList.contains('font-mono'), 'Must use font-mono');
     } finally {
       unmount();
     }
   });
 
-  await testCase('renders technical description and handles default fallback', () => {
+  await testCase('renders technical description and leaves it absent when unavailable', () => {
     const { container, rerender, unmount } = render(
       <StageDetailsDrawer
         isOpen={true}
@@ -177,7 +177,7 @@ async function runTests() {
       assert.ok(desc, 'Description element must exist');
       assert.equal(desc.textContent?.trim(), MOCK_BASE_NODE.technicalDescription);
 
-      // Fallback when technicalDescription is empty
+      // No technical description should be invented when the source has none.
       const nodeNoDesc: TimelineNodeData = {
         ...MOCK_BASE_NODE,
         technicalDescription: '',
@@ -190,10 +190,7 @@ async function runTests() {
         />
       );
       const fallbackDesc = container.querySelector('#stage-drawer-description');
-      assert.ok(
-        fallbackDesc?.textContent?.includes('Serviço técnico integrante do cronograma executivo'),
-        'Must render default technical description fallback'
-      );
+      assert.equal(fallbackDesc, null, 'Missing technical description must remain absent');
     } finally {
       unmount();
     }

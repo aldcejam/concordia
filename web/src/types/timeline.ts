@@ -6,7 +6,7 @@
 /**
  * Estados operacionais possíveis para um nó de etapa na trilha.
  */
-export type StageState = 'done' | 'active' | 'delayed' | 'boost' | 'locked' | 'milestone';
+export type StageState = 'done' | 'active' | 'delayed' | 'boost' | 'locked' | 'planned' | 'milestone';
 
 export interface Stage {
   id: number;
@@ -27,6 +27,7 @@ export type NodeStatus =
   | 'delayed'     // Atrasada / Impedimento (Vermelho Alerta / TriangleAlert)
   | 'accelerate'  // Oportunidade de Adiantamento (Dourado / Gem / Badge flutuante)
   | 'locked'      // Bloqueada por predecessores (Cinza Concreto / LockKeyhole)
+  | 'planned'     // Orçada, ainda sem medição de execução
   | 'milestone';  // Marco de Macroetapa / Boss Level (Dourado / Trophy)
 
 /**
@@ -51,6 +52,7 @@ export interface NodeBadgeData {
 export interface TimelineNodeData {
   id: string;
   eapCode: string;                                    // Ex: "02.01.015"
+  macroetapa?: string;
   title: string;                                      // Ex: "Tubulação PVC R DN 150mm"
   subtitle: string;                                   // Ex: "65% executado • 32m de 50m"
   status: NodeStatus;
@@ -59,6 +61,7 @@ export interface TimelineNodeData {
   badge?: string | NodeBadgeData;                     // Texto ou objeto de badge customizado
   technicalDescription?: string;                       // Descrição completa da especificação técnica
   sinapiCode?: string;                                // Referência oficial (ex: "SINAPI 104166")
+  compositionType?: string;
   budgetedQuantity?: number | string;                 // Ex: 50 ou "50,00 m"
   executedQuantity?: number | string;                 // Ex: 32 ou "32,00 m"
   unit?: string;                                      // Ex: "m", "m²", "m³", "un"

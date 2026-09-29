@@ -55,6 +55,7 @@ const ALL_STATUSES: NodeStatus[] = [
   'delayed',
   'accelerate',
   'locked',
+  'planned',
   'milestone',
 ];
 
@@ -476,6 +477,19 @@ testCase('TimelineNodeItem dialog accessibility attributes', () => {
     <TimelineNodeItem node={mockNode('in_progress')} isSelected={true} />
   );
   assert.ok(selectedHtml.includes('aria-expanded="true"'), 'Selected has aria-expanded="true"');
+});
+
+testCase('TimelineNodeItem limits long trail labels and opens the full description', () => {
+  const fullTitle = 'FORNECIMENTO E INSTALAÇÃO DE PLACA DE LICENCIAMENTO DE OBRA COM FORMATO RETANGULAR';
+  const fullDescription = 'Conforme padrão da SEMURB, feita com chapa galvanizada e estrutura de madeira.';
+  const node = { ...mockNode('planned'), title: fullTitle, technicalDescription: fullDescription };
+  const closedHtml = ReactDOMServer.renderToStaticMarkup(<TimelineNodeItem node={node} />);
+  const openHtml = ReactDOMServer.renderToStaticMarkup(<TimelineNodeItem node={node} isPopoverOpen />);
+
+  assert.ok(closedHtml.includes('line-clamp-2'), 'Long node labels must be visually clamped to two lines');
+  assert.ok(closedHtml.includes(`aria-label="Abrir detalhes de ${fullTitle}: status planned, 65% executado"`), 'Accessible name keeps the complete title');
+  assert.ok(openHtml.includes(fullTitle), 'Popover shows the complete title');
+  assert.ok(openHtml.includes(fullDescription), 'Popover shows the complete technical description');
 });
 
 testCase('TimelineNodeItem positioning style from node.position', () => {

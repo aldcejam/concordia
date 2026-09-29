@@ -20,6 +20,147 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
+  /api/obras/{id}/etapas:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - Obras
+      operationId: listarEtapasDaObra
+      summary: Lista etapas e itens EAP associados à obra
+      responses:
+        '200':
+          description: Etapas da obra
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EtapaResponse'
+        '404':
+          description: Obra não encontrada
+    post:
+      tags:
+        - Obras
+      operationId: criarEtapaDaObra
+      summary: Cria uma etapa e seu nó EAP na obra
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EtapaRequest'
+      responses:
+        '201':
+          description: Etapa criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EtapaResponse'
+        '400':
+          description: Dados inválidos ou item pai inexistente
+        '404':
+          description: Obra não encontrada
+  /api/obras/{id}/etapas/{etapaId}/medicoes:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: etapaId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags:
+        - Obras
+      operationId: registrarMedicaoDaEtapa
+      summary: Registra uma medição e preserva seu histórico
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MedicaoRequest'
+      responses:
+        '200':
+          description: Etapa atualizada com a nova medição
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EtapaResponse'
+        '400':
+          description: Dados da medição inválidos
+        '404':
+          description: Obra ou etapa não encontrada
+  /api/obras/{id}/etapas/{etapaId}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: etapaId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - Obras
+      operationId: consultarEtapaDaObra
+      summary: Consulta uma etapa e seu histórico de medições
+      responses:
+        '200':
+          description: Etapa encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EtapaResponse'
+  /api/obras/{id}/etapas/{etapaId}/orcamento:
+    patch:
+      tags: [Obras]
+      summary: Atualizar dados do orçamento de uma etapa
+      operationId: atualizarDadosOrcamento
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: etapaId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EtapaRequest'
+      responses:
+        '200':
+          description: Dados orçamentários atualizados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EtapaResponse'
+        '404':
+          description: Obra ou etapa não encontrada
 components:
   schemas:
     HealthResponse:
@@ -30,3 +171,185 @@ components:
         status:
           type: string
           example: UP
+    EtapaRequest:
+      type: object
+      required: [nome, descricao]
+      properties:
+        nome:
+          type: string
+        descricao:
+          type: string
+        inicio:
+          type: string
+          format: date-time
+          nullable: true
+        prazoEsperadoDias:
+          type: integer
+          minimum: 1
+          nullable: true
+        idItemPai:
+          type: string
+          format: uuid
+          nullable: true
+        posicao:
+          type: number
+          minimum: 0
+        codigoEap:
+          type: string
+          nullable: true
+        bancoOrcamento:
+          type: string
+          nullable: true
+        codigoComposicao:
+          type: string
+          nullable: true
+        tipoComposicao:
+          type: string
+          nullable: true
+        macroetapa:
+          type: string
+          nullable: true
+        unidadeOrcamento:
+          type: string
+          nullable: true
+        quantidadeOrcada:
+          type: number
+          minimum: 0
+          nullable: true
+        valorUnitarioOrcado:
+          type: number
+          minimum: 0
+          nullable: true
+        valorUnitarioBase:
+          type: number
+          minimum: 0
+          nullable: true
+        percentualBdi:
+          type: number
+          minimum: 0
+          nullable: true
+        valorTotalOrcado:
+          type: number
+          minimum: 0
+          nullable: true
+    MedicaoRequest:
+      type: object
+      required: [percentualExecutado, quantidadeExecutada]
+      properties:
+        percentualExecutado:
+          type: number
+          minimum: 0
+          maximum: 100
+        quantidadeExecutada:
+          type: number
+          minimum: 0
+        observacao:
+          type: string
+          nullable: true
+        motivoAtraso:
+          type: string
+          nullable: true
+        diasAtraso:
+          type: integer
+          minimum: 0
+          nullable: true
+    EtapaResponse:
+      type: object
+      required: [id, idItemEap, nome, descricao, posicao, percentualExecutado, quantidadeExecutada, medicoes]
+      properties:
+        id:
+          type: string
+          format: uuid
+        idItemEap:
+          type: string
+          format: uuid
+        idItemPai:
+          type: string
+          format: uuid
+          nullable: true
+        nome:
+          type: string
+        descricao:
+          type: string
+        posicao:
+          type: number
+        inicio:
+          type: string
+          format: date-time
+        fim:
+          type: string
+          format: date-time
+          nullable: true
+        prazoEsperadoDias:
+          type: integer
+          nullable: true
+        percentualExecutado:
+          type: number
+        quantidadeExecutada:
+          type: number
+        motivoAtraso:
+          type: string
+          nullable: true
+        diasAtraso:
+          type: integer
+          nullable: true
+        codigoEap:
+          type: string
+          nullable: true
+        bancoOrcamento:
+          type: string
+          nullable: true
+        codigoComposicao:
+          type: string
+          nullable: true
+        tipoComposicao:
+          type: string
+          nullable: true
+        macroetapa:
+          type: string
+          nullable: true
+        unidadeOrcamento:
+          type: string
+          nullable: true
+        quantidadeOrcada:
+          type: number
+          nullable: true
+        valorUnitarioOrcado:
+          type: number
+          nullable: true
+        valorUnitarioBase:
+          type: number
+          nullable: true
+        percentualBdi:
+          type: number
+          nullable: true
+        valorTotalOrcado:
+          type: number
+          nullable: true
+        medicoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/MedicaoResponse'
+    MedicaoResponse:
+      type: object
+      required: [id, percentualExecutado, quantidadeExecutada, registradaEm]
+      properties:
+        id:
+          type: string
+          format: uuid
+        percentualExecutado:
+          type: number
+        quantidadeExecutada:
+          type: number
+        observacao:
+          type: string
+          nullable: true
+        motivoAtraso:
+          type: string
+          nullable: true
+        diasAtraso:
+          type: integer
+          nullable: true
+        registradaEm:
+          type: string
+          format: date-time

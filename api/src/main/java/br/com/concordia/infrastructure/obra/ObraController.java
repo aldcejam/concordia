@@ -4,12 +4,16 @@ import br.com.concordia.domain.obra.ObraService;
 import br.com.concordia.infrastructure.obra.dtos.ObraParcialRequest;
 import br.com.concordia.infrastructure.obra.dtos.ObraRequest;
 import br.com.concordia.infrastructure.obra.dtos.ObraResponse;
+import br.com.concordia.infrastructure.obra.dtos.EtapaRequest;
+import br.com.concordia.infrastructure.obra.dtos.EtapaResponse;
+import br.com.concordia.infrastructure.obra.dtos.MedicaoRequest;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -73,5 +77,90 @@ public class ObraController {
     @GetMapping
     public ResponseEntity<List<ObraResponse>> listar() {
         return ResponseEntity.ok(mapper.toResponseDto(service.listar()));
+    }
+
+    @GetMapping("/{id}/etapas")
+    public ResponseEntity<List<EtapaResponse>> listarEtapas(@PathVariable UUID id) {
+        return ResponseEntity.ok(service.listarEtapas(id).stream().map(EtapaResponse::from).toList());
+    }
+
+    @GetMapping("/{id}/etapas/{etapaId}")
+    public ResponseEntity<EtapaResponse> consultarEtapa(@PathVariable UUID id, @PathVariable UUID etapaId) {
+        return ResponseEntity.ok(EtapaResponse.from(service.consultarEtapa(id, etapaId)));
+    }
+
+    @PostMapping("/{id}/etapas")
+    public ResponseEntity<EtapaResponse> criarEtapa(
+            @PathVariable UUID id, @RequestBody @Valid EtapaRequest request, UriComponentsBuilder uriBuilder) {
+        var output = service.criarEtapa(
+                id,
+                new br.com.concordia.domain.obra.dtos.EtapaInput(
+                        request.nome(),
+                        request.descricao(),
+                        request.inicio(),
+                        request.prazoEsperadoDias(),
+                        request.idItemPai(),
+                        request.posicao(),
+                        request.codigoEap(),
+                        request.bancoOrcamento(),
+                        request.codigoComposicao(),
+                        request.tipoComposicao(),
+                        request.macroetapa(),
+                        request.unidadeOrcamento(),
+                        request.quantidadeOrcada(),
+                        request.valorUnitarioOrcado(),
+                        request.valorUnitarioBase(),
+                        request.percentualBdi(),
+                        request.valorTotalOrcado()));
+        var uri = uriBuilder
+                .path("/api/obras/{id}/etapas/{etapaId}")
+                .buildAndExpand(id, output.id())
+                .encode()
+                .toUri();
+        return ResponseEntity.created(uri).body(EtapaResponse.from(output));
+    }
+
+    @PatchMapping("/{id}/etapas/{etapaId}/orcamento")
+    public ResponseEntity<EtapaResponse> atualizarDadosOrcamento(
+            @PathVariable UUID id,
+            @PathVariable UUID etapaId,
+            @RequestBody @Valid EtapaRequest request) {
+        var output = service.atualizarOrcamentoEtapa(
+                id,
+                etapaId,
+                new br.com.concordia.domain.obra.dtos.EtapaInput(
+                        request.nome(),
+                        request.descricao(),
+                        request.inicio(),
+                        request.prazoEsperadoDias(),
+                        request.idItemPai(),
+                        request.posicao(),
+                        request.codigoEap(),
+                        request.bancoOrcamento(),
+                        request.codigoComposicao(),
+                        request.tipoComposicao(),
+                        request.macroetapa(),
+                        request.unidadeOrcamento(),
+                        request.quantidadeOrcada(),
+                        request.valorUnitarioOrcado(),
+                        request.valorUnitarioBase(),
+                        request.percentualBdi(),
+                        request.valorTotalOrcado()));
+        return ResponseEntity.ok(EtapaResponse.from(output));
+    }
+
+    @PostMapping("/{id}/etapas/{etapaId}/medicoes")
+    public ResponseEntity<EtapaResponse> registrarMedicao(
+            @PathVariable UUID id, @PathVariable UUID etapaId, @RequestBody @Valid MedicaoRequest request) {
+        var output = service.registrarMedicao(
+                id,
+                etapaId,
+                new br.com.concordia.domain.obra.dtos.MedicaoInput(
+                        request.percentualExecutado(),
+                        request.quantidadeExecutada(),
+                        request.observacao(),
+                        request.motivoAtraso(),
+                        request.diasAtraso()));
+        return ResponseEntity.ok(EtapaResponse.from(output));
     }
 }

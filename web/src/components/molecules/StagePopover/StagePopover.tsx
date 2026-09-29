@@ -17,6 +17,7 @@ const STATE_LABELS: Record<StageState, string> = {
   delayed: 'ATRASADO',
   boost: 'OPORTUNIDADE',
   locked: 'BLOQUEADO',
+  planned: 'ORÇADO • SEM MEDIÇÃO',
   milestone: 'MARCO DA SEÇÃO',
 };
 
@@ -28,6 +29,7 @@ function normalizeStage(stage: Stage | TimelineNodeData): {
   progress: number;
   planned: string;
   actual: string;
+  technicalDescription?: string;
   x: number;
   original: Stage | TimelineNodeData;
 } {
@@ -41,6 +43,7 @@ function normalizeStage(stage: Stage | TimelineNodeData): {
       progress: stage.progress,
       planned: stage.planned,
       actual: stage.actual,
+      technicalDescription: undefined,
       x: stage.x,
       original: stage,
     };
@@ -54,6 +57,7 @@ function normalizeStage(stage: Stage | TimelineNodeData): {
     delayed: 'delayed',
     accelerate: 'boost',
     locked: 'locked',
+    planned: 'planned',
     milestone: 'milestone',
   };
 
@@ -65,8 +69,9 @@ function normalizeStage(stage: Stage | TimelineNodeData): {
     code: node.eapCode,
     state: statusToState[node.status] || 'locked',
     progress: node.progress ?? 0,
-    planned: node.planned ?? '8 dias',
-    actual: node.actual ?? '5 dias',
+    planned: node.planned ?? 'Sem cronograma',
+    actual: node.actual ?? 'Sem medição',
+    technicalDescription: node.technicalDescription,
     x: parsedX,
     original: node,
   };
@@ -158,6 +163,12 @@ export const StagePopover: React.FC<StagePopoverProps> = ({
         <h3 className="mt-2 text-lg font-extrabold text-foreground leading-snug">
           {normalized.name}
         </h3>
+        {normalized.technicalDescription && normalized.technicalDescription !== normalized.name && (
+          <div className="mt-3">
+            <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Descrição completa</p>
+            <p className="mt-1 text-sm leading-relaxed text-foreground">{normalized.technicalDescription}</p>
+          </div>
+        )}
 
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
           <div

@@ -2,6 +2,7 @@ package br.com.concordia.domain.obra.entities;
 
 import br.com.concordia.domain.obra.valueobjects.CpmInfo;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,10 +23,9 @@ public class EtapaObra {
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 2000)
     private String descricao;
 
-    @Column(nullable = false)
     private OffsetDateTime inicio;
 
     private OffsetDateTime fim;
@@ -50,9 +50,24 @@ public class EtapaObra {
     @JoinColumn(name = "id_etapa_obra", nullable = false)
     private List<ItemOrcamento> orcamentos = new ArrayList<>();
 
-    public EtapaObra(@NonNull String descricao, @NonNull OffsetDateTime inicio, @NonNull Integer prazoEsperadoDias) {
+    @OneToMany(mappedBy = "etapa", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("registradaEm ASC")
+    private List<MedicaoEtapa> medicoes = new ArrayList<>();
+
+    public EtapaObra(@NonNull String descricao, OffsetDateTime inicio, Integer prazoEsperadoDias) {
         this.descricao = descricao;
         this.inicio = inicio;
         this.prazoEsperadoDias = prazoEsperadoDias;
+    }
+
+    public MedicaoEtapa registrarMedicao(
+            @NonNull BigDecimal percentualExecutado,
+            @NonNull BigDecimal quantidadeExecutada,
+            String observacao,
+            String motivoAtraso,
+            Integer diasAtraso) {
+        var medicao = new MedicaoEtapa(this, percentualExecutado, quantidadeExecutada, observacao, motivoAtraso, diasAtraso);
+        medicoes.add(medicao);
+        return medicao;
     }
 }

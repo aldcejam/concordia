@@ -1,4 +1,4 @@
-import { DEFAULT_DECORATIONS } from '@/components/molecules/SiteDecoration';
+import { DEFAULT_DECORATIONS } from '@/mocks/decorations';
 import { DEFAULT_TIMELINE_NODES } from '@/mocks/timeline';
 import type { SectionBannerData, Stage, TimelineNodeData } from '@/types/timeline';
 

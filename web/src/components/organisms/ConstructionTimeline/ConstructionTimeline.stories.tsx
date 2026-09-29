@@ -31,6 +31,17 @@ type Story = StoryObj<typeof meta>;
 
 export const FullTrail: Story = {};
 
+export const LongTrailPagination: Story = {
+  args: {
+    nodes: Array.from({ length: 16 }, (_, index) => ({
+      ...storyNodes[index % storyNodes.length],
+      id: `long-trail-${index + 1}`,
+      eapCode: `01.${String(index + 1).padStart(2, '0')}`,
+      title: `Serviço de demonstração ${index + 1}`,
+    })),
+  },
+};
+
 export const EmptyState: Story = {
   args: {
     nodes: [],

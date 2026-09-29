@@ -10,7 +10,7 @@ export interface TimelineHeaderProps {
   phaseTitle?: string;
   eapPhase?: string; // Compatibilidade com PROJECT.md
   progressPercentage: number;
-  daysRemaining: number;
+  daysRemaining?: number;
   daysStatusText?: string;
   criticalStagesCount?: number;
   criticalDelaysCount?: number; // Compatibilidade com PROJECT.md
@@ -23,7 +23,7 @@ export interface TimelineHeaderProps {
 export const TimelineHeader: React.FC<TimelineHeaderProps> = ({
   projectTitle,
   projectName,
-  contractCode = 'OBRA CV-0248',
+  contractCode,
   phaseTitle,
   eapPhase,
   progressPercentage,
@@ -36,8 +36,8 @@ export const TimelineHeader: React.FC<TimelineHeaderProps> = ({
   onCriticalAlertClick,
   className = '',
 }) => {
-  const resolvedProjectTitle = projectTitle ?? projectName ?? 'Residencial Vista Verde';
-  const resolvedPhaseTitle = phaseTitle ?? eapPhase ?? 'FASE 2: INFRAESTRUTURA';
+  const resolvedProjectTitle = projectTitle ?? projectName ?? '';
+  const resolvedPhaseTitle = phaseTitle ?? eapPhase;
   const resolvedCriticalCount = criticalStagesCount ?? criticalDelaysCount ?? 0;
   const handleMemorialClick = onOpenMemorialGuide ?? onMemorialClick;
 
@@ -56,9 +56,11 @@ export const TimelineHeader: React.FC<TimelineHeaderProps> = ({
               <p className="truncate text-sm font-extrabold sm:text-base text-foreground">
                 {resolvedProjectTitle}
               </p>
-              <p className="truncate font-mono text-[9px] text-muted-foreground">
-                {contractCode} • {resolvedPhaseTitle}
-              </p>
+              {(contractCode || resolvedPhaseTitle) && (
+                <p className="truncate font-mono text-[9px] text-muted-foreground">
+                  {[contractCode, resolvedPhaseTitle].filter(Boolean).join(' • ')}
+                </p>
+              )}
             </div>
           </div>
         </div>

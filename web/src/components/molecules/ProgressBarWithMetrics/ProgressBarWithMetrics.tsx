@@ -4,7 +4,7 @@ import { MetricChip } from '@/components/atoms/MetricChip';
 
 export interface ProgressBarWithMetricsProps {
   progressPercentage: number;
-  daysRemaining: number;
+  daysRemaining?: number;
   daysStatusText?: string;          // Padrão: "No prazo"
   criticalStagesCount?: number;     // De explorer_survey_2
   criticalDelaysCount?: number;     // De PROJECT.md
@@ -56,15 +56,17 @@ export const ProgressBarWithMetrics: React.FC<ProgressBarWithMetricsProps> = ({
       </div>
 
       {/* Chip de Contagem Regressiva de Dias */}
-      <MetricChip
-        variant="primary"
-        label={`${daysRemaining} dias restantes`}
-        className="px-3 py-2 text-xs shrink-0"
-      >
-        <span className="text-muted-foreground font-sans font-normal">
-          • {daysStatusText}
-        </span>
-      </MetricChip>
+      {daysRemaining !== undefined && (
+        <MetricChip
+          variant="primary"
+          label={`${daysRemaining} dias restantes`}
+          className="px-3 py-2 text-xs shrink-0"
+        >
+          <span className="text-muted-foreground font-sans font-normal">
+            • {daysStatusText}
+          </span>
+        </MetricChip>
+      )}
 
       {/* Chip / Botão de Alerta para Etapas Críticas */}
       {criticalCount > 0 && (

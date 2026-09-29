@@ -85,4 +85,15 @@ public class Obra {
             this.empresa = empresa;
         }
     }
+
+    public void adicionarEtapa(@NonNull EtapaObra etapa) {
+        etapas.add(etapa);
+    }
+
+    public void adicionarItemEap(@NonNull ItemEap item) {
+        eap.add(item);
+        if (item.getPai() != null) {
+            item.getPai().getFilhos().add(item);
+        }
+    }
 }

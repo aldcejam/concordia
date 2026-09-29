@@ -39,3 +39,14 @@ export const DelayedWithPopover: Story = {
     isPopoverOpen: true,
   },
 };
+
+export const LongDescription: Story = {
+  args: {
+    node: {
+      ...activeNode,
+      title: 'FORNECIMENTO E INSTALAÇÃO DE PLACA DE LICENCIAMENTO DE OBRA COM FORMATO RETANGULAR',
+      technicalDescription: 'Fornecimento e instalação de placa de licenciamento de obra, com formato retangular 1,20 x 0,80 m, conforme padrão da SEMURB, feita com chapa galvanizada e estrutura de madeira.',
+    },
+    isPopoverOpen: true,
+  },
+};

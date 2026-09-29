@@ -298,6 +298,7 @@ async function runTests() {
     'delayed',
     'accelerate',
     'locked',
+    'planned',
     'milestone',
   ];
 
@@ -308,6 +309,7 @@ async function runTests() {
       delayed: 'lucide-triangle-alert',
       accelerate: 'lucide-gem',
       locked: 'lucide-lock-keyhole',
+      planned: 'lucide-clipboard-list',
       milestone: 'lucide-trophy',
     };
 

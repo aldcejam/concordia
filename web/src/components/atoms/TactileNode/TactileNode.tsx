@@ -6,6 +6,7 @@ import {
   Gem,
   LockKeyhole,
   Trophy,
+  ClipboardList,
 } from 'lucide-react';
 import { NodeStatus } from '@/types/timeline';
 
@@ -61,6 +62,12 @@ const STATUS_CONFIG: Record<
     defaultColor: 'var(--concrete)',
     defaultDepth: '#475569',
     textColor: 'text-primary-foreground',
+    defaultSize: 'md',
+  },
+  planned: {
+    defaultColor: 'var(--muted)',
+    defaultDepth: 'var(--border)',
+    textColor: 'text-foreground',
     defaultSize: 'md',
   },
   milestone: {
@@ -127,6 +134,8 @@ export const TactileNode: React.FC<TactileNodeProps> = ({
         return <Gem className={iconClass} strokeWidth={strokeWidth} />;
       case 'locked':
         return <LockKeyhole className={iconClass} strokeWidth={strokeWidth} />;
+      case 'planned':
+        return <ClipboardList className={iconClass} strokeWidth={strokeWidth} />;
       case 'milestone':
         return <Trophy className={iconClass} strokeWidth={strokeWidth} />;
       default:

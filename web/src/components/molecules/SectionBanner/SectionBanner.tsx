@@ -29,18 +29,18 @@ export const SectionBanner: React.FC<SectionBannerProps> = ({
   onMemorialClick,
   className = '',
 }) => {
-  const resolvedTag = banner?.tag ?? tag ?? 'MACROETAPA ATUAL';
-  const resolvedTitle = banner?.title ?? title ?? 'SEÇÃO 2: INFRAESTRUTURA E DRENAGEM PROFUNDA';
+  const resolvedTag = banner?.tag ?? tag ?? '';
+  const resolvedTitle = banner?.title ?? title ?? '';
   const resolvedDescription =
     banner?.description ??
     banner?.subtitle ??
     description ??
     subtitle ??
-    'Execução de galerias, tubulações de PVC e caixas de passagem';
+    '';
   const resolvedStats = banner?.stats ?? stats ?? {
-    totalServices: 7,
-    completedServices: 2,
-    criticalAlerts: 1,
+    totalServices: 0,
+    completedServices: 0,
+    criticalAlerts: 0,
   };
   const handleMemorialClick = banner?.onMemorialClick ?? onMemorialClick;
 
@@ -51,9 +51,9 @@ export const SectionBanner: React.FC<SectionBannerProps> = ({
     >
       <div className="grid gap-5 p-5 sm:grid-cols-[1fr_auto] sm:items-center sm:p-7">
         <div>
-          <div className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold tracking-widest opacity-80 select-none">
+          {resolvedTag && <div className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold tracking-widest opacity-80 select-none">
             <span className="h-px w-8 bg-primary-foreground/50" /> {resolvedTag}
-          </div>
+          </div>}
           <h1 className="max-w-4xl text-xl font-extrabold leading-tight tracking-tight sm:text-3xl">
             {resolvedTitle}
           </h1>
@@ -62,7 +62,7 @@ export const SectionBanner: React.FC<SectionBannerProps> = ({
           </p>
         </div>
 
-        <div>
+        {handleMemorialClick && <div>
           <TactileButton
             variant="action"
             size="md"
@@ -71,7 +71,7 @@ export const SectionBanner: React.FC<SectionBannerProps> = ({
           >
             Memorial técnico
           </TactileButton>
-        </div>
+        </div>}
       </div>
 
       {/* Faixa inferior dividida em 3 colunas com tipografia mono */}
