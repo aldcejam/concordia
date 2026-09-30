@@ -1,5 +1,6 @@
 package br.com.concordia.domain.obra.entities;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,12 +42,15 @@ public class ItemEap {
     @JoinColumn(name = "id_etapa_obra", unique = true)
     private EtapaObra etapa;
 
-    public ItemEap(@NonNull Obra obra, @NonNull String nome, @NonNull ItemEap pai, Double posicao) {
+    public ItemEap(@NonNull Obra obra, @NonNull String nome, @Nullable ItemEap pai, Double posicao) {
         this.nome = nome;
         this.pai = pai;
         this.obra = obra;
         if (posicao != null) {
             this.posicao = posicao;
+        }
+        if (pai != null) {
+            pai.filhos.add(this);
         }
     }
 

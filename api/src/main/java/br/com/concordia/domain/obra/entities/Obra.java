@@ -85,4 +85,11 @@ public class Obra {
             this.empresa = empresa;
         }
     }
+
+    public void adicionarItemEap(@NonNull ItemEap item) {
+        if (item.getObra() != this) {
+            throw new IllegalArgumentException("O item da EAP pertence a outra obra.");
+        }
+        eap.add(item);
+    }
 }
