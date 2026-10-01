@@ -18,6 +18,10 @@ FOUR_PLACES = Decimal("0.0001")
 
 
 def value(cell, shared_strings):
+    if cell.get("t") == "inlineStr":
+        inline = cell.find("m:is/m:t", NS)
+        if inline is not None:
+            return inline.text or ""
     raw = cell.find("m:v", NS)
     if raw is None:
         return ""
@@ -28,11 +32,14 @@ def value(cell, shared_strings):
 
 def read_rows(path):
     with zipfile.ZipFile(path) as workbook:
-        strings_xml = ElementTree.fromstring(workbook.read("xl/sharedStrings.xml"))
-        shared_strings = [
-            "".join(part.text or "" for part in item.findall(".//m:t", NS))
-            for item in strings_xml.findall("m:si", NS)
-        ]
+        try:
+            strings_xml = ElementTree.fromstring(workbook.read("xl/sharedStrings.xml"))
+            shared_strings = [
+                "".join(part.text or "" for part in item.findall(".//m:t", NS))
+                for item in strings_xml.findall("m:si", NS)
+            ]
+        except KeyError:
+            shared_strings = []
         sheet = ElementTree.fromstring(workbook.read("xl/worksheets/sheet1.xml"))
         rows = []
         for row in sheet.findall(".//m:sheetData/m:row", NS):
