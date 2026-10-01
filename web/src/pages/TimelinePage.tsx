@@ -55,9 +55,10 @@ export const TimelinePage: React.FC = () => {
       
       const macroParts = (stage.macroetapa || 'GERAL').split('›').map(s => s.trim());
       const rootName = macroParts[0];
-      const subName = macroParts.length > 1 ? macroParts[1] : rootName;
       
-      const subId = parts.length > 1 ? `${parts[0]}.${parts[1]}` : rootId;
+      const isDirectChild = parts.length <= 2;
+      const subId = isDirectChild ? rootId : `${parts[0]}.${parts[1]}`;
+      const subName = isDirectChild ? rootName : (macroParts.length > 1 ? macroParts[1] : rootName);
       
       if (!map.has(rootId)) {
         map.set(rootId, { id: rootId, name: rootName, subGroups: [] });
@@ -150,7 +151,7 @@ export const TimelinePage: React.FC = () => {
                   onTouchStart={() => startScrolling('left')}
                   onTouchEnd={stopScrolling}
                   onClick={() => document.getElementById('tabs-scroll')?.scrollBy({ left: -250, behavior: 'smooth' })}
-                  className="size-9 rounded-full bg-white text-primary-deep shadow-md flex items-center justify-center hover:scale-105 active:scale-95 transition-transform pointer-events-auto"
+                  className="size-9 rounded-full bg-primary text-white shadow-md flex items-center justify-center hover:bg-primary-soft hover:scale-105 active:scale-95 transition-all pointer-events-auto"
                   aria-label="Rolar para a esquerda"
                 >
                    <ChevronLeft className="size-6" />
@@ -180,7 +181,7 @@ export const TimelinePage: React.FC = () => {
                   onTouchStart={() => startScrolling('right')}
                   onTouchEnd={stopScrolling}
                   onClick={() => document.getElementById('tabs-scroll')?.scrollBy({ left: 250, behavior: 'smooth' })}
-                  className="size-9 rounded-full bg-white text-primary-deep shadow-md flex items-center justify-center hover:scale-105 active:scale-95 transition-transform pointer-events-auto"
+                  className="size-9 rounded-full bg-primary text-white shadow-md flex items-center justify-center hover:bg-primary-soft hover:scale-105 active:scale-95 transition-all pointer-events-auto"
                   aria-label="Rolar para a direita"
                 >
                    <ChevronRight className="size-6" />
