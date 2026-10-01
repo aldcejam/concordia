@@ -91,6 +91,9 @@ public class Obra {
     }
 
     public void adicionarItemEap(@NonNull ItemEap item) {
+        if (item.getObra() != this) {
+            throw new IllegalArgumentException("O item da EAP pertence a outra obra.");
+        }
         eap.add(item);
         if (item.getPai() != null) {
             item.getPai().getFilhos().add(item);
