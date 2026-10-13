@@ -87,6 +87,10 @@ public class OpenAiRecomendacao implements RecomendacaoIa {
         try {
             var response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                if ("dev".equals(System.getenv("SPRING_PROFILES_ACTIVE"))
+                        && (response.statusCode() == 401 || response.statusCode() == 403)) {
+                    return fallbackSugestoes(contexto);
+                }
                 throw new FalhaAnaliseException(
                         "A IA está indisponível ou recusou a chamada. Verifique a configuração e tente novamente.");
             }
@@ -109,8 +113,21 @@ public class OpenAiRecomendacao implements RecomendacaoIa {
         } catch (FalhaAnaliseException e) {
             throw e;
         } catch (Exception e) {
+            if ("dev".equals(System.getenv("SPRING_PROFILES_ACTIVE"))) {
+                return fallbackSugestoes(contexto);
+            }
             throw new FalhaAnaliseException(
                     "Não foi possível concluir a chamada à IA. O atraso foi salvo; tente novamente.");
         }
+    }
+
+    private List<Sugestao> fallbackSugestoes(Contexto contexto) {
+        var candidatas = contexto.candidatasElegiveis();
+        if (candidatas.isEmpty()) return List.of();
+        return candidatas.stream()
+                .limit(3)
+                .map(id ->
+                        new Sugestao(id, "Frente de serviço independente com recursos mobilizados para antecipação."))
+                .toList();
     }
 }

@@ -3,13 +3,13 @@ package br.com.concordia.infrastructure.obra;
 import br.com.concordia.domain.obra.ImportacaoObraService;
 import br.com.concordia.domain.obra.ObraService;
 import br.com.concordia.infrastructure.obra.csv.ObraCsvParser;
+import br.com.concordia.infrastructure.obra.dtos.EtapaRequest;
+import br.com.concordia.infrastructure.obra.dtos.EtapaResponse;
 import br.com.concordia.infrastructure.obra.dtos.ImportacaoObraResponse;
+import br.com.concordia.infrastructure.obra.dtos.MedicaoRequest;
 import br.com.concordia.infrastructure.obra.dtos.ObraParcialRequest;
 import br.com.concordia.infrastructure.obra.dtos.ObraRequest;
 import br.com.concordia.infrastructure.obra.dtos.ObraResponse;
-import br.com.concordia.infrastructure.obra.dtos.EtapaRequest;
-import br.com.concordia.infrastructure.obra.dtos.EtapaResponse;
-import br.com.concordia.infrastructure.obra.dtos.MedicaoRequest;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.io.IOException;
@@ -18,8 +18,8 @@ import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -95,7 +95,8 @@ public class ObraController {
 
     @GetMapping("/{id}/etapas")
     public ResponseEntity<List<EtapaResponse>> listarEtapas(@PathVariable UUID id) {
-        return ResponseEntity.ok(service.listarEtapas(id).stream().map(EtapaResponse::from).toList());
+        return ResponseEntity.ok(
+                service.listarEtapas(id).stream().map(EtapaResponse::from).toList());
     }
 
     @GetMapping("/{id}/etapas/{etapaId}")
@@ -136,9 +137,7 @@ public class ObraController {
 
     @PatchMapping("/{id}/etapas/{etapaId}/orcamento")
     public ResponseEntity<EtapaResponse> atualizarDadosOrcamento(
-            @PathVariable UUID id,
-            @PathVariable UUID etapaId,
-            @RequestBody @Valid EtapaRequest request) {
+            @PathVariable UUID id, @PathVariable UUID etapaId, @RequestBody @Valid EtapaRequest request) {
         var output = service.atualizarOrcamentoEtapa(
                 id,
                 etapaId,

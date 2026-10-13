@@ -123,7 +123,9 @@ class CronogramaIntegrationTest {
         assertThat(legada.inicio()).isNull();
         assertThat(legada.fim()).isNull();
         assertThat(legada.duracaoDias()).isNull();
-        assertThatThrownBy(() -> cronogramas.registrarAtraso(obraId, e.id(), "Chuva", 1))
+        var atraso = cronogramas.registrarAtraso(obraId, e.id(), "Chuva", 1);
+        assertThat(atraso.status()).isEqualTo("REGISTRADO");
+        assertThatThrownBy(() -> analises.analisar(obraId, atraso.id()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("datas e duração");
         etapa("Nova etapa planejada", 1, 2);
@@ -291,6 +293,18 @@ class CronogramaIntegrationTest {
         assertThat(medida.percentualExecutado()).isEqualByComparingTo("25");
         assertThat(cronogramas.consultar(obraId).cronograma().versao()).isGreaterThan(versao);
         assertThat(buscar(etapa.id()).inicio()).isNull();
+
+        var registroAtraso =
+                post("/atrasos", Map.of("etapaId", etapa.id(), "motivo", "Atraso no fornecedor", "diasAtraso", 3));
+        assertThat(registroAtraso.statusCode()).isEqualTo(201);
+        var atraso = json.ler(registroAtraso.body(), Atraso.class);
+        assertThat(atraso.status()).isEqualTo("REGISTRADO");
+        assertThat(atraso.motivo()).isEqualTo("Atraso no fornecedor");
+        assertThat(atraso.diasAtraso()).isEqualTo(3);
+
+        var analise = post("/atrasos/" + atraso.id() + "/analise", Map.of());
+        assertThat(analise.statusCode()).isEqualTo(400);
+        assertThat(analise.body()).contains("Todas as etapas precisam de datas e duração");
     }
 
     @Test

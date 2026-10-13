@@ -3,8 +3,8 @@ package br.com.concordia.infrastructure.obra.dtos;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-import java.time.OffsetDateTime;
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public record EtapaRequest(

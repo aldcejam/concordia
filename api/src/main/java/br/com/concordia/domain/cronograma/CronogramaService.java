@@ -8,6 +8,7 @@ import br.com.concordia.domain.obra.entities.EtapaObra;
 import br.com.concordia.domain.obra.entities.Obra;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -108,7 +109,6 @@ public class CronogramaService {
     @Transactional
     public Atraso registrarAtraso(UUID obraId, UUID etapaId, String motivo, int dias) {
         var obra = obra(obraId, true);
-        exigirPlanejamento(obra);
         if (etapa(obra, etapaId).getStatus() == StatusEtapa.CONCLUIDA) {
             throw new IllegalArgumentException("Não é possível apontar atraso em uma etapa concluída.");
         }
@@ -153,7 +153,10 @@ public class CronogramaService {
             UUID obraId, UUID atrasoId, Contexto contexto, List<Sugestao> sugestoes, String erro) {
         var obra = obra(obraId, true);
         var atraso = atraso(obraId, atrasoId);
-        if (!atraso.getStatus().equals("ANALISANDO") || !atraso.getReferencia().isEqual(contexto.referencia())) {
+        if (!atraso.getStatus().equals("ANALISANDO")
+                || !atraso.getReferencia()
+                        .truncatedTo(ChronoUnit.MICROS)
+                        .isEqual(contexto.referencia().truncatedTo(ChronoUnit.MICROS))) {
             throw new ConflitoException("Uma análise mais recente substituiu esta resposta.");
         }
         if (obra.getVersaoCronograma() != contexto.cronograma().versao()) {
@@ -306,7 +309,7 @@ public class CronogramaService {
     }
 
     private OffsetDateTime agora(Obra obra) {
-        return OffsetDateTime.now(clock.withZone(obra.getFusoHorario()));
+        return OffsetDateTime.now(clock.withZone(obra.getFusoHorario())).truncatedTo(ChronoUnit.MICROS);
     }
 
     private Obra obra(UUID id, boolean lock) {

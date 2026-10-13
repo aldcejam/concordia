@@ -1,13 +1,26 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useListar, useListarEtapas } from '@/api/generated/obras/obras';
-import type { BrComConcordiaInfrastructureObraDtosEtapaResponse } from '@/api/generated/models';
-import { ChevronDown, HardHat, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react';
+import type { BrComConcordiaInfrastructureObraDtosEtapaResponse, BrComConcordiaInfrastructureObraDtosObraResponse } from '@/api/generated/models';
+import { ChevronDown, HardHat, ClipboardList, ChevronLeft, ChevronRight, TriangleAlert } from 'lucide-react';
+
+import { useConsultar4 } from '@/api/generated/cronograma-controller/cronograma-controller';
+import { useDelayReprogramming, requireSuccess } from '@/hooks/useDelayReprogramming';
+import { StageDelayPopover } from '@/components/molecules/StageDelayPopover/StageDelayPopover';
+import { StageAdvanceBranches } from '@/components/organisms/StageAdvanceBranches/StageAdvanceBranches';
+import type { Schedule } from '@/types/cronograma';
 
 const PROJECT_DESCRIPTION =
   'COMPLEMENTAÇÃO DA OBRA DA ESCOLA MULTICAMPI DE CIÊNCIAS MÉDICAS (EMCM) - INFRAESTRUTURA E URBANIZAÇÃO - COM DESCONTO LINEAR';
 const EMPTY_STAGES: BrComConcordiaInfrastructureObraDtosEtapaResponse[] = [];
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const quantity = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
+
+const EMPTY_SCHEDULE: NonNullable<Schedule['cronograma']>['etapas'] = [];
+
+function dateLabel(value?: string, timeZone?: string) {
+  return value ? new Intl.DateTimeFormat('pt-BR', { timeZone }).format(new Date(value)) : 'Sem data';
+}
 
 interface GroupedData {
   id: string;
@@ -20,11 +33,32 @@ interface GroupedData {
 }
 
 export const TimelinePage: React.FC = () => {
-  const obrasQuery = useListar();
-  const obras = obrasQuery.data?.data ?? [];
-  const obra = obras.find((item) => item.descricao === PROJECT_DESCRIPTION);
-  const etapasQuery = useListarEtapas(obra?.id ?? '', { query: { enabled: Boolean(obra?.id) } });
-  const stages = etapasQuery.data?.data ?? EMPTY_STAGES;
+  const [searchParams] = useSearchParams();
+  const requestedObraId = searchParams.get('obraId');
+  const obrasQuery = useListar<BrComConcordiaInfrastructureObraDtosObraResponse[]>({ query: { select: requireSuccess } });
+  const obras = obrasQuery.data ?? [];
+  const obra = requestedObraId
+    ? obras.find((item) => item.id === requestedObraId)
+    : obras.find((item) => item.descricao === PROJECT_DESCRIPTION) ?? obras[0];
+  const etapasQuery = useListarEtapas<BrComConcordiaInfrastructureObraDtosEtapaResponse[]>(obra?.id ?? '', { query: { enabled: Boolean(obra?.id), select: requireSuccess } });
+  const stages = etapasQuery.data ?? EMPTY_STAGES;
+
+  const scheduleQuery = useConsultar4<Schedule>(obra?.id ?? '', {
+    query: { enabled: Boolean(obra?.id), select: requireSuccess },
+  });
+  const schedule = scheduleQuery.data;
+  const scheduleStages = schedule?.cronograma?.etapas ?? EMPTY_SCHEDULE!;
+  const [openStageId, setOpenStageId] = useState<string | null>(null);
+  const [sequenceChoice, setSequenceView] = useState<boolean | null>(null);
+  const sequenceView = sequenceChoice ?? Boolean(schedule?.atrasos?.some(delay => delay.status === 'APLICADO'));
+  const [notice, setNotice] = useState('');
+  const triggerRef = React.useRef<HTMLButtonElement | null>(null);
+  const closePopover = useCallback(() => { setOpenStageId(null); requestAnimationFrame(() => triggerRef.current?.focus()); }, []);
+  const flow = useDelayReprogramming(obra?.id ?? '', () => {
+    closePopover(); setSequenceView(true); setNotice('Sequência e datas atualizadas.');
+  });
+  const scheduleById = new Map(scheduleStages.map(stage => [stage.id, stage]));
+  const missingPlanning = scheduleStages.filter(stage => !stage.inicio || !stage.fim || !stage.duracaoDias).length;
 
   const scrollAnimationRef = React.useRef<number | null>(null);
 
@@ -100,28 +134,74 @@ export const TimelinePage: React.FC = () => {
 
   const totalBudget = stages.reduce((acc, stage) => acc + Number(stage.valorTotalOrcado ?? 0), 0);
   const completedCount = stages.filter(s => Number(s.percentualExecutado ?? 0) >= 100).length;
-  const delayedCount = stages.filter(s => Boolean(s.motivoAtraso)).length;
+  const delayedIds = new Set(schedule?.atrasos?.map(delay => delay.etapaId));
+  const delayedCount = stages.filter(s => Boolean(s.motivoAtraso) || delayedIds.has(s.id)).length;
+  const visibleNodes = sequenceView
+    ? rootGroups.flatMap(group => group.subGroups.flatMap(sub => sub.nodes)).sort((a, b) => (scheduleById.get(a.id)?.ordem ?? a.posicao ?? 0) - (scheduleById.get(b.id)?.ordem ?? b.posicao ?? 0))
+    : [...(activeSub?.nodes ?? [])].sort((a, b) => (scheduleById.get(a.id)?.ordem ?? a.posicao ?? 0) - (scheduleById.get(b.id)?.ordem ?? b.posicao ?? 0));
+  const isSequenceAvailable = schedule?.atrasos?.some(delay => delay.status === 'APLICADO');
+  const chosen = stages.find(stage => stage.id === openStageId);
+  const candidates = (flow.delay?.sugestoes ?? []).flatMap(suggestion => {
+    const stage = stages.find(item => item.id === suggestion.etapaId);
+    if (!stage?.id || !suggestion.justificativa) return [];
+    return [{ id: stage.id, code: stage.codigoEap ?? '', name: stage.nome ?? stage.descricao ?? '', justification: suggestion.justificativa }];
+  });
+  const dateRange = (stage?: { inicio?: string; fim?: string }) => `${dateLabel(stage?.inicio, schedule?.fusoHorario)} → ${dateLabel(stage?.fim, schedule?.fusoHorario)}`;
+  const changes = flow.preview?.depois?.etapas?.map(stage => ({
+    id: stage.id!, order: (stage.ordem ?? 0) + 1,
+    name: stages.find(item => item.id === stage.id)?.nome ?? stage.descricao ?? '',
+    before: dateRange(flow.preview?.antes?.etapas?.find(item => item.id === stage.id)), after: dateRange(stage),
+  }));
+  function openStage(id: string) {
+    if (flow.busy) return;
+    if (openStageId === id) { closePopover(); return; }
+    if (flow.delay?.etapaId !== id || flow.delay?.status === 'APLICADO') {
+      const pending = [...(schedule?.atrasos ?? [])].reverse().find(delay => delay.etapaId === id && delay.status !== 'APLICADO');
+      flow.open(pending);
+    }
+    setOpenStageId(id); setNotice('');
+  }
+
 
   if (obrasQuery.isLoading || etapasQuery.isLoading) {
      return <div className="min-h-screen bg-background flex items-center justify-center blueprint-grid"><p className="animate-pulse text-muted-foreground font-bold font-mono">Carregando trilha...</p></div>;
   }
 
+  if (obrasQuery.isError || etapasQuery.isError) {
+    return <div className="min-h-screen bg-background grid place-items-center p-6 blueprint-grid"><div role="alert" className="text-center"><p>Não foi possível carregar a obra e suas etapas.</p><button type="button" className="mt-3 min-h-12 rounded-lg bg-primary px-4 font-bold text-white" onClick={() => { void obrasQuery.refetch(); void etapasQuery.refetch(); }}>Tentar novamente</button></div></div>;
+  }
+
   if (!obra) {
-     return <div className="min-h-screen bg-background flex items-center justify-center blueprint-grid"><p className="text-muted-foreground">Obra não encontrada.</p></div>;
+     return (
+       <div className="min-h-screen bg-background grid place-items-center p-6 blueprint-grid">
+         <section className="w-full max-w-lg rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+           <HardHat className="mx-auto size-10 text-primary" aria-hidden="true" />
+           <h1 className="mt-4 text-xl font-extrabold">{requestedObraId ? 'Obra não encontrada' : 'Nenhuma obra cadastrada'}</h1>
+           <p className="mt-2 text-sm text-muted-foreground">Cadastre uma obra para começar a acompanhar o cronograma.</p>
+           <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
+             <Link to="/obras/nova" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-action px-5 font-extrabold text-action-foreground shadow-action focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Cadastrar obra</Link>
+             <Link to="/obras" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-border px-5 font-bold text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Ver obras</Link>
+           </div>
+         </section>
+       </div>
+     );
   }
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans flex flex-col blueprint-grid">
       <header className="bg-primary-deep text-white pt-6 border-b border-border shadow-md relative z-10">
         <div className="max-w-[1500px] mx-auto px-4 lg:px-8">
-          <div className="flex items-center gap-3">
-             <div className="bg-white/10 p-2 rounded-lg">
+          <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+             <div className="shrink-0 rounded-lg bg-white/10 p-2">
                 <HardHat className="size-8 text-white" />
              </div>
-             <div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight leading-none text-white">{obra.descricao}</h1>
+             <div className="min-w-0">
+                <h1 className="break-words text-base font-extrabold uppercase leading-tight tracking-tight text-white sm:text-3xl">{obra.descricao}</h1>
                 <p className="text-primary-soft mt-1 font-mono text-sm">{rootGroups.length} macroetapas • Orçamento total <span className="font-bold text-white">{money.format(totalBudget)}</span></p>
              </div>
+          </div>
+          <Link to="/obras" className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-white/25 px-3 text-xs font-bold text-white/90 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:text-sm">Obras</Link>
           </div>
           
           <div className="grid grid-cols-3 divide-x divide-white/20 border-y border-white/20 mt-8">
@@ -164,7 +244,7 @@ export const TimelinePage: React.FC = () => {
                    return (
                       <button 
                         key={group.id}
-                        onClick={() => { setActiveRootId(group.id); setActiveSubId(null); }}
+                        onClick={() => { setActiveRootId(group.id); setActiveSubId(null); setSequenceView(false); closePopover(); }}
                         className={`shrink-0 px-5 py-4 rounded-t-xl font-bold text-sm whitespace-nowrap border-t-4 transition-all hover:bg-white/10 ${isActive ? 'bg-white text-primary-deep border-orange-500 shadow-sm' : 'bg-white/5 text-white/70 border-transparent'}`}
                       >
                          {group.id}.0.0 {group.name.toUpperCase()}
@@ -208,7 +288,7 @@ export const TimelinePage: React.FC = () => {
                    <div 
                      key={sub.id} 
                      className="relative cursor-pointer group"
-                     onClick={() => setActiveSubId(sub.id)}
+                     onClick={() => { setActiveSubId(sub.id); setSequenceView(false); closePopover(); }}
                    >
                       <div className={`absolute -left-[37px] top-1 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors shadow-sm border-2 ${isActive ? 'bg-primary border-primary text-white scale-110' : 'bg-background border-border text-muted-foreground group-hover:border-primary/50'}`}>
                          {i + 1}
@@ -227,21 +307,28 @@ export const TimelinePage: React.FC = () => {
          <section className="flex flex-col gap-6">
             <div className="mb-8">
                <div className="text-[10px] font-extrabold text-action tracking-widest uppercase mb-1">
-                  NÍVEL DETALHADO • {activeSub?.id}.0
+                  {sequenceView ? 'SEQUÊNCIA DE EXECUÇÃO DA OBRA' : `NÍVEL DETALHADO • ${activeSub?.id}.0`}
                </div>
-               <h2 className="text-2xl sm:text-3xl font-extrabold uppercase leading-tight text-foreground">{activeSub?.name}</h2>
+               <h2 className="text-2xl sm:text-3xl font-extrabold uppercase leading-tight text-foreground">{sequenceView ? 'Cronograma reprogramado' : activeSub?.name}</h2>
+               {isSequenceAvailable && <button type="button" className="mt-3 min-h-12 rounded-lg border border-primary px-4 text-sm font-bold text-primary focus-visible:ring-2 focus-visible:ring-ring" onClick={() => { setSequenceView(!sequenceView); closePopover(); }}>{sequenceView ? 'Ver por macroetapa' : 'Ver sequência de execução'}</button>}
+               {notice && <p role="status" className="mt-3 text-sm font-bold text-primary">{notice}</p>}
+               {scheduleQuery.isError && <p role="alert" className="mt-3 text-sm text-warning">Não foi possível carregar o cronograma. <button type="button" className="min-h-12 underline" onClick={() => void scheduleQuery.refetch()}>Tentar novamente</button></p>}
             </div>
 
+            {visibleNodes.length === 0 && <p className="text-sm text-muted-foreground">Nenhum serviço cadastrado nesta macroetapa.</p>}
             <div className="relative mt-8 mb-16 w-full max-w-4xl mx-auto">
                <div className="absolute left-1/2 top-4 bottom-4 w-0 border-l-2 border-dashed border-border -translate-x-1/2 z-0"></div>
                <div className="space-y-16">
-                  {activeSub?.nodes.map((node, index) => {
+                  {visibleNodes.map((node, index) => {
+                     const planned = scheduleById.get(node.id);
+                     const isDelayed = delayedIds.has(node.id);
                      const isDone = node.progress >= 100;
                      const isStarted = node.progress > 0 && !isDone;
                      const isLeft = index % 2 === 0;
 
                      return (
-                        <div key={node.id} className={`flex w-full items-start ${isLeft ? 'flex-row' : 'flex-row-reverse'}`}>
+                        <div key={node.id} className={`relative ${openStageId === node.id ? 'z-popover' : 'z-0'}`}>
+                        <div data-stage-id={node.id} className={`flex w-full items-start ${isLeft ? 'flex-row' : 'flex-row-reverse'}`}>
                            
                            <div className={`w-1/2 flex relative ${isLeft ? 'justify-end pr-8 sm:pr-12' : 'justify-start pl-8 sm:pl-12'}`}>
                               <div className={`absolute top-6 w-8 sm:w-12 border-t-2 border-dashed border-border z-0 ${isLeft ? 'right-0' : 'left-0'}`}></div>
@@ -252,7 +339,9 @@ export const TimelinePage: React.FC = () => {
                                     <ChevronDown className="size-3 ml-1 opacity-50" />
                                  </div>
 
-                                 <h4 className="font-extrabold text-sm sm:text-base text-foreground uppercase leading-snug">{node.title}</h4>
+                                 <h4 className="font-extrabold text-sm sm:text-base text-foreground uppercase leading-snug">{node.nome}</h4>
+                                 {(planned?.inicio || planned?.fim) && <p className="mt-2 text-xs font-mono text-muted-foreground">{dateRange(planned)}</p>}
+                                 {isDelayed && <p className="mt-2 text-xs font-bold text-warning">Atraso apontado</p>}
                                  
                                  <p className="font-mono text-[9px] sm:text-[10px] text-muted-foreground mt-2 uppercase font-bold">
                                     {node.progress}% MEDIDO • {quantity.format(node.executedQuantity)} {node.unidadeOrcamento} DE {quantity.format(node.plannedQuantity)} {node.unidadeOrcamento}
@@ -266,15 +355,47 @@ export const TimelinePage: React.FC = () => {
                               </div>
                            </div>
 
-                           <div className="relative flex justify-center shrink-0 w-0 z-10">
-                              <div className="absolute top-0 -translate-y-2 grid place-items-center w-12 h-12 sm:w-14 sm:h-14 bg-background border-[6px] border-muted/30 rounded-full shadow-sm z-10">
+                           <div className="relative flex justify-center shrink-0 self-stretch w-0 z-30">
+                              {openStageId === node.id && flow.delay?.status === 'PRONTO' && (
+                                 <div aria-hidden="true" className="absolute top-12 bottom-0 w-0 border-l-2 border-dashed border-primary-soft -translate-x-1/2 z-10" />
+                              )}
+                              <button type="button" data-node-id={node.id} aria-label={`Abrir etapa ${node.codigoEap} ${node.nome}`} aria-expanded={openStageId === node.id} disabled={flow.busy} onClick={event => { triggerRef.current = event.currentTarget; openStage(node.id); }} className={`absolute top-0 -translate-y-2 grid place-items-center w-12 h-12 sm:w-14 sm:h-14 bg-background border-[6px] rounded-full shadow-sm z-10 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 ${isDelayed ? 'border-warning/40' : 'border-muted/30'}`}>
                                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-border bg-white flex items-center justify-center">
-                                    <ClipboardList className="size-4 sm:size-5 text-primary-deep" />
+                                    {isDelayed ? <TriangleAlert className="size-4 sm:size-5 text-warning" /> : <ClipboardList className="size-4 sm:size-5 text-primary-deep" />}
                                  </div>
-                              </div>
+                              </button>
+
+                              {openStageId === node.id && chosen && flow.delay?.status !== 'PRONTO' && (
+                                 <div className={`absolute z-popover top-14 left-1/2 -translate-x-1/2 sm:top-0 sm:translate-x-0 ${isLeft ? 'sm:left-10 sm:right-auto' : 'sm:right-10 sm:left-auto'} w-[calc(100vw-2rem)] sm:w-[26rem] max-w-sm sm:max-w-md animate-in fade-in zoom-in-95 duration-150`}>
+                                    <StageDelayPopover
+                                       key={node.id}
+                                       name={chosen.nome ?? chosen.descricao ?? ''}
+                                       code={chosen.codigoEap ?? ''}
+                                       dates={dateRange(planned)}
+                                       completed={isDone || planned?.status === 'CONCLUIDA'}
+                                       busy={flow.busy || scheduleQuery.isLoading}
+                                       error={flow.error}
+                                       missingPlanning={missingPlanning}
+                                       saved={Boolean(flow.delay)}
+                                       onClose={closePopover}
+                                       onSubmit={(reason, days) => flow.submit(node.id, reason, days, missingPlanning > 0)}
+                                       onRetry={flow.retry}
+                                    />
+                                 </div>
+                              )}
                            </div>
                            
                            <div className="w-1/2"></div>
+                        </div>
+                        {openStageId === node.id && chosen && flow.delay?.status === 'PRONTO' && (
+                          <div className="relative z-popover pt-0">
+                            <StageAdvanceBranches
+                              candidates={candidates} selected={flow.selected} busy={flow.busy} error={flow.error}
+                              changes={changes} finishBefore={dateLabel(flow.preview?.terminoAntes, schedule?.fusoHorario)} finishAfter={dateLabel(flow.preview?.terminoDepois, schedule?.fusoHorario)}
+                              onToggle={flow.toggle} onMove={flow.move} onPreview={flow.simulate} onConfirm={flow.confirm} onRetry={flow.retry} onClose={closePopover}
+                            />
+                          </div>
+                        )}
                         </div>
                      );
                   })}

@@ -5,11 +5,28 @@ salvo antes de chamar a IA. A resposta lista IDs e justificativas em ordem de
 prioridade. A simulação e a aplicação recebem os IDs na ordem escolhida pelo
 usuário; confirmar aplica a sequência e as datas juntas.
 
-O frontend desta branch mantém a interface da `main`, incluindo a trilha, o tema,
-os componentes e as medições. A tela alternativa de cronograma foi removida.
-Os endpoints de IA estão disponíveis no cliente Orval gerado; os controles para
-selecionar sugestões, ajustar a ordem e confirmar datas ainda serão integrados
-à interface existente.
+O frontend mantém a trilha e o tema da `main`. Clicar no nó circular abre um
+popover com dias aproximados e motivo do atraso. Depois da análise, as sugestões
+aparecem como ramificações de escolha, sem criar dependências. O usuário seleciona
+os nós, ajusta a ordem com as setas e confere a prévia de sequência e datas antes
+de confirmar. Alterar a seleção ou a ordem descarta a prévia anterior.
+
+Ao aplicar, a trilha passa a mostrar a sequência de execução da obra inteira,
+inclusive etapas antecipadas de outras macroetapas. A ordem vem do cronograma
+persistido e permanece após recarregar a página. A EAP conserva seus códigos e
+agrupamentos; o botão de visualização permite voltar às macroetapas.
+
+Falhas de análise permitem repetir a chamada usando o apontamento já salvo.
+Conflitos ao simular ou confirmar impedem usar a prévia anterior. A tela apresenta
+carregamento, erros recuperáveis e ausência de candidatas explicitamente.
+
+A API permite salvar o apontamento de atraso mesmo em etapas que ainda não
+possuam planejamento completo de datas. Entretanto, a análise da IA, simulação
+e recálculo das datas exigem início, término e duração em todas as etapas da obra.
+Enquanto faltar planejamento, o popover explica quantas etapas precisam dele,
+permite salvar o registro de atraso e mantém a chamada à IA desabilitada.
+Nenhuma data é inventada para a obra importada. As demonstrações com datas de exemplo
+ficam no Storybook, e os testes usam respostas de API controladas.
 
 ## Regras implementadas
 
@@ -108,6 +125,7 @@ cd ../web
 npm test
 npm run build
 npm run lint
+npm run test:e2e
 ```
 
 Testes de domínio cobrem propagação transitiva, paralelismo, ordem escolhida,
@@ -115,4 +133,6 @@ pré-requisitos, datas reais, reprogramações sucessivas, horário de verão e 
 grafo de 5.000 etapas. Integração cobre persistência, histórico, respostas
 inválidas, falhas da IA, concorrência e repetição da confirmação. A integração
 também cobre os endpoints existentes de cadastro, listagem e medição da EAP,
-incluindo etapas sem planejamento. A interface é a mesma da `main`.
+incluindo etapas sem planejamento. Os testes do frontend cobrem o fluxo de atraso, seleção, edição da ordem, prévia,
+confirmação, persistência visual após recarregar, recuperação de falhas e
+acessibilidade em tamanhos de celular e tablet. O estilo da trilha segue a `main`.
