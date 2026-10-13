@@ -3,6 +3,7 @@ package br.com.concordia.domain.obra.entities;
 import br.com.concordia.domain.cronograma.StatusEtapa;
 import br.com.concordia.domain.obra.valueobjects.CpmInfo;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -64,20 +65,24 @@ public class EtapaObra {
     @JoinColumn(name = "id_etapa_obra", nullable = false)
     private List<ItemOrcamento> orcamentos = new ArrayList<>();
 
-    public EtapaObra(@NonNull String descricao, @NonNull OffsetDateTime inicio, @NonNull Integer prazoEsperadoDias) {
-        this(descricao, inicio, prazoEsperadoDias, inicio.getOffset());
+    @OneToMany(mappedBy = "etapa", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("registradaEm ASC")
+    private List<MedicaoEtapa> medicoes = new ArrayList<>();
+
+    public EtapaObra(@NonNull String descricao, OffsetDateTime inicio, Integer prazoEsperadoDias) {
+        this(descricao, inicio, prazoEsperadoDias, inicio == null ? java.time.ZoneOffset.UTC : inicio.getOffset());
     }
 
     public EtapaObra(
-            @NonNull String descricao,
-            @NonNull OffsetDateTime inicio,
-            @NonNull Integer prazoEsperadoDias,
-            @NonNull ZoneId fuso) {
+            @NonNull String descricao, OffsetDateTime inicio, Integer prazoEsperadoDias, @NonNull ZoneId fuso) {
         this.descricao = descricao;
         this.inicio = inicio;
         this.prazoEsperadoDias = prazoEsperadoDias;
-        if (prazoEsperadoDias <= 0) throw new IllegalArgumentException("A duração deve ser positiva.");
-        this.fim = inicio.atZoneSameInstant(fuso).plusDays(prazoEsperadoDias).toOffsetDateTime();
+        if (prazoEsperadoDias != null && prazoEsperadoDias <= 0)
+            throw new IllegalArgumentException("A duração deve ser positiva.");
+        this.fim = inicio == null || prazoEsperadoDias == null
+                ? null
+                : inicio.atZoneSameInstant(fuso).plusDays(prazoEsperadoDias).toOffsetDateTime();
         this.inicioOriginal = inicio;
         this.fimOriginal = fim;
     }
@@ -117,5 +122,17 @@ public class EtapaObra {
         this.status = status;
         this.inicioReal = inicioReal;
         this.fimReal = fimReal;
+    }
+
+    public MedicaoEtapa registrarMedicao(
+            @NonNull BigDecimal percentualExecutado,
+            @NonNull BigDecimal quantidadeExecutada,
+            String observacao,
+            String motivoAtraso,
+            Integer diasAtraso) {
+        var medicao =
+                new MedicaoEtapa(this, percentualExecutado, quantidadeExecutada, observacao, motivoAtraso, diasAtraso);
+        medicoes.add(medicao);
+        return medicao;
     }
 }

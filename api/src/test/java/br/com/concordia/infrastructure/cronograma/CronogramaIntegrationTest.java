@@ -241,6 +241,58 @@ class CronogramaIntegrationTest {
                         HttpResponse.BodyHandlers.ofString());
     }
 
+    private HttpResponse<String> requestObra(String method, String path, Object body) throws Exception {
+        var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/api/obras/" + obraId + path))
+                .header("Content-Type", "application/json")
+                .method(
+                        method,
+                        body == null
+                                ? HttpRequest.BodyPublishers.noBody()
+                                : HttpRequest.BodyPublishers.ofString(json.escrever(body)))
+                .build();
+        return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    @Test
+    void preservaCadastroSemDatasListagemEMedicoesUsadosPelaTelaDaMain() throws Exception {
+        var cadastro = requestObra(
+                "POST",
+                "/etapas",
+                Map.of(
+                        "nome",
+                        "Etapa da EAP",
+                        "descricao",
+                        "Etapa da EAP",
+                        "posicao",
+                        1000,
+                        "codigoEap",
+                        "1.1",
+                        "macroetapa",
+                        "Fundação",
+                        "quantidadeOrcada",
+                        8));
+        assertThat(cadastro.statusCode()).isEqualTo(201);
+        var etapa = json.ler(cadastro.body(), br.com.concordia.infrastructure.obra.dtos.EtapaResponse.class);
+        assertThat(etapa.id()).isNotNull();
+        assertThat(etapa.inicio()).isNull();
+        assertThat(etapa.prazoEsperadoDias()).isNull();
+        var listagem = requestObra("GET", "/etapas", null);
+        assertThat(listagem.statusCode()).isEqualTo(200);
+        assertThat(json.ler(listagem.body(), br.com.concordia.infrastructure.obra.dtos.EtapaResponse[].class))
+                .extracting(br.com.concordia.infrastructure.obra.dtos.EtapaResponse::id)
+                .containsExactly(etapa.id());
+        var versao = cronogramas.consultar(obraId).cronograma().versao();
+        var medicao = requestObra(
+                "POST",
+                "/etapas/" + etapa.id() + "/medicoes",
+                Map.of("percentualExecutado", 25, "quantidadeExecutada", 2));
+        assertThat(medicao.statusCode()).isEqualTo(200);
+        var medida = json.ler(medicao.body(), br.com.concordia.infrastructure.obra.dtos.EtapaResponse.class);
+        assertThat(medida.percentualExecutado()).isEqualByComparingTo("25");
+        assertThat(cronogramas.consultar(obraId).cronograma().versao()).isGreaterThan(versao);
+        assertThat(buscar(etapa.id()).inicio()).isNull();
+    }
+
     @Test
     void executaFluxoPelosEndpointsHttpEValidaCorpos() throws Exception {
         var response = post(

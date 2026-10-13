@@ -1,0 +1,67 @@
+@import './theme/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Blueprint Grid Background Pattern idêntico ao original */
+.blueprint-grid {
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--blueprint) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--blueprint) 14%, transparent) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Tactile 3D Nodes and Buttons idênticos ao original */
+.node-tactile {
+  box-shadow: 0 7px 0 var(--node-depth), 0 13px 22px color-mix(in oklab, var(--node-color) 22%, transparent), inset 0 2px 0 color-mix(in oklab, white 34%, transparent);
+  background: var(--node-color);
+  border-color: color-mix(in oklab, var(--node-color) 70%, white);
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.node-tactile:hover {
+  transform: translateY(-3px) scale(1.04);
+}
+
+.node-tactile:active {
+  transform: translateY(5px);
+  box-shadow: 0 2px 0 var(--node-depth);
+}
+
+/* Sombras táteis dos botões */
+.shadow-tactile {
+  box-shadow: var(--shadow-tactile);
+}
+
+.shadow-action {
+  box-shadow: var(--shadow-action);
+}
+
+/* Active Node Pulse Animation */
+@keyframes active-pulse {
+  0%, 100% { box-shadow: 0 0 0 7px color-mix(in oklab, var(--primary) 14%, transparent); }
+  50% { box-shadow: 0 0 0 15px color-mix(in oklab, var(--primary) 4%, transparent); }
+}
+
+.active-pulse {
+  animation: active-pulse 2.2s ease-in-out infinite;
+}
+
+/* Gold Floating Badge Animation */
+@keyframes gold-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.gold-float {
+  animation: gold-float 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}

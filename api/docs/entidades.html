@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concordia — Diagrama de Entidades</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+
+  <style>
+    :root {
+      --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+
+      /* Dark / Blueprint (Padrão) */
+      --bg-canvas: #090e17;
+      --bg-panel: rgba(15, 23, 42, 0.85);
+      --border-panel: #1e293b;
+      --border-btn: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --grid-line: rgba(56, 189, 248, 0.04);
+      --grid-dot: rgba(56, 189, 248, 0.1);
+    }
+
+    [data-theme="light"] {
+      --bg-canvas: #f8fafc;
+      --bg-panel: rgba(255, 255, 255, 0.9);
+      --border-panel: #e2e8f0;
+      --border-btn: #cbd5e1;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      --grid-line: rgba(2, 132, 199, 0.04);
+      --grid-dot: rgba(2, 132, 199, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: var(--font-sans);
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    /* Grid de Fundo Técnico */
+    .blueprint-bg {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: 
+        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px),
+        radial-gradient(circle, var(--grid-dot) 1px, transparent 1px);
+      background-size: 32px 32px, 32px 32px, 16px 16px;
+      z-index: 0;
+    }
+
+    /* Viewport Fullscreen */
+    #viewport {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+      cursor: grab;
+      z-index: 1;
+    }
+
+    #viewport.grabbing {
+      cursor: grabbing;
+    }
+
+    #transformWrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    #diagramContainer {
+      display: inline-block;
+    }
+
+    #diagramContainer svg {
+      display: block;
+      max-width: none !important;
+      filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.45));
+    }
+
+    /* Controles Flutuantes Minimalistas */
+    .floating-controls {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border-panel);
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      z-index: 20;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      height: 34px;
+      padding: 0 12px;
+      border-radius: 6px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border-btn);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+
+    .btn-icon {
+      width: 34px;
+      padding: 0;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .zoom-level-text {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      min-width: 58px;
+      text-align: center;
+    }
+
+    .separator {
+      width: 1px;
+      height: 20px;
+      background: var(--border-btn);
+      margin: 0 4px;
+    }
+
+    /* Dica Minimalista no Topo */
+    .hint-badge {
+      position: fixed;
+      top: 16px;
+      left: 20px;
+      padding: 8px 14px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-panel);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      pointer-events: none;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hint-badge strong {
+      color: var(--text-main);
+    }
+
+    /* Loader */
+    #loader {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: var(--bg-canvas);
+      z-index: 50;
+      transition: opacity 0.3s ease;
+    }
+
+    .spinner {
+      width: 46px;
+      height: 46px;
+      border: 3px solid rgba(56, 189, 248, 0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="blueprint-bg"></div>
+
+  <!-- Loader -->
+  <div id="loader">
+    <div class="spinner"></div>
+    <div style="font-family: var(--font-mono); font-size: 13px; color: var(--text-muted);">
+      Renderizando diagrama de entidades...
+    </div>
+  </div>
+
+  <!-- Dica de Navegação -->
+  <div class="hint-badge">
+    <span>💡 <strong>Arraste</strong> para mover • <strong>Scroll do mouse</strong> para Zoom livre (até 1000%)</span>
+  </div>
+
+  <!-- Viewport de Tela Inteira -->
+  <div id="viewport">
+    <div id="transformWrapper">
+      <div id="diagramContainer"></div>
+    </div>
+  </div>
+
+  <!-- Barra de Controles Flutuante -->
+  <div class="floating-controls">
+    <button id="btnZoomOut" class="btn btn-icon" title="Diminuir Zoom (-)">−</button>
+    <div id="zoomText" class="zoom-level-text">100%</div>
+    <button id="btnZoomIn" class="btn btn-icon" title="Aumentar Zoom (+)">+</button>
+    
+    <div class="separator"></div>
+
+    <button id="btnZoom100" class="btn" title="Tamanho Real (100% legível)">100% Real</button>
+    <button id="btnFit" class="btn" title="Ver Diagrama Completo">Ajustar à Tela</button>
+
+    <div class="separator"></div>
+
+    <button id="btnTheme" class="btn" title="Alternar Modo Escuro / Claro">
+      <span id="themeText">Modo Claro</span>
+    </button>
+  </div>
+
+  <script>
+    const MERMAID_CODE = `classDiagram
+    direction TB
+
+    %% Relacionamentos principais da Obra
+    Obra "1" *-- "0..*" ItemEap : contém (eap)
+    Obra "1" *-- "0..*" EtapaObra : possui (etapas)
+    Obra "*" --> "0..1" Empresa : contratada (empresa)
+    Obra "*" --> "1" StatusObra : status
+    Obra "*" --> "1" UnidadeFederativa : uf
+
+    %% Relacionamentos da EAP e Etapas
+    ItemEap "*" --> "1" Obra : pertence a
+    ItemEap "0..1" *-- "0..*" ItemEap : hierarquia (pai/filhos)
+    ItemEap "0..1" o-- "0..1" EtapaObra : associa-se (etapa)
+
+    %% Relacionamentos da Etapa de Obra
+    EtapaObra "1" *-- "1" CpmInfo : cpm (embedded)
+    EtapaObra "1" *-- "0..*" ItemOrcamento : orçamentos
+    EtapaObra "1" *-- "0..*" MedicaoEtapa : medições
+    EtapaObra "*" <--> "*" EtapaObra : dependência CPM (predecessores/sucessores)
+
+    %% Relacionamento de Medição
+    MedicaoEtapa "*" --> "1" EtapaObra : etapa
+
+    %% Herança e associações de Itens de Orçamento
+    ItemOrcamentoInsumo --|> ItemOrcamento : é um
+    ItemOrcamentoComposicao --|> ItemOrcamento : é um
+    ItemOrcamentoInsumo "*" --> "1" Insumo : referencia
+    ItemOrcamentoComposicao "*" --> "1" Composicao : referencia
+
+    %% Composite Pattern de Composição e Insumos
+    Insumo --|> ItemComposicao : é um
+    Composicao --|> ItemComposicao : é um
+    Composicao "1" *-- "0..*" ItemComposicao : itens (composicaoPai)
+    ItemComposicao "*" --> "1" UnidadeMedida : unidade
+
+    %% Definições de Classes
+    class Obra {
+        -UUID id
+        -String descricao
+        -StatusObra status
+        -Empresa empresa
+        -UnidadeFederativa uf
+        -ZoneId fusoHorario
+        -List~EtapaObra~ etapas
+        -List~ItemEap~ eap
+        +atualizar(String, UnidadeFederativa, ZoneId, Empresa)
+        +atualizarParcial(String, UnidadeFederativa, ZoneId, Empresa)
+        +adicionarEtapa(EtapaObra)
+        +adicionarItemEap(ItemEap)
+    }
+
+    class Empresa {
+        -UUID id
+        -String nome
+        -String cnpj
+        -String razaoSocial
+        +atualizar(String, String, String)
+        +atualizarParcial(String, String, String)
+    }
+
+    class ItemEap {
+        -UUID id
+        -String nome
+        -String codigoEap
+        -String bancoOrcamento
+        -String codigoComposicao
+        -String tipoComposicao
+        -String macroetapa
+        -String unidadeOrcamento
+        -BigDecimal quantidadeOrcada
+        -BigDecimal valorUnitarioOrcado
+        -BigDecimal valorUnitarioBase
+        -BigDecimal percentualBdi
+        -BigDecimal valorTotalOrcado
+        -Obra obra
+        -Double posicao
+        -ItemEap pai
+        -List~ItemEap~ filhos
+        -EtapaObra etapa
+        +atualizarDadosOrcamento(...)
+    }
+
+    class EtapaObra {
+        -UUID id
+        -String descricao
+        -OffsetDateTime inicio
+        -OffsetDateTime fim
+        -Integer prazoEsperadoDias
+        -CpmInfo cpm
+        -List~EtapaObra~ predecessores
+        -List~EtapaObra~ sucessores
+        -List~ItemOrcamento~ orcamentos
+        -List~MedicaoEtapa~ medicoes
+        +registrarMedicao(BigDecimal, BigDecimal, String, String, Integer) MedicaoEtapa
+    }
+
+    class CpmInfo {
+        <<embeddable>>
+        -OffsetDateTime earlyStart
+        -OffsetDateTime earlyFinish
+        -OffsetDateTime lateStart
+        -OffsetDateTime lateFinish
+        -Integer folgaDias
+        -Boolean caminhoCritico
+    }
+
+    class MedicaoEtapa {
+        -UUID id
+        -EtapaObra etapa
+        -BigDecimal percentualExecutado
+        -BigDecimal quantidadeExecutada
+        -String observacao
+        -String motivoAtraso
+        -Integer diasAtraso
+        -OffsetDateTime registradaEm
+    }
+
+    class ItemOrcamento {
+        <<abstract>>
+        -UUID id
+        -BigDecimal quantidade
+    }
+
+    class ItemOrcamentoInsumo {
+        -Insumo insumo
+    }
+
+    class ItemOrcamentoComposicao {
+        -Composicao composicao
+    }
+
+    class ItemComposicao {
+        <<abstract>>
+        -UUID id
+        -String codigo
+        -String descricao
+        -UnidadeMedida unidade
+        -BigDecimal preco
+        -Composicao composicaoPai
+        +atualizar(String, String, UnidadeMedida, BigDecimal)
+        +atualizarParcial(String, String, UnidadeMedida, BigDecimal)
+    }
+
+    class Insumo {
+    }
+
+    class Composicao {
+        -List~ItemComposicao~ itens
+        +getItens() List~UUID~
+        +adicionarItem(ItemComposicao) Composicao
+        +removerItem(ItemComposicao)
+    }
+
+    class StatusObra {
+        <<enumeration>>
+        EM_PLANEJAMENTO
+        EM_ANDAMENTO
+        PAUSADA
+        CONCLUIDA
+        CANCELADA
+    }
+
+    class UnidadeFederativa {
+        <<enumeration>>
+        AC
+        AL
+        AP
+        AM
+        BA
+        CE
+        DF
+        ES
+        GO
+        MA
+        MT
+        MS
+        MG
+        PA
+        PB
+        PR
+        PE
+        PI
+        RJ
+        RN
+        RS
+        RO
+        RR
+        SC
+        SP
+        SE
+        TO
+    }
+
+    class UnidadeMedida {
+        <<enumeration>>
+        KG
+        G
+        TON
+        M
+        M2
+        M3
+        KM
+        KM_T
+        M3_KM
+        H
+        MES
+        DIA
+        UN
+        MIL
+        CENT
+        DZ
+        PAR
+        CJ
+        JG
+        KIT
+        L
+        GL
+        CX
+        SC
+        RL
+        TB
+        LATA
+        KWH
+        TX
+        VB
+    }`;
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: 'transparent',
+        primaryColor: '#0f172a',
+        primaryTextColor: '#f8fafc',
+        primaryBorderColor: '#38bdf8',
+        lineColor: '#38bdf8',
+        secondaryColor: '#1e293b',
+        tertiaryColor: '#090e17',
+        fontFamily: 'Manrope, sans-serif',
+        fontSize: '15px'
+      }
+    });
+
+    const viewport = document.getElementById('viewport');
+    const transformWrapper = document.getElementById('transformWrapper');
+    const diagramContainer = document.getElementById('diagramContainer');
+    const zoomText = document.getElementById('zoomText');
+    const loader = document.getElementById('loader');
+
+    // Escala inicial confortável (1.0 = 100% legível)
+    let scale = 1.0;
+    let translateX = 0;
+    let translateY = 0;
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+
+    function updateTransform() {
+      transformWrapper.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+      zoomText.textContent = `${Math.round(scale * 100)}%`;
+    }
+
+    async function initDiagram() {
+      try {
+        const { svg } = await mermaid.render('concordiaDiagramSvg', MERMAID_CODE);
+        diagramContainer.innerHTML = svg;
+
+        const svgEl = diagramContainer.querySelector('svg');
+        if (svgEl) {
+          const vb = svgEl.viewBox.baseVal;
+          if (vb && vb.width > 0) {
+            svgEl.style.width = vb.width + 'px';
+            svgEl.style.height = vb.height + 'px';
+          }
+        }
+
+        // Posiciona inicialmente em 100% com a classe Obra em foco central
+        setTimeout(() => {
+          centerAtScale(1.0);
+          loader.style.opacity = '0';
+          setTimeout(() => loader.style.display = 'none', 250);
+        }, 80);
+      } catch (err) {
+        console.error('Erro:', err);
+        loader.innerHTML = `<div style="color:#ef4444; padding:20px;">Erro: ${err.message}</div>`;
+      }
+    }
+
+    function centerAtScale(targetScale) {
+      const svgEl = diagramContainer.querySelector('svg');
+      if (!svgEl) return;
+
+      const vb = svgEl.viewBox.baseVal;
+      const svgW = (vb && vb.width) ? vb.width : 2136;
+
+      scale = targetScale;
+      translateX = (window.innerWidth - svgW * scale) / 2;
+      translateY = 80; // Dá uma folga agradável do topo
+      updateTransform();
+    }
+
+    function fitToScreen() {
+      const svgEl = diagramContainer.querySelector('svg');
+      if (!svgEl) return;
+
+      const vb = svgEl.viewBox.baseVal;
+      const svgW = (vb && vb.width) ? vb.width : 2136;
+      const svgH = (vb && vb.height) ? vb.height : 2876;
+
+      const padding = 60;
+      const availW = window.innerWidth - padding * 2;
+      const availH = window.innerHeight - padding * 2;
+
+      scale = Math.min(availW / svgW, availH / svgH);
+      translateX = (window.innerWidth - svgW * scale) / 2;
+      translateY = (window.innerHeight - svgH * scale) / 2;
+
+      updateTransform();
+    }
+
+    // Pan / Drag com mouse
+    viewport.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.floating-controls')) return;
+      isDragging = true;
+      startX = e.clientX - translateX;
+      startY = e.clientY - translateY;
+      viewport.classList.add('grabbing');
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      translateX = e.clientX - startX;
+      translateY = e.clientY - startY;
+      updateTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+      viewport.classList.remove('grabbing');
+    });
+
+    // Zoom livre por scroll (de 5% até 1000%!)
+    viewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 1.18 : 0.82;
+      const newScale = Math.min(Math.max(scale * factor, 0.05), 10.0);
+
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+
+      translateX = mouseX - (mouseX - translateX) * (newScale / scale);
+      translateY = mouseY - (mouseY - translateY) * (newScale / scale);
+      scale = newScale;
+
+      updateTransform();
+    }, { passive: false });
+
+    // Botões de Zoom
+    document.getElementById('btnZoomIn').addEventListener('click', () => {
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      const newScale = Math.min(scale * 1.3, 10.0);
+
+      translateX = centerX - (centerX - translateX) * (newScale / scale);
+      translateY = centerY - (centerY - translateY) * (newScale / scale);
+      scale = newScale;
+      updateTransform();
+    });
+
+    document.getElementById('btnZoomOut').addEventListener('click', () => {
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      const newScale = Math.max(scale * 0.75, 0.05);
+
+      translateX = centerX - (centerX - translateX) * (newScale / scale);
+      translateY = centerY - (centerY - translateY) * (newScale / scale);
+      scale = newScale;
+      updateTransform();
+    });
+
+    document.getElementById('btnZoom100').addEventListener('click', () => {
+      centerAtScale(1.0);
+    });
+
+    document.getElementById('btnFit').addEventListener('click', () => {
+      fitToScreen();
+    });
+
+    // Alternar Tema
+    const btnTheme = document.getElementById('btnTheme');
+    const themeText = document.getElementById('themeText');
+    btnTheme.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      themeText.textContent = next === 'dark' ? 'Modo Claro' : 'Modo Escuro';
+    });
+
+    // Inicialização
+    initDiagram();
+  </script>
+</body>
+</html>

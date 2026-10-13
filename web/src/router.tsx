@@ -1,14 +1,11 @@
-import { createBrowserRouter } from 'react-router-dom'
-import { HomePage } from './pages/HomePage'
-import { CronogramaPage } from './pages/cronograma/CronogramaPage'
+import { Routes, Route, Navigate } from 'react-router-dom';
+import TimelinePage from './pages/TimelinePage';
 
-export const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <HomePage />,
-  },
-  {
-    path: '/obras/:obraId/cronograma',
-    element: <CronogramaPage />,
-  },
-])
+export default function AppRouter() {
+  return (
+    <Routes>
+      <Route path="/" element={<TimelinePage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}

@@ -1,4 +1,2 @@
 dist
-coverage
 node_modules
-src/api/generated

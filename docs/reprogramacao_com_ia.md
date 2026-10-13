@@ -1,9 +1,15 @@
 # Reprogramação após previsão de atraso
 
-O usuário informa motivo e dias adicionais para uma etapa. O apontamento é salvo
-antes de chamar a IA. A resposta lista IDs e justificativas em ordem de prioridade.
-O usuário seleciona candidatas e usa as setas para mudar essa ordem. Cada alteração
-solicita uma simulação ao backend. Confirmar aplica a sequência e as datas juntas.
+A API permite registrar motivo e dias adicionais para uma etapa. O apontamento é
+salvo antes de chamar a IA. A resposta lista IDs e justificativas em ordem de
+prioridade. A simulação e a aplicação recebem os IDs na ordem escolhida pelo
+usuário; confirmar aplica a sequência e as datas juntas.
+
+O frontend desta branch mantém a interface da `main`, incluindo a trilha, o tema,
+os componentes e as medições. A tela alternativa de cronograma foi removida.
+Os endpoints de IA estão disponíveis no cliente Orval gerado; os controles para
+selecionar sugestões, ajustar a ordem e confirmar datas ainda serão integrados
+à interface existente.
 
 ## Regras implementadas
 
@@ -27,7 +33,7 @@ solicita uma simulação ao backend. Confirmar aplica a sequência e as datas ju
   recebem alterações de datas. Uma análise sem candidatas permite aplicar apenas
   o impacto do atraso às datas.
 - Materiais, equipes, feriados e limites de capacidade ainda não possuem cadastro
-  no domínio. A tela pede ao gestor confirmar as frentes antes de aplicar;
+  no domínio. O gestor precisa conferir as frentes antes de aplicar;
   o sistema não calcula alocação de recursos, Curva S nem folgas CPM neste fluxo.
 - Simulação não grava datas. Aplicação usa lock da obra e versão do cronograma;
   mudanças em etapas, execução, dependências ou dados da obra invalidam a análise.
@@ -46,8 +52,8 @@ No backend, configurar `OPENAI_API_KEY`. `OPENAI_MODEL` tem padrão `gpt-4o-mini
 uma API compatível com `POST /chat/completions`, mensagens e
 `response_format: json_schema` com `strict: true`. A chave nunca vai ao frontend.
 
-Sem chave, o apontamento fica salvo e a análise mostra erro com opção de tentar
-novamente. Não há substituição silenciosa por sugestões simuladas. As provas
+Sem chave, o apontamento fica salvo e a análise retorna uma falha que pode ser
+consultada e repetida pela API. Não há substituição por sugestões simuladas. As provas
 automatizadas usam uma IA local controlada e um servidor HTTP de teste.
 
 Para desenvolvimento:
@@ -60,13 +66,16 @@ SPRING_PROFILES_ACTIVE=dev mvn spring-boot:run
 # Terminal 2
 cd web
 npm install
+npm run generate:api
 npm run dev
 ```
 
-O frontend gera o cliente Orval antes de dev, build e testes. Vite encaminha
-`/api` para `http://localhost:8080`; `API_PROXY_TARGET` permite mudar esse endereço.
-O Nginx do Compose encaminha `/api` ao serviço `api`. O Compose repassa as três
-variáveis da IA ao backend e usa o perfil dev por padrão para o banco local.
+Com a API em execução, `npm run generate:api` gera os hooks e tipos a partir de
+`http://localhost:8080/v3/api-docs`. `OPENAPI_URL` permite usar outro endereço na
+geração. Vite encaminha `/api` para `http://localhost:8080`;
+`API_PROXY_TARGET` permite mudar o destino sem alterar a interface. O Compose
+repassa as três variáveis da IA ao backend e mantém o perfil prod como padrão.
+O perfil dev desta branch atualiza o schema sem recriar as tabelas.
 
 Em banco existente com perfil prod, aplicar previamente
 `api/src/main/resources/db/manual/20261012_cronograma.sql`. O projeto ainda não
@@ -99,11 +108,11 @@ cd ../web
 npm test
 npm run build
 npm run lint
-npm run format:check
 ```
 
 Testes de domínio cobrem propagação transitiva, paralelismo, ordem escolhida,
 pré-requisitos, datas reais, reprogramações sucessivas, horário de verão e um
 grafo de 5.000 etapas. Integração cobre persistência, histórico, respostas
-inválidas, falhas da IA, concorrência e repetição da confirmação. A interface
-verifica seleção, reordenação, simulação e bloqueio de análises desatualizadas.
+inválidas, falhas da IA, concorrência e repetição da confirmação. A integração
+também cobre os endpoints existentes de cadastro, listagem e medição da EAP,
+incluindo etapas sem planejamento. A interface é a mesma da `main`.

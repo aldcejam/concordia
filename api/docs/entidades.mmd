@@ -1,92 +1,125 @@
 classDiagram
-    Obra "1" *-- "1..*" ItemEap : contém raiz
-    Obra "1" *-- "0..*" EtapaObra : possui
-    Obra "*" o-- "1" Empresa : contratada
+    direction TB
+
+    %% Relacionamentos principais da Obra
+    Obra "1" *-- "0..*" ItemEap : contém (eap)
+    Obra "1" *-- "0..*" EtapaObra : possui (etapas)
+    Obra "*" --> "0..1" Empresa : contratada (empresa)
+    Obra "*" --> "1" StatusObra : status
     Obra "*" --> "1" UnidadeFederativa : uf
 
-    ItemEap "1" o-- "0..1" EtapaObra : associa-se
+    %% Relacionamentos da EAP e Etapas
+    ItemEap "*" --> "1" Obra : pertence a
     ItemEap "0..1" *-- "0..*" ItemEap : hierarquia (pai/filhos)
+    ItemEap "0..1" o-- "0..1" EtapaObra : associa-se (etapa)
 
-    EtapaObra "1" *-- "0..*" ItemOrcamento : possui
+    %% Relacionamentos da Etapa de Obra
+    EtapaObra "1" *-- "1" CpmInfo : cpm (embedded)
+    EtapaObra "1" *-- "0..*" ItemOrcamento : orçamentos
+    EtapaObra "1" *-- "0..*" MedicaoEtapa : medições
     EtapaObra "*" <--> "*" EtapaObra : dependência CPM (predecessores/sucessores)
 
+    %% Relacionamento de Medição
+    MedicaoEtapa "*" --> "1" EtapaObra : etapa
+
+    %% Herança e associações de Itens de Orçamento
     ItemOrcamentoInsumo --|> ItemOrcamento : é um
     ItemOrcamentoComposicao --|> ItemOrcamento : é um
-
     ItemOrcamentoInsumo "*" --> "1" Insumo : referencia
     ItemOrcamentoComposicao "*" --> "1" Composicao : referencia
 
-    Composicao "1" *-- "1..*" ItemComposicao : possui
-    ItemComposicao "*" o-- "0..1" Insumo : pode ser
-    ItemComposicao "*" o-- "0..1" Composicao : pode ser auxiliar
+    %% Composite Pattern de Composição e Insumos
+    Insumo --|> ItemComposicao : é um
+    Composicao --|> ItemComposicao : é um
+    Composicao "1" *-- "0..*" ItemComposicao : itens (composicaoPai)
+    ItemComposicao "*" --> "1" UnidadeMedida : unidade
 
-    Insumo "*" --> "1" UnidadeMedida : unidade
-    Composicao "*" --> "1" UnidadeMedida : unidade
-
-    class Obra{
+    %% Definições de Classes
+    class Obra {
+        -UUID id
         -String descricao
-        -Status status
+        -StatusObra status
         -Empresa empresa
         -UnidadeFederativa uf
         -ZoneId fusoHorario
-        -List~ItemEap~ nodosEap
         -List~EtapaObra~ etapas
+        -List~ItemEap~ eap
+        +atualizar(String, UnidadeFederativa, ZoneId, Empresa)
+        +atualizarParcial(String, UnidadeFederativa, ZoneId, Empresa)
+        +adicionarEtapa(EtapaObra)
+        +adicionarItemEap(ItemEap)
+    }
+
+    class Empresa {
+        -UUID id
+        -String nome
+        -String cnpj
+        -String razaoSocial
+        +atualizar(String, String, String)
+        +atualizarParcial(String, String, String)
     }
 
     class ItemEap {
+        -UUID id
         -String nome
+        -String codigoEap
+        -String bancoOrcamento
+        -String codigoComposicao
+        -String tipoComposicao
+        -String macroetapa
+        -String unidadeOrcamento
+        -BigDecimal quantidadeOrcada
+        -BigDecimal valorUnitarioOrcado
+        -BigDecimal valorUnitarioBase
+        -BigDecimal percentualBdi
+        -BigDecimal valorTotalOrcado
         -Obra obra
         -Double posicao
         -ItemEap pai
         -List~ItemEap~ filhos
         -EtapaObra etapa
+        +atualizarDadosOrcamento(...)
     }
 
-    class EtapaObra{
+    class EtapaObra {
+        -UUID id
         -String descricao
-        -DateTime inicio
-        -DateTime fim
-        -Integer prazoEsperado
-        -DateTime earlyStart
-        -DateTime earlyFinish
-        -DateTime lateStart
-        -DateTime lateFinish
-        -Integer folgaDias
-        -Bool caminhoCritico
+        -OffsetDateTime inicio
+        -OffsetDateTime fim
+        -Integer prazoEsperadoDias
+        -CpmInfo cpm
         -List~EtapaObra~ predecessores
         -List~EtapaObra~ sucessores
         -List~ItemOrcamento~ orcamentos
+        -List~MedicaoEtapa~ medicoes
+        +registrarMedicao(BigDecimal, BigDecimal, String, String, Integer) MedicaoEtapa
     }
 
-    class Insumo {
-        -String codigo
-        -String descricao
-        -UnidadeMedida unidade
-        -Decimal preco
+    class CpmInfo {
+        <<embeddable>>
+        -OffsetDateTime earlyStart
+        -OffsetDateTime earlyFinish
+        -OffsetDateTime lateStart
+        -OffsetDateTime lateFinish
+        -Integer folgaDias
+        -Boolean caminhoCritico
     }
 
-    class Composicao {
-        -String codigo
-        -String descricao
-        -UnidadeMedida unidade
-        -Decimal preco
-        -List~ItemComposicao~ itens
-    }
-
-    class ItemComposicao {
-        -Decimal coeficiente
-        -Insumo insumo
-        -Composicao composicaoPai
-        -Composicao composicaoAuxiliar
-    }
-
-    class UnidadeMedida {
-        <<enumeration>>
+    class MedicaoEtapa {
+        -UUID id
+        -EtapaObra etapa
+        -BigDecimal percentualExecutado
+        -BigDecimal quantidadeExecutada
+        -String observacao
+        -String motivoAtraso
+        -Integer diasAtraso
+        -OffsetDateTime registradaEm
     }
 
     class ItemOrcamento {
         <<abstract>>
-        -Decimal quantidade
+        -UUID id
+        -BigDecimal quantidade
     }
 
     class ItemOrcamentoInsumo {
@@ -97,9 +130,98 @@ classDiagram
         -Composicao composicao
     }
 
-    class UnidadeFederativa {
-        <<enumeration>>
+    class ItemComposicao {
+        <<abstract>>
+        -UUID id
+        -String codigo
+        -String descricao
+        -UnidadeMedida unidade
+        -BigDecimal preco
+        -Composicao composicaoPai
+        +atualizar(String, String, UnidadeMedida, BigDecimal)
+        +atualizarParcial(String, String, UnidadeMedida, BigDecimal)
     }
 
-    class Empresa{
+    class Insumo {
+    }
+
+    class Composicao {
+        -List~ItemComposicao~ itens
+        +getItens() List~UUID~
+        +adicionarItem(ItemComposicao) Composicao
+        +removerItem(ItemComposicao)
+    }
+
+    class StatusObra {
+        <<enumeration>>
+        EM_PLANEJAMENTO
+        EM_ANDAMENTO
+        PAUSADA
+        CONCLUIDA
+        CANCELADA
+    }
+
+    class UnidadeFederativa {
+        <<enumeration>>
+        AC
+        AL
+        AP
+        AM
+        BA
+        CE
+        DF
+        ES
+        GO
+        MA
+        MT
+        MS
+        MG
+        PA
+        PB
+        PR
+        PE
+        PI
+        RJ
+        RN
+        RS
+        RO
+        RR
+        SC
+        SP
+        SE
+        TO
+    }
+
+    class UnidadeMedida {
+        <<enumeration>>
+        KG
+        G
+        TON
+        M
+        M2
+        M3
+        KM
+        KM_T
+        M3_KM
+        H
+        MES
+        DIA
+        UN
+        MIL
+        CENT
+        DZ
+        PAR
+        CJ
+        JG
+        KIT
+        L
+        GL
+        CX
+        SC
+        RL
+        TB
+        LATA
+        KWH
+        TX
+        VB
     }

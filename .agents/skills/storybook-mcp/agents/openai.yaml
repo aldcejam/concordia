@@ -1,0 +1,4 @@
+interface:
+  display_name: "Storybook MCP"
+  short_description: "Use o catálogo Storybook via MCP antes de alterar UI"
+  default_prompt: "Consulte o MCP do Storybook para reutilizar os componentes e validar as stories desta alteração."

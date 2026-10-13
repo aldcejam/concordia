@@ -1,10 +1,28 @@
-import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { domscribe } from '@domscribe/react/vite';
+import path from 'path';
 
+// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    domscribe({
+      relay: {
+        autoStart: true,
+        host: '127.0.0.1',
+      },
+      overlay: {
+        initialMode: 'expanded',
+      },
+    }),
+  ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   server: {
-    host: true,
     port: 5173,
     proxy: {
       '/api': {
@@ -13,9 +31,4 @@ export default defineConfig({
       },
     },
   },
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: './src/test/setup.ts',
-  },
-})
+});

@@ -1,8 +1,0 @@
-.git
-**/node_modules
-**/target
-**/dist
-**/coverage
-.agents
-.env
-tmp

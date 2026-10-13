@@ -94,4 +94,18 @@ public class Obra {
             this.empresa = empresa;
         }
     }
+
+    public void adicionarEtapa(@NonNull EtapaObra etapa) {
+        etapas.add(etapa);
+    }
+
+    public void adicionarItemEap(@NonNull ItemEap item) {
+        if (item.getObra() != this) {
+            throw new IllegalArgumentException("O item da EAP pertence a outra obra.");
+        }
+        eap.add(item);
+        if (item.getPai() != null && !item.getPai().getFilhos().contains(item)) {
+            item.getPai().getFilhos().add(item);
+        }
+    }
 }
