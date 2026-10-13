@@ -3,6 +3,14 @@
     "concordia-storybook": {
       "type": "http",
       "url": "http://localhost:6006/mcp"
+    },
+    "domscribe": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@domscribe/mcp"
+      ]
     }
   }
 }

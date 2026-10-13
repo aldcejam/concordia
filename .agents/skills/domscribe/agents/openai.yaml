@@ -1,0 +1,4 @@
+interface:
+  display_name: "Domscribe"
+  short_description: "Ponte pixel-to-code para inspeção e edição de UI em tempo real"
+  default_prompt: "Use o Domscribe para mapear elementos visuais, inspecionar runtime e processar anotações de UI."
