@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "predev": "npm run generate:api",
+    "prebuild": "npm run generate:api",
+    "pretest": "npm run generate:api",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

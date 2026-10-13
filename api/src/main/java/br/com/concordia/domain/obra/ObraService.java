@@ -52,6 +52,7 @@ public class ObraService {
         var obra = obterObra(id);
         Empresa empresa = obterEmpresa(request.idEmpresa());
         obra.atualizar(request.descricao(), request.uf(), request.fusoHorario(), empresa);
+        obra.alterarCronograma();
 
         return mapper.toOutputDto(obra);
     }
@@ -61,6 +62,7 @@ public class ObraService {
         var obra = obterObra(id);
         Empresa empresa = obterEmpresa(request.idEmpresa());
         obra.atualizarParcial(request.descricao(), request.uf(), request.fusoHorario(), empresa);
+        obra.alterarCronograma();
 
         return mapper.toOutputDto(obra);
     }
@@ -81,7 +83,7 @@ public class ObraService {
 
     private @NonNull Obra obterObra(UUID id) {
         return obraRepository
-                .findById(id)
+                .findByIdForUpdate(id)
                 .orElseThrow(() -> new EntityNotFoundException("Obra com ID %s não foi encontrada".formatted(id)));
     }
 

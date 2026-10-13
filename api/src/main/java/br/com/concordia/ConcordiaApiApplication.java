@@ -13,7 +13,7 @@ public class ConcordiaApiApplication {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
-    static void main(String[] args) {
+    public static void main(String[] args) {
         SpringApplication.run(ConcordiaApiApplication.class, args);
     }
 }

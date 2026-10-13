@@ -26,16 +26,21 @@ services:
     ports:
       - "8080:8080"
     environment:
-      DB_URL: jdbc:postgresql://localhost:5432/${POSTGRES_DB:-concordia}
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-concordia}
       DB_USERNAME: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
     depends_on:
       postgres:
         condition: service_healthy
 
   web:
     build:
-      context: ./web
+      context: .
+      dockerfile: web/Dockerfile
     restart: unless-stopped
     ports:
       - "3000:80"

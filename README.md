@@ -41,9 +41,14 @@ Em seguida, inicie a aplicação:
 
 ```bash
 cd api
-mvn spring-boot:run
+SPRING_PROFILES_ACTIVE=dev mvn spring-boot:run
 ```
 
 Por padrão, o banco usa `concordia` como nome e `postgres` como usuário e senha. Esses valores podem ser alterados pelas variáveis `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` e `POSTGRES_PORT`; ajuste também `DB_URL`, `DB_USERNAME` e `DB_PASSWORD` ao iniciar a API.
 
 A documentação Swagger estará disponível em `http://localhost:8080/swagger`.
+
+O fluxo de atraso, sugestões de IA e reprogramação está documentado em
+[Reprogramação com IA](docs/reprogramacao_com_ia.md). Configure `OPENAI_API_KEY`
+no backend para gerar recomendações. Acesse uma obra pela página inicial para
+cadastrar etapas, informar atrasos e confirmar a nova sequência e suas datas.

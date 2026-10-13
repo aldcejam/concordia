@@ -22,8 +22,18 @@ public class ObraRepositoryImpl implements ObraRepository {
     }
 
     @Override
+    public void flush() {
+        repository.flush();
+    }
+
+    @Override
     public Optional<Obra> findById(UUID id) {
         return repository.findById(id);
+    }
+
+    @Override
+    public Optional<Obra> findByIdForUpdate(UUID id) {
+        return repository.findByIdForUpdate(id);
     }
 
     @Override

@@ -20,7 +20,7 @@ public class ItemEap {
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text")
     private String nome;
 
     @ManyToOne(fetch = FetchType.LAZY)

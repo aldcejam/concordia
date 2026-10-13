@@ -1,32 +1,751 @@
 openapi: 3.0.3
 info:
   title: Concordia API
-  version: 0.1.0
-servers:
-  - url: http://localhost:8080
-tags:
-  - name: Health
+  version: 0.2.0
 paths:
   /api/health:
     get:
       tags:
-        - Health
+      - Health
       operationId: getHealth
-      summary: Verifica a disponibilidade da API
+      summary: getHealth
       responses:
         '200':
-          description: API disponível
+          description: Sucesso
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
+        '400':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters: []
+  /api/obras:
+    get:
+      tags:
+      - Obras
+      operationId: getObras
+      summary: getObras
+      responses:
+        '200':
+          description: Sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ObraResponse'
+        '400':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters: []
+    post:
+      tags:
+      - Obras
+      operationId: createObra
+      summary: createObra
+      responses:
+        '201':
+          description: Sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObraResponse'
+        '400':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ObraRequest'
+  /api/obras/{obraId}/cronograma:
+    get:
+      tags:
+      - Cronograma
+      operationId: getCronograma
+      summary: getCronograma
+      responses:
+        '200':
+          description: Sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cronograma'
+        '400':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - in: path
+        name: obraId
+        required: true
+        schema: &id001
+          type: string
+          format: uuid
+  /api/obras/{obraId}/cronograma/etapas:
+    post:
+      tags:
+      - Cronograma
+      operationId: createEtapa
+      summary: createEtapa
+      responses:
+        '201':
+          description: Sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Etapa'
+        '400':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - in: path
+        name: obraId
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EtapaRequest'
+  /api/obras/{obraId}/cronograma/etapas/{etapaId}/dependencias:
+    put:
+      tags:
+      - Cronograma
+      operationId: updateDependencias
+      summary: updateDependencias
+      responses:
+        '204':
+          description: Sucesso
+        '400':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - in: path
+        name: obraId
+        required: true
+        schema: *id001
+      - in: path
+        name: etapaId
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DependenciasRequest'
+  /api/obras/{obraId}/cronograma/etapas/{etapaId}/execucao:
+    patch:
+      tags:
+      - Cronograma
+      operationId: updateExecucao
+      summary: updateExecucao
+      responses:
+        '204':
+          description: Sucesso
+        '400':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - in: path
+        name: obraId
+        required: true
+        schema: *id001
+      - in: path
+        name: etapaId
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecucaoRequest'
+  /api/obras/{obraId}/cronograma/atrasos:
+    post:
+      tags:
+      - Cronograma
+      operationId: createAtraso
+      summary: createAtraso
+      responses:
+        '201':
+          description: Sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Atraso'
+        '400':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - in: path
+        name: obraId
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AtrasoRequest'
+  /api/obras/{obraId}/cronograma/atrasos/{atrasoId}/analise:
+    post:
+      tags:
+      - Cronograma
+      operationId: analisarAtraso
+      summary: analisarAtraso
+      responses:
+        '200':
+          description: Sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Atraso'
+        '400':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - in: path
+        name: obraId
+        required: true
+        schema: *id001
+      - in: path
+        name: atrasoId
+        required: true
+        schema: *id001
+  /api/obras/{obraId}/cronograma/atrasos/{atrasoId}/simulacao:
+    post:
+      tags:
+      - Cronograma
+      operationId: simularAtraso
+      summary: simularAtraso
+      responses:
+        '200':
+          description: Sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Simulacao'
+        '400':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - in: path
+        name: obraId
+        required: true
+        schema: *id001
+      - in: path
+        name: atrasoId
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelecaoRequest'
+  /api/obras/{obraId}/cronograma/atrasos/{atrasoId}/aplicacao:
+    post:
+      tags:
+      - Cronograma
+      operationId: aplicarAtraso
+      summary: aplicarAtraso
+      responses:
+        '200':
+          description: Sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Atraso'
+        '400':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Requisição inválida, recurso ausente ou cronograma alterado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - in: path
+        name: obraId
+        required: true
+        schema: *id001
+      - in: path
+        name: atrasoId
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelecaoRequest'
 components:
   schemas:
     HealthResponse:
       type: object
       required:
-        - status
+      - status
       properties:
+        status: &id002
+          type: string
+    StatusEtapa:
+      type: string
+      enum:
+      - NAO_INICIADA
+      - EM_ANDAMENTO
+      - CONCLUIDA
+    Uf:
+      type: string
+      enum:
+      - AC
+      - AL
+      - AP
+      - AM
+      - BA
+      - CE
+      - DF
+      - ES
+      - GO
+      - MA
+      - MT
+      - MS
+      - MG
+      - PA
+      - PB
+      - PR
+      - PE
+      - PI
+      - RJ
+      - RN
+      - RS
+      - RO
+      - RR
+      - SC
+      - SP
+      - SE
+      - TO
+    ObraResponse:
+      type: object
+      required:
+      - id
+      - descricao
+      - uf
+      - fusoHorario
+      - status
+      - id_empresa
+      properties:
+        id: *id001
+        descricao: *id002
+        uf:
+          $ref: '#/components/schemas/Uf'
+        fusoHorario: *id002
+        status: *id002
+        id_empresa:
+          type: string
+          format: uuid
+          nullable: true
+    ObraRequest:
+      type: object
+      required:
+      - descricao
+      - uf
+      - fusoHorario
+      properties:
+        descricao:
+          type: string
+          minLength: 1
+        uf:
+          $ref: '#/components/schemas/Uf'
+        fusoHorario: *id002
+        idEmpresa:
+          type: string
+          format: uuid
+          nullable: true
+    Etapa:
+      type: object
+      required:
+      - id
+      - descricao
+      - ordem
+      - status
+      - inicio
+      - fim
+      - duracaoDias
+      - inicioOriginal
+      - fimOriginal
+      - inicioReal
+      - fimReal
+      - predecessores
+      properties:
+        id: *id001
+        descricao: *id002
+        ordem: &id004
+          type: integer
+          format: int32
+        status:
+          $ref: '#/components/schemas/StatusEtapa'
+        inicio: &id006
+          type: string
+          format: date-time
+          nullable: true
+        fim: *id006
+        duracaoDias:
+          type: integer
+          format: int32
+          nullable: true
+        inicioOriginal: *id006
+        fimOriginal: *id006
+        inicioReal: &id005
+          type: string
+          format: date-time
+          nullable: true
+        fimReal: *id005
+        predecessores:
+          type: array
+          items: *id001
+    Snapshot:
+      type: object
+      required:
+      - versao
+      - etapas
+      properties:
+        versao: &id006
+          type: integer
+          format: int64
+        etapas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Etapa'
+    Sugestao:
+      type: object
+      required:
+      - etapaId
+      - justificativa
+      properties:
+        etapaId: *id001
+        justificativa: *id002
+    Simulacao:
+      type: object
+      required:
+      - antes
+      - depois
+      - terminoAntes
+      - terminoDepois
+      properties:
+        antes:
+          $ref: '#/components/schemas/Snapshot'
+        depois:
+          $ref: '#/components/schemas/Snapshot'
+        terminoAntes: *id005
+        terminoDepois: *id005
+    Atraso:
+      type: object
+      required:
+      - id
+      - etapaId
+      - motivo
+      - diasAtraso
+      - status
+      - erro
+      - versaoCronograma
+      - criadoEm
+      - referencia
+      - sugestoes
+      - selecionadas
+      - resultado
+      - aplicadoEm
+      - autorAplicacao
+      properties:
+        id: *id001
+        etapaId: *id001
+        motivo: *id002
+        diasAtraso: *id004
         status:
           type: string
-          example: UP
+          enum:
+          - REGISTRADO
+          - ANALISANDO
+          - PRONTO
+          - FALHOU
+          - APLICADO
+        erro:
+          type: string
+          nullable: true
+        versaoCronograma: *id006
+        criadoEm: &id003
+          type: string
+          format: date-time
+        referencia: *id005
+        sugestoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sugestao'
+        selecionadas:
+          type: array
+          items: *id001
+        resultado:
+          allOf:
+          - $ref: '#/components/schemas/Simulacao'
+          nullable: true
+        aplicadoEm:
+          type: string
+          format: date-time
+          nullable: true
+        autorAplicacao:
+          type: string
+          nullable: true
+    Cronograma:
+      type: object
+      required:
+      - obraId
+      - descricao
+      - fusoHorario
+      - cronograma
+      - atrasos
+      properties:
+        obraId: *id001
+        descricao: *id002
+        fusoHorario: *id002
+        cronograma:
+          $ref: '#/components/schemas/Snapshot'
+        atrasos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Atraso'
+    EtapaRequest:
+      type: object
+      required:
+      - descricao
+      - inicio
+      - duracaoDias
+      - predecessores
+      properties:
+        descricao:
+          type: string
+          minLength: 1
+          maxLength: 500
+        inicio: *id003
+        duracaoDias:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 3650
+        predecessores:
+          type: array
+          items: *id001
+    AtrasoRequest:
+      type: object
+      required:
+      - etapaId
+      - motivo
+      - diasAtraso
+      properties:
+        etapaId: *id001
+        motivo:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        diasAtraso:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 3650
+    SelecaoRequest:
+      type: object
+      required:
+      - etapaIds
+      properties:
+        etapaIds:
+          type: array
+          items: *id001
+    DependenciasRequest:
+      type: object
+      required:
+      - predecessores
+      properties:
+        predecessores:
+          type: array
+          items: *id001
+    ExecucaoRequest:
+      type: object
+      required:
+      - status
+      - inicioReal
+      properties:
+        status:
+          $ref: '#/components/schemas/StatusEtapa'
+        inicioReal: *id003
+        fimReal: *id005
+    ProblemDetail:
+      type: object
+      required:
+      - detail
+      properties:
+        title: *id002
+        detail: *id002
+        status: *id004
