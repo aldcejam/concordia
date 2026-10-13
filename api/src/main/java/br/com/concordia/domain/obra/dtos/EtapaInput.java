@@ -1,7 +1,7 @@
 package br.com.concordia.domain.obra.dtos;
 
-import java.time.OffsetDateTime;
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public record EtapaInput(

@@ -1,109 +1,612 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Concordia API
-  version: 0.1.0
+  description: API de Gestão de Obras.
+  version: 1.0.0
 servers:
-  - url: http://localhost:8080
-tags:
-  - name: Health
+- url: http://localhost:8080
+  description: API local
 paths:
-  /api/health:
+  /api/obras/{obraId}/cronograma/etapas/{etapaId}/dependencias:
+    put:
+      tags:
+      - cronograma-controller
+      operationId: dependencias
+      parameters:
+      - name: obraId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: etapaId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.cronograma.CronogramaController.DependenciasRequest'
+        required: true
+      responses:
+        '204':
+          description: No Content
+  /api/obras/{id}:
     get:
       tags:
-        - Health
-      operationId: getHealth
-      summary: Verifica a disponibilidade da API
-      responses:
-        '200':
-          description: API disponível
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HealthResponse'
-  /api/obras/{id}/etapas:
-    parameters:
+      - Obras
+      operationId: consultar
+      parameters:
       - name: id
         in: path
         required: true
         schema:
           type: string
           format: uuid
-    get:
-      tags:
-        - Obras
-      operationId: listarEtapasDaObra
-      summary: Lista etapas e itens EAP associados à obra
       responses:
         '200':
-          description: Etapas da obra
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.ObraResponse'
+    put:
+      tags:
+      - Obras
+      operationId: atualizar
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.ObraRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.ObraResponse'
+    delete:
+      tags:
+      - Obras
+      operationId: deletar
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+    patch:
+      tags:
+      - Obras
+      operationId: atualizarParcial
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.ObraParcialRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.ObraResponse'
+  /api/insumos/{id}:
+    get:
+      tags:
+      - Insumos
+      operationId: consultar_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.insumo.dtos.InsumoResponse'
+    put:
+      tags:
+      - Insumos
+      operationId: atualizar_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.insumo.dtos.InsumoRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.insumo.dtos.InsumoResponse'
+    delete:
+      tags:
+      - Insumos
+      operationId: deletar_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+    patch:
+      tags:
+      - Insumos
+      operationId: atualizarParcial_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.insumo.dtos.InsumoParcialRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.insumo.dtos.InsumoResponse'
+  /api/empresas/{id}:
+    get:
+      tags:
+      - Empresas
+      operationId: consultar_2
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.empresa.dtos.EmpresaResponse'
+    put:
+      tags:
+      - Empresas
+      operationId: atualizar_2
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.empresa.dtos.EmpresaRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.empresa.dtos.EmpresaResponse'
+    delete:
+      tags:
+      - Empresas
+      operationId: deletar_2
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+    patch:
+      tags:
+      - Empresas
+      operationId: atualizarParcial_2
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.empresa.dtos.EmpresaParcialRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.empresa.dtos.EmpresaResponse'
+  /api/composicoes/{id}:
+    get:
+      tags:
+      - Composições
+      operationId: consultar_3
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.composicao.dtos.ComposicaoResponse'
+    put:
+      tags:
+      - Composições
+      operationId: atualizar_3
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.composicao.dtos.ComposicaoRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.composicao.dtos.ComposicaoResponse'
+    delete:
+      tags:
+      - Composições
+      operationId: deletar_3
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+    patch:
+      tags:
+      - Composições
+      operationId: atualizarParcial_3
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.composicao.dtos.ComposicaoParcialRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.composicao.dtos.ComposicaoResponse'
+  /api/obras:
+    get:
+      tags:
+      - Obras
+      operationId: listar
+      responses:
+        '200':
+          description: OK
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/EtapaResponse'
-        '404':
-          description: Obra não encontrada
+                  $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.ObraResponse'
     post:
       tags:
-        - Obras
-      operationId: criarEtapaDaObra
-      summary: Cria uma etapa e seu nó EAP na obra
+      - Obras
+      operationId: criar
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EtapaRequest'
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.ObraRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.ObraResponse'
+  /api/obras/{obraId}/cronograma/etapas:
+    post:
+      tags:
+      - cronograma-controller
+      operationId: criarEtapa
+      parameters:
+      - name: obraId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.cronograma.CronogramaController.EtapaRequest'
+        required: true
       responses:
         '201':
-          description: Etapa criada
+          description: Created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EtapaResponse'
-        '400':
-          description: Dados inválidos ou item pai inexistente
-        '404':
-          description: Obra não encontrada
-  /api/obras/{id}/etapas/{etapaId}/medicoes:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: etapaId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+                $ref: '#/components/schemas/br.com.concordia.domain.cronograma.CronogramaDados.Etapa'
+  /api/obras/{obraId}/cronograma/atrasos:
     post:
       tags:
-        - Obras
-      operationId: registrarMedicaoDaEtapa
-      summary: Registra uma medição e preserva seu histórico
-      requestBody:
+      - cronograma-controller
+      operationId: atraso
+      parameters:
+      - name: obraId
+        in: path
         required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MedicaoRequest'
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.cronograma.CronogramaController.AtrasoRequest'
+        required: true
       responses:
-        '200':
-          description: Etapa atualizada com a nova medição
+        '201':
+          description: Created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EtapaResponse'
-        '400':
-          description: Dados da medição inválidos
-        '404':
-          description: Obra ou etapa não encontrada
-  /api/obras/{id}/etapas/{etapaId}:
-    parameters:
+                $ref: '#/components/schemas/br.com.concordia.domain.cronograma.CronogramaDados.Atraso'
+  /api/obras/{obraId}/cronograma/atrasos/{atrasoId}/simulacao:
+    post:
+      tags:
+      - cronograma-controller
+      operationId: simular
+      parameters:
+      - name: obraId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: atrasoId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.cronograma.CronogramaController.SelecaoRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.domain.cronograma.CronogramaDados.Simulacao'
+  /api/obras/{obraId}/cronograma/atrasos/{atrasoId}/aplicacao:
+    post:
+      tags:
+      - cronograma-controller
+      operationId: aplicar
+      parameters:
+      - name: obraId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: atrasoId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.cronograma.CronogramaController.SelecaoRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.domain.cronograma.CronogramaDados.Atraso'
+  /api/obras/{obraId}/cronograma/atrasos/{atrasoId}/analise:
+    post:
+      tags:
+      - cronograma-controller
+      operationId: analisar
+      parameters:
+      - name: obraId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: atrasoId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.domain.cronograma.CronogramaDados.Atraso'
+  /api/obras/{id}/importar:
+    post:
+      tags:
+      - Obras
+      operationId: importar
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                arquivo:
+                  type: string
+                  format: binary
+              required:
+              - arquivo
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.ImportacaoObraResponse'
+  /api/obras/{id}/etapas:
+    get:
+      tags:
+      - Obras
+      operationId: listarEtapas
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.EtapaResponse'
+    post:
+      tags:
+      - Obras
+      operationId: criarEtapa_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.EtapaRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.EtapaResponse'
+  /api/obras/{id}/etapas/{etapaId}/medicoes:
+    post:
+      tags:
+      - Obras
+      operationId: registrarMedicao
+      parameters:
       - name: id
         in: path
         required: true
@@ -116,146 +619,826 @@ paths:
         schema:
           type: string
           format: uuid
-    get:
-      tags:
-        - Obras
-      operationId: consultarEtapaDaObra
-      summary: Consulta uma etapa e seu histórico de medições
-      responses:
-        '200':
-          description: Etapa encontrada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EtapaResponse'
-  /api/obras/{id}/etapas/{etapaId}/orcamento:
-    patch:
-      tags: [Obras]
-      summary: Atualizar dados do orçamento de uma etapa
-      operationId: atualizarDadosOrcamento
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - in: path
-          name: etapaId
-          required: true
-          schema:
-            type: string
-            format: uuid
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EtapaRequest'
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.MedicaoRequest'
+        required: true
       responses:
         '200':
-          description: Dados orçamentários atualizados
+          description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EtapaResponse'
-        '404':
-          description: Obra ou etapa não encontrada
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.EtapaResponse'
+  /api/insumos:
+    get:
+      tags:
+      - Insumos
+      operationId: listar_1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/br.com.concordia.infrastructure.insumo.dtos.InsumoResponse'
+    post:
+      tags:
+      - Insumos
+      operationId: criar_1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.insumo.dtos.InsumoRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.insumo.dtos.InsumoResponse'
+  /api/empresas:
+    get:
+      tags:
+      - Empresas
+      operationId: listar_2
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/br.com.concordia.infrastructure.empresa.dtos.EmpresaResponse'
+    post:
+      tags:
+      - Empresas
+      operationId: criar_2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.empresa.dtos.EmpresaRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.empresa.dtos.EmpresaResponse'
+  /api/composicoes:
+    get:
+      tags:
+      - Composições
+      operationId: listar_3
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/br.com.concordia.infrastructure.composicao.dtos.ComposicaoResponse'
+    post:
+      tags:
+      - Composições
+      operationId: criar_3
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.composicao.dtos.ComposicaoRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.composicao.dtos.ComposicaoResponse'
+  /api/composicoes/{idComposicao}/itens:
+    post:
+      tags:
+      - Composições
+      operationId: adicionarItem
+      parameters:
+      - name: idComposicao
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: idItem
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.composicao.dtos.ComposicaoResponse'
+    delete:
+      tags:
+      - Composições
+      operationId: deletarItem
+      parameters:
+      - name: idComposicao
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: idItem
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.composicao.dtos.ComposicaoResponse'
+  /api/obras/{obraId}/cronograma/etapas/{etapaId}/execucao:
+    patch:
+      tags:
+      - cronograma-controller
+      operationId: execucao
+      parameters:
+      - name: obraId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: etapaId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.cronograma.CronogramaController.ExecucaoRequest'
+        required: true
+      responses:
+        '204':
+          description: No Content
+  /api/obras/{id}/etapas/{etapaId}/orcamento:
+    patch:
+      tags:
+      - Obras
+      operationId: atualizarDadosOrcamento
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: etapaId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.EtapaRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.EtapaResponse'
+  /api/obras/{obraId}/cronograma:
+    get:
+      tags:
+      - cronograma-controller
+      operationId: consultar_4
+      parameters:
+      - name: obraId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.domain.cronograma.CronogramaDados.Cronograma'
+  /api/obras/{id}/etapas/{etapaId}:
+    get:
+      tags:
+      - Obras
+      operationId: consultarEtapa
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: etapaId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.EtapaResponse'
 components:
   schemas:
-    HealthResponse:
+    br.com.concordia.infrastructure.cronograma.CronogramaController.DependenciasRequest:
       type: object
-      required:
-        - status
       properties:
+        predecessores:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+      - predecessores
+    br.com.concordia.infrastructure.obra.dtos.ObraRequest:
+      type: object
+      properties:
+        descricao:
+          type: string
+          minLength: 1
+        uf:
+          type: string
+          enum:
+          - AC
+          - AL
+          - AP
+          - AM
+          - BA
+          - CE
+          - DF
+          - ES
+          - GO
+          - MA
+          - MT
+          - MS
+          - MG
+          - PA
+          - PB
+          - PR
+          - PE
+          - PI
+          - RJ
+          - RN
+          - RS
+          - RO
+          - RR
+          - SC
+          - SP
+          - SE
+          - TO
+        fusoHorario:
+          type: string
+        idEmpresa:
+          type:
+          - string
+          - 'null'
+          format: uuid
+      required:
+      - descricao
+      - fusoHorario
+      - uf
+    br.com.concordia.infrastructure.obra.dtos.ObraResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        descricao:
+          type: string
         status:
           type: string
-          example: UP
-    EtapaRequest:
+          enum:
+          - EM_ANDAMENTO
+          - CONCLUIDA
+          - CANCELADA
+          - EM_PLANEJAMENTO
+          - PAUSADA
+        id_empresa:
+          type: string
+          format: uuid
+        uf:
+          type: string
+          enum:
+          - AC
+          - AL
+          - AP
+          - AM
+          - BA
+          - CE
+          - DF
+          - ES
+          - GO
+          - MA
+          - MT
+          - MS
+          - MG
+          - PA
+          - PB
+          - PR
+          - PE
+          - PI
+          - RJ
+          - RN
+          - RS
+          - RO
+          - RR
+          - SC
+          - SP
+          - SE
+          - TO
+        fusoHorario:
+          type: string
+    br.com.concordia.infrastructure.insumo.dtos.InsumoRequest:
       type: object
-      required: [nome, descricao]
       properties:
-        nome:
+        codigo:
+          type: string
+          minLength: 1
+        descricao:
+          type: string
+          minLength: 1
+        unidade:
+          type: string
+          enum:
+          - KG
+          - G
+          - T
+          - M
+          - M2
+          - M3
+          - KM
+          - KM/T
+          - M3XKM
+          - H
+          - MES
+          - DIA
+          - UN
+          - MIL
+          - CENT
+          - DZ
+          - PAR
+          - CJ
+          - JG
+          - KIT
+          - L
+          - GL
+          - CX
+          - SC
+          - RL
+          - TB
+          - LATA
+          - KWH
+          - TX
+          - VB
+        preco:
+          type: number
+      required:
+      - codigo
+      - descricao
+      - preco
+      - unidade
+    br.com.concordia.infrastructure.insumo.dtos.InsumoResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        codigo:
           type: string
         descricao:
           type: string
+        unidade:
+          type: string
+          enum:
+          - KG
+          - G
+          - T
+          - M
+          - M2
+          - M3
+          - KM
+          - KM/T
+          - M3XKM
+          - H
+          - MES
+          - DIA
+          - UN
+          - MIL
+          - CENT
+          - DZ
+          - PAR
+          - CJ
+          - JG
+          - KIT
+          - L
+          - GL
+          - CX
+          - SC
+          - RL
+          - TB
+          - LATA
+          - KWH
+          - TX
+          - VB
+        preco:
+          type: number
+    br.com.concordia.infrastructure.empresa.dtos.EmpresaRequest:
+      type: object
+      properties:
+        nome:
+          type: string
+          minLength: 1
+        cnpj:
+          type: string
+          minLength: 1
+          pattern: ^\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}$|^\d{14}$
+        razaoSocial:
+          type: string
+          minLength: 1
+      required:
+      - cnpj
+      - nome
+      - razaoSocial
+    br.com.concordia.infrastructure.empresa.dtos.EmpresaResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+        cnpj:
+          type: string
+        razaoSocial:
+          type: string
+    br.com.concordia.infrastructure.composicao.dtos.ComposicaoRequest:
+      type: object
+      properties:
+        codigo:
+          type: string
+        descricao:
+          type: string
+        unidade:
+          type: string
+          enum:
+          - KG
+          - G
+          - T
+          - M
+          - M2
+          - M3
+          - KM
+          - KM/T
+          - M3XKM
+          - H
+          - MES
+          - DIA
+          - UN
+          - MIL
+          - CENT
+          - DZ
+          - PAR
+          - CJ
+          - JG
+          - KIT
+          - L
+          - GL
+          - CX
+          - SC
+          - RL
+          - TB
+          - LATA
+          - KWH
+          - TX
+          - VB
+        preco:
+          type: number
+      required:
+      - codigo
+      - descricao
+      - preco
+      - unidade
+    br.com.concordia.infrastructure.composicao.dtos.ComposicaoResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        codigo:
+          type: string
+        descricao:
+          type: string
+        unidade:
+          type: string
+          enum:
+          - KG
+          - G
+          - T
+          - M
+          - M2
+          - M3
+          - KM
+          - KM/T
+          - M3XKM
+          - H
+          - MES
+          - DIA
+          - UN
+          - MIL
+          - CENT
+          - DZ
+          - PAR
+          - CJ
+          - JG
+          - KIT
+          - L
+          - GL
+          - CX
+          - SC
+          - RL
+          - TB
+          - LATA
+          - KWH
+          - TX
+          - VB
+        preco:
+          type: number
+        itens:
+          type: array
+          items:
+            type: string
+            format: uuid
+    br.com.concordia.infrastructure.cronograma.CronogramaController.EtapaRequest:
+      type: object
+      properties:
+        descricao:
+          type: string
+          maxLength: 500
+          minLength: 0
         inicio:
           type: string
           format: date-time
-          nullable: true
+        duracaoDias:
+          type: integer
+          format: int32
+          maximum: 3650
+          minimum: 1
+        predecessores:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+      - descricao
+      - inicio
+      - predecessores
+    br.com.concordia.domain.cronograma.CronogramaDados.Etapa:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        descricao:
+          type: string
+        ordem:
+          type: integer
+          format: int32
+        status:
+          type: string
+          enum:
+          - NAO_INICIADA
+          - EM_ANDAMENTO
+          - CONCLUIDA
+        inicio:
+          type: string
+          format: date-time
+        fim:
+          type: string
+          format: date-time
+        duracaoDias:
+          type: integer
+          format: int32
+        inicioOriginal:
+          type: string
+          format: date-time
+        fimOriginal:
+          type: string
+          format: date-time
+        inicioReal:
+          type: string
+          format: date-time
+        fimReal:
+          type: string
+          format: date-time
+        predecessores:
+          type: array
+          items:
+            type: string
+            format: uuid
+    br.com.concordia.infrastructure.cronograma.CronogramaController.AtrasoRequest:
+      type: object
+      properties:
+        etapaId:
+          type: string
+          format: uuid
+        motivo:
+          type: string
+          maxLength: 2000
+          minLength: 0
+        diasAtraso:
+          type: integer
+          format: int32
+          maximum: 3650
+          minimum: 1
+      required:
+      - etapaId
+      - motivo
+    br.com.concordia.domain.cronograma.CronogramaDados.Atraso:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        etapaId:
+          type: string
+          format: uuid
+        motivo:
+          type: string
+        diasAtraso:
+          type: integer
+          format: int32
+        status:
+          type: string
+        erro:
+          type: string
+        versaoCronograma:
+          type: integer
+          format: int64
+        criadoEm:
+          type: string
+          format: date-time
+        referencia:
+          type: string
+          format: date-time
+        sugestoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/br.com.concordia.domain.cronograma.CronogramaDados.Sugestao'
+        selecionadas:
+          type: array
+          items:
+            type: string
+            format: uuid
+        resultado:
+          $ref: '#/components/schemas/br.com.concordia.domain.cronograma.CronogramaDados.Simulacao'
+        aplicadoEm:
+          type: string
+          format: date-time
+        autorAplicacao:
+          type: string
+    br.com.concordia.domain.cronograma.CronogramaDados.Simulacao:
+      type: object
+      properties:
+        antes:
+          $ref: '#/components/schemas/br.com.concordia.domain.cronograma.CronogramaDados.Snapshot'
+        depois:
+          $ref: '#/components/schemas/br.com.concordia.domain.cronograma.CronogramaDados.Snapshot'
+        terminoAntes:
+          type: string
+          format: date-time
+        terminoDepois:
+          type: string
+          format: date-time
+    br.com.concordia.domain.cronograma.CronogramaDados.Snapshot:
+      type: object
+      properties:
+        versao:
+          type: integer
+          format: int64
+        etapas:
+          type: array
+          items:
+            $ref: '#/components/schemas/br.com.concordia.domain.cronograma.CronogramaDados.Etapa'
+    br.com.concordia.domain.cronograma.CronogramaDados.Sugestao:
+      type: object
+      properties:
+        etapaId:
+          type: string
+          format: uuid
+        justificativa:
+          type: string
+    br.com.concordia.infrastructure.cronograma.CronogramaController.SelecaoRequest:
+      type: object
+      properties:
+        etapaIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+      - etapaIds
+    br.com.concordia.infrastructure.obra.dtos.ImportacaoObraResponse:
+      type: object
+      properties:
+        idObra:
+          type: string
+          format: uuid
+        itensEapCriados:
+          type: integer
+          format: int32
+    br.com.concordia.infrastructure.obra.dtos.EtapaRequest:
+      type: object
+      properties:
+        nome:
+          type: string
+          minLength: 1
+        descricao:
+          type: string
+          minLength: 1
+        inicio:
+          type: string
+          format: date-time
         prazoEsperadoDias:
           type: integer
-          minimum: 1
-          nullable: true
+          format: int32
+          minimum: 0
         idItemPai:
           type: string
           format: uuid
-          nullable: true
         posicao:
           type: number
+          format: double
           minimum: 0
         codigoEap:
           type: string
-          nullable: true
         bancoOrcamento:
           type: string
-          nullable: true
         codigoComposicao:
           type: string
-          nullable: true
         tipoComposicao:
           type: string
-          nullable: true
         macroetapa:
           type: string
-          nullable: true
         unidadeOrcamento:
           type: string
-          nullable: true
         quantidadeOrcada:
           type: number
           minimum: 0
-          nullable: true
         valorUnitarioOrcado:
           type: number
           minimum: 0
-          nullable: true
         valorUnitarioBase:
           type: number
           minimum: 0
-          nullable: true
         percentualBdi:
           type: number
           minimum: 0
-          nullable: true
         valorTotalOrcado:
           type: number
           minimum: 0
-          nullable: true
-    MedicaoRequest:
+      required:
+      - descricao
+      - nome
+    br.com.concordia.infrastructure.obra.dtos.EtapaResponse:
       type: object
-      required: [percentualExecutado, quantidadeExecutada]
-      properties:
-        percentualExecutado:
-          type: number
-          minimum: 0
-          maximum: 100
-        quantidadeExecutada:
-          type: number
-          minimum: 0
-        observacao:
-          type: string
-          nullable: true
-        motivoAtraso:
-          type: string
-          nullable: true
-        diasAtraso:
-          type: integer
-          minimum: 0
-          nullable: true
-    EtapaResponse:
-      type: object
-      required: [id, idItemEap, nome, descricao, posicao, percentualExecutado, quantidadeExecutada, medicoes]
       properties:
         id:
           type: string
@@ -266,73 +1449,59 @@ components:
         idItemPai:
           type: string
           format: uuid
-          nullable: true
         nome:
           type: string
         descricao:
           type: string
         posicao:
           type: number
+          format: double
         inicio:
           type: string
           format: date-time
         fim:
           type: string
           format: date-time
-          nullable: true
         prazoEsperadoDias:
           type: integer
-          nullable: true
+          format: int32
         percentualExecutado:
           type: number
         quantidadeExecutada:
           type: number
         motivoAtraso:
           type: string
-          nullable: true
         diasAtraso:
           type: integer
-          nullable: true
+          format: int32
         codigoEap:
           type: string
-          nullable: true
         bancoOrcamento:
           type: string
-          nullable: true
         codigoComposicao:
           type: string
-          nullable: true
         tipoComposicao:
           type: string
-          nullable: true
         macroetapa:
           type: string
-          nullable: true
         unidadeOrcamento:
           type: string
-          nullable: true
         quantidadeOrcada:
           type: number
-          nullable: true
         valorUnitarioOrcado:
           type: number
-          nullable: true
         valorUnitarioBase:
           type: number
-          nullable: true
         percentualBdi:
           type: number
-          nullable: true
         valorTotalOrcado:
           type: number
-          nullable: true
         medicoes:
           type: array
           items:
-            $ref: '#/components/schemas/MedicaoResponse'
-    MedicaoResponse:
+            $ref: '#/components/schemas/br.com.concordia.infrastructure.obra.dtos.MedicaoResponse'
+    br.com.concordia.infrastructure.obra.dtos.MedicaoResponse:
       type: object
-      required: [id, percentualExecutado, quantidadeExecutada, registradaEm]
       properties:
         id:
           type: string
@@ -343,13 +1512,200 @@ components:
           type: number
         observacao:
           type: string
-          nullable: true
         motivoAtraso:
           type: string
-          nullable: true
         diasAtraso:
           type: integer
-          nullable: true
+          format: int32
         registradaEm:
           type: string
           format: date-time
+    br.com.concordia.infrastructure.obra.dtos.MedicaoRequest:
+      type: object
+      properties:
+        percentualExecutado:
+          type: number
+          maximum: 100.0
+          minimum: 0.0
+        quantidadeExecutada:
+          type: number
+          minimum: 0.0
+        observacao:
+          type: string
+        motivoAtraso:
+          type: string
+        diasAtraso:
+          type: integer
+          format: int32
+          minimum: 0
+      required:
+      - percentualExecutado
+      - quantidadeExecutada
+    br.com.concordia.infrastructure.cronograma.CronogramaController.ExecucaoRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - NAO_INICIADA
+          - EM_ANDAMENTO
+          - CONCLUIDA
+        inicioReal:
+          type: string
+          format: date-time
+        fimReal:
+          type: string
+          format: date-time
+      required:
+      - inicioReal
+      - status
+    br.com.concordia.infrastructure.obra.dtos.ObraParcialRequest:
+      type: object
+      properties:
+        descricao:
+          type: string
+        uf:
+          type: string
+          enum:
+          - AC
+          - AL
+          - AP
+          - AM
+          - BA
+          - CE
+          - DF
+          - ES
+          - GO
+          - MA
+          - MT
+          - MS
+          - MG
+          - PA
+          - PB
+          - PR
+          - PE
+          - PI
+          - RJ
+          - RN
+          - RS
+          - RO
+          - RR
+          - SC
+          - SP
+          - SE
+          - TO
+        fusoHorario:
+          type: string
+        idEmpresa:
+          type: string
+          format: uuid
+    br.com.concordia.infrastructure.insumo.dtos.InsumoParcialRequest:
+      type: object
+      properties:
+        codigo:
+          type: string
+        descricao:
+          type: string
+        unidade:
+          type: string
+          enum:
+          - KG
+          - G
+          - T
+          - M
+          - M2
+          - M3
+          - KM
+          - KM/T
+          - M3XKM
+          - H
+          - MES
+          - DIA
+          - UN
+          - MIL
+          - CENT
+          - DZ
+          - PAR
+          - CJ
+          - JG
+          - KIT
+          - L
+          - GL
+          - CX
+          - SC
+          - RL
+          - TB
+          - LATA
+          - KWH
+          - TX
+          - VB
+        preco:
+          type: number
+    br.com.concordia.infrastructure.empresa.dtos.EmpresaParcialRequest:
+      type: object
+      properties:
+        nome:
+          type: string
+        cnpj:
+          type: string
+          pattern: ^\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}$|^\d{14}$
+        razaoSocial:
+          type: string
+    br.com.concordia.infrastructure.composicao.dtos.ComposicaoParcialRequest:
+      type: object
+      properties:
+        codigo:
+          type: string
+        descricao:
+          type: string
+        unidade:
+          type: string
+          enum:
+          - KG
+          - G
+          - T
+          - M
+          - M2
+          - M3
+          - KM
+          - KM/T
+          - M3XKM
+          - H
+          - MES
+          - DIA
+          - UN
+          - MIL
+          - CENT
+          - DZ
+          - PAR
+          - CJ
+          - JG
+          - KIT
+          - L
+          - GL
+          - CX
+          - SC
+          - RL
+          - TB
+          - LATA
+          - KWH
+          - TX
+          - VB
+        preco:
+          type: number
+    br.com.concordia.domain.cronograma.CronogramaDados.Cronograma:
+      type: object
+      properties:
+        obraId:
+          type: string
+          format: uuid
+        descricao:
+          type: string
+        fusoHorario:
+          type: string
+        cronograma:
+          $ref: '#/components/schemas/br.com.concordia.domain.cronograma.CronogramaDados.Snapshot'
+        atrasos:
+          type: array
+          items:
+            $ref: '#/components/schemas/br.com.concordia.domain.cronograma.CronogramaDados.Atraso'

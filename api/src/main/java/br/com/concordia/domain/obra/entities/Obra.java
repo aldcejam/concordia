@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.UuidGenerator;
 
 @Entity
@@ -46,6 +47,14 @@ public class Obra {
 
     @OneToMany(mappedBy = "obra", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemEap> eap = new ArrayList<>();
+
+    @Column(nullable = false)
+    @ColumnDefault("0")
+    private long versaoCronograma;
+
+    public void alterarCronograma() {
+        versaoCronograma++;
+    }
 
     public Obra(
             @NonNull String descricao, @NonNull UnidadeFederativa uf, @NonNull ZoneId fusoHorario, Empresa empresa) {
@@ -95,7 +104,7 @@ public class Obra {
             throw new IllegalArgumentException("O item da EAP pertence a outra obra.");
         }
         eap.add(item);
-        if (item.getPai() != null) {
+        if (item.getPai() != null && !item.getPai().getFilhos().contains(item)) {
             item.getPai().getFilhos().add(item);
         }
     }

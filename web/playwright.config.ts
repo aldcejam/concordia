@@ -8,12 +8,12 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: 'list',
   use: {
+    browserName: 'chromium',
     baseURL: 'http://127.0.0.1:5173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     reducedMotion: 'reduce',
     launchOptions: {
-      executablePath: '/home/apm/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome',
       args: ['--no-sandbox'],
     },
   },

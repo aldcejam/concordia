@@ -40,6 +40,7 @@ As skills especializadas estão configuradas em `.agents/skills/`:
 - **`frontend-development`** (`.agents/skills/frontend-development/SKILL.md`): Fluxo de desenvolvimento do frontend React/Vite do Concordia, uso de Tailwind CSS puro, Lucide React, TanStack Query, React Router e implementação da trilha gamificada/tátil.
 - **`bp-playwright`** (`.agents/skills/bp-playwright/SKILL.md`): Melhores práticas para testes automatizados com Playwright (E2E, componentes, Page Object Model, fixtures, mocks, responsividade, acessibilidade e CI/CD).
 - **`storybook-mcp`** (`.agents/skills/storybook-mcp/SKILL.md`): Fluxo para consultar o catálogo do Storybook via MCP antes de criar ou alterar componentes e stories.
+- **`domscribe`** (`.agents/skills/domscribe/SKILL.md`): Ponte pixel-to-code entre o frontend em execução e o agente de IA para mapear elementos visuais, inspecionar props/estado em tempo real e processar anotações de UI.
 
 ---
 

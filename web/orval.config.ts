@@ -3,7 +3,7 @@ import { defineConfig } from 'orval';
 export default defineConfig({
   concordia: {
     input: {
-      target: 'http://localhost:8080/v3/api-docs',
+      target: process.env.OPENAPI_URL ?? 'http://localhost:8080/v3/api-docs',
     },
     output: {
       target: './src/api/generated/concordia.ts',

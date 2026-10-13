@@ -22,7 +22,7 @@ public class ItemEap {
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     private UUID id;
 
-    @Column(nullable = false, length = 2000)
+    @Column(nullable = false, columnDefinition = "text")
     private String nome;
 
     @Column(name = "codigo_eap", length = 80)
@@ -128,5 +128,4 @@ public class ItemEap {
         this.percentualBdi = percentualBdi;
         this.valorTotalOrcado = valorTotalOrcado;
     }
-
 }

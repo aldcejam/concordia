@@ -8,7 +8,11 @@ import java.util.UUID;
 public interface ObraRepository {
     Obra save(Obra obra);
 
+    void flush();
+
     Optional<Obra> findById(UUID id);
+
+    Optional<Obra> findByIdForUpdate(UUID id);
 
     List<Obra> findAll();
 

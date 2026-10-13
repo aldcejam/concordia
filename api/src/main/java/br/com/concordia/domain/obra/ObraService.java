@@ -2,12 +2,12 @@ package br.com.concordia.domain.obra;
 
 import br.com.concordia.domain.empresa.EmpresaRepository;
 import br.com.concordia.domain.empresa.entities.Empresa;
-import br.com.concordia.domain.obra.dtos.ObraInput;
-import br.com.concordia.domain.obra.dtos.ObraOutput;
 import br.com.concordia.domain.obra.dtos.EtapaInput;
 import br.com.concordia.domain.obra.dtos.EtapaOutput;
 import br.com.concordia.domain.obra.dtos.MedicaoInput;
 import br.com.concordia.domain.obra.dtos.MedicaoOutput;
+import br.com.concordia.domain.obra.dtos.ObraInput;
+import br.com.concordia.domain.obra.dtos.ObraOutput;
 import br.com.concordia.domain.obra.entities.EtapaObra;
 import br.com.concordia.domain.obra.entities.ItemEap;
 import br.com.concordia.domain.obra.entities.MedicaoEtapa;
@@ -57,18 +57,20 @@ public class ObraService {
 
     @Transactional
     public ObraOutput atualizar(UUID id, ObraInput request) {
-        var obra = obterObra(id);
+        var obra = obterObraParaAtualizar(id);
         Empresa empresa = obterEmpresa(request.idEmpresa());
         obra.atualizar(request.descricao(), request.uf(), request.fusoHorario(), empresa);
+        obra.alterarCronograma();
 
         return mapper.toOutputDto(obra);
     }
 
     @Transactional
     public ObraOutput atualizarParcial(UUID id, ObraInput request) {
-        var obra = obterObra(id);
+        var obra = obterObraParaAtualizar(id);
         Empresa empresa = obterEmpresa(request.idEmpresa());
         obra.atualizarParcial(request.descricao(), request.uf(), request.fusoHorario(), empresa);
+        obra.alterarCronograma();
 
         return mapper.toOutputDto(obra);
     }
@@ -99,7 +101,7 @@ public class ObraService {
 
     @Transactional
     public EtapaOutput criarEtapa(UUID obraId, EtapaInput request) {
-        var obra = obterObra(obraId);
+        var obra = obterObraParaAtualizar(obraId);
         ItemEap pai = null;
         if (request.idItemPai() != null) {
             pai = obra.getEap().stream()
@@ -128,18 +130,20 @@ public class ObraService {
                 request.valorTotalOrcado());
         obra.adicionarEtapa(etapa);
         obra.adicionarItemEap(item);
-        obraRepository.save(obra);
-        return toEtapaOutput(item);
+        obra.alterarCronograma();
+        var persistida = obraRepository.save(obra);
+        obraRepository.flush();
+        return toEtapaOutput(persistida.getEap().getLast());
     }
 
     @Transactional
     public EtapaOutput atualizarOrcamentoEtapa(UUID obraId, UUID etapaId, EtapaInput request) {
-        var obra = obterObra(obraId);
+        var obra = obterObraParaAtualizar(obraId);
         var item = obra.getEap().stream()
                 .filter(eap -> eap.getEtapa() != null && eap.getEtapa().getId().equals(etapaId))
                 .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Etapa com ID %s não foi encontrada na obra".formatted(etapaId)));
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Etapa com ID %s não foi encontrada na obra".formatted(etapaId)));
         item.atualizarDadosOrcamento(
                 request.nome(),
                 request.codigoEap(),
@@ -153,6 +157,7 @@ public class ObraService {
                 request.valorUnitarioBase(),
                 request.percentualBdi(),
                 request.valorTotalOrcado());
+        obra.alterarCronograma();
         return toEtapaOutput(item);
     }
 
@@ -162,25 +167,26 @@ public class ObraService {
         var item = obra.getEap().stream()
                 .filter(eap -> eap.getEtapa() != null && eap.getEtapa().getId().equals(etapaId))
                 .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Etapa com ID %s não foi encontrada na obra".formatted(etapaId)));
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Etapa com ID %s não foi encontrada na obra".formatted(etapaId)));
         return toEtapaOutput(item);
     }
 
     @Transactional
     public EtapaOutput registrarMedicao(UUID obraId, UUID etapaId, MedicaoInput request) {
-        var obra = obterObra(obraId);
+        var obra = obterObraParaAtualizar(obraId);
         var etapa = obra.getEtapas().stream()
                 .filter(item -> item.getId().equals(etapaId))
                 .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Etapa com ID %s não foi encontrada na obra".formatted(etapaId)));
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Etapa com ID %s não foi encontrada na obra".formatted(etapaId)));
         etapa.registrarMedicao(
                 request.percentualExecutado(),
                 request.quantidadeExecutada(),
                 request.observacao(),
                 request.motivoAtraso(),
                 request.diasAtraso());
+        obra.alterarCronograma();
         obraRepository.save(obra);
 
         return consultarEtapa(obraId, etapaId);
@@ -189,6 +195,12 @@ public class ObraService {
     private @NonNull Obra obterObra(UUID id) {
         return obraRepository
                 .findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Obra com ID %s não foi encontrada".formatted(id)));
+    }
+
+    private @NonNull Obra obterObraParaAtualizar(UUID id) {
+        return obraRepository
+                .findByIdForUpdate(id)
                 .orElseThrow(() -> new EntityNotFoundException("Obra com ID %s não foi encontrada".formatted(id)));
     }
 
@@ -206,7 +218,9 @@ public class ObraService {
     private EtapaOutput toEtapaOutput(ItemEap item) {
         var etapa = item.getEtapa();
         var medicoes = etapa.getMedicoes().stream().map(this::toMedicaoOutput).toList();
-        var ultimaMedicao = etapa.getMedicoes().isEmpty() ? null : etapa.getMedicoes().get(etapa.getMedicoes().size() - 1);
+        var ultimaMedicao = etapa.getMedicoes().isEmpty()
+                ? null
+                : etapa.getMedicoes().get(etapa.getMedicoes().size() - 1);
 
         return new EtapaOutput(
                 etapa.getId(),

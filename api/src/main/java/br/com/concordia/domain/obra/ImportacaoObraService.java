@@ -26,7 +26,7 @@ public class ImportacaoObraService {
     @Transactional
     public ImportacaoObraOutput importar(UUID idObra, ImportacaoObraInput input) {
         var obra = obraRepository
-                .findById(idObra)
+                .findByIdForUpdate(idObra)
                 .orElseThrow(() -> new EntityNotFoundException("Obra com ID %s não foi encontrada".formatted(idObra)));
 
         if (!obra.getEap().isEmpty()) {
@@ -47,6 +47,7 @@ public class ImportacaoObraService {
             }
         }
 
+        obra.alterarCronograma();
         obraRepository.save(obra);
         return new ImportacaoObraOutput(obra.getId(), itensPorNumero.size());
     }

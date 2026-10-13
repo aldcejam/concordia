@@ -1,6 +1,7 @@
 import ReactDOMServer from 'react-dom/server';
 import assert from 'node:assert/strict';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
 
 // -----------------------------------------------------------------------------
 // 1. UNIFIED ROOT BARREL IMPORT VERIFICATION (@/components)
@@ -31,7 +32,7 @@ import { TimelineNodeData } from '@/types/timeline';
 const renderTimelinePage = () => {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return ReactDOMServer.renderToStaticMarkup(
-    <QueryClientProvider client={queryClient}><TimelinePage /></QueryClientProvider>
+    <MemoryRouter><QueryClientProvider client={queryClient}><TimelinePage /></QueryClientProvider></MemoryRouter>
   );
 };
 
@@ -218,23 +219,10 @@ testCase('ConstructionTimeline supports custom nodes array override', () => {
 // -----------------------------------------------------------------------------
 console.log('\n--- 3. Floating Smooth-Scroll Button targeting in_progress ---');
 
-testCase('TimelinePage renders floating action button in BlueprintLayout', () => {
+testCase('TimelinePage waits for real API data before offering stage actions', () => {
   const html = renderTimelinePage();
-
-  // Button exists and has accessibility label
-  assert.ok(
-    html.includes('aria-label="Centralizar na etapa em execução"'),
-    'Floating action button must have accessible aria-label'
-  );
-  assert.ok(
-    html.includes('title="Centralizar na etapa em execução"'),
-    'Floating action button must have title'
-  );
-  // Fixed positioning container
-  assert.ok(
-    html.includes('fixed bottom-6 right-5 z-30'),
-    'Floating action container must be fixed bottom-6 right-5 z-30'
-  );
+  assert.ok(html.includes('Carregando trilha...'), 'Loading feedback must remain visible');
+  assert.ok(!html.includes('data-node-id'), 'No stage action is available without real stages');
 });
 
 testCase('TimelinePage does not render story fixtures before real API data loads', () => {
@@ -245,7 +233,7 @@ const nodes = DEFAULT_TIMELINE_NODES;
 
   const html = renderTimelinePage();
   assert.ok(
-    !html.includes('Tubulação PVC R DN 150mm') && html.includes('Carregando trilha da obra'),
+    !html.includes('Tubulação PVC R DN 150mm') && html.includes('Carregando trilha...'),
     'Page must show loading state and keep Storybook fixtures out of production'
   );
 });
@@ -445,10 +433,9 @@ testCase('TimelinePage SSR renders the API-backed loading state without mock pro
   assert.ok(!html.includes('OBRA CV-0248'), 'Mock contract code must not be rendered');
   assert.ok(!html.includes('142 dias restantes'), 'Mock schedule must not be rendered');
 
-  assert.ok(html.includes('Carregando trilha da obra'), 'Loading state must be shown while API data loads');
+  assert.ok(html.includes('Carregando trilha...'), 'Loading state must be shown while API data loads');
 
-  // Floating button check
-  assert.ok(html.includes('aria-label="Centralizar na etapa em execução"'), 'FAB missing in page');
+  assert.ok(!html.includes('Indicar atraso'), 'Delay actions require a loaded stage');
 });
 
 testCase('TimelineHeader handles custom and default props defensively', () => {

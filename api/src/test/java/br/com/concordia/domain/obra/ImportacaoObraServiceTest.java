@@ -104,6 +104,14 @@ class ImportacaoObraServiceTest {
         }
 
         @Override
+        public Optional<Obra> findByIdForUpdate(UUID id) {
+            return findById(id);
+        }
+
+        @Override
+        public void flush() {}
+
+        @Override
         public List<Obra> findAll() {
             return List.of(obra);
         }
