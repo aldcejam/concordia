@@ -13,6 +13,7 @@ echo "Working Directory: ${WEB_DIR}"
 echo ""
 
 SUITES=(
+  "src/tests/SugestaoAtrasoModal.component.test.tsx"
   "src/tests/TactileNode.component.test.tsx"
   "src/tests/StageDetailsDrawer.component.test.tsx"
   "src/tests/m1_empirical_stress.test.tsx"

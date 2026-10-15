@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useListar, useListarEtapas } from '@/api/generated/obras/obras';
 import type { BrComConcordiaInfrastructureObraDtosEtapaResponse } from '@/api/generated/models';
-import { ChevronDown, HardHat, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown, HardHat, ClipboardList, ChevronLeft, ChevronRight, AlertTriangle, Sparkles } from 'lucide-react';
+import { SugestaoAtrasoModal } from '@/components/molecules';
 
 const PROJECT_DESCRIPTION =
   'COMPLEMENTAÇÃO DA OBRA DA ESCOLA MULTICAMPI DE CIÊNCIAS MÉDICAS (EMCM) - INFRAESTRUTURA E URBANIZAÇÃO - COM DESCONTO LINEAR';
@@ -22,9 +23,16 @@ interface GroupedData {
 export const TimelinePage: React.FC = () => {
   const obrasQuery = useListar();
   const obras = obrasQuery.data?.data ?? [];
-  const obra = obras.find((item) => item.descricao === PROJECT_DESCRIPTION);
+  const obra = obras.find((item) => item.descricao === PROJECT_DESCRIPTION) ?? obras[0];
   const etapasQuery = useListarEtapas(obra?.id ?? '', { query: { enabled: Boolean(obra?.id) } });
   const stages = etapasQuery.data?.data ?? EMPTY_STAGES;
+
+  const [selectedStageForDelay, setSelectedStageForDelay] = useState<{
+    id: string;
+    nome: string;
+    codigoEap?: string;
+  } | null>(null);
+  const [delays, setDelays] = useState<Record<string, { dias: number; motivo: string }>>({});
 
   const scrollAnimationRef = React.useRef<number | null>(null);
 
@@ -71,8 +79,10 @@ export const TimelinePage: React.FC = () => {
         root.subGroups.push(sub);
       }
       
+      const title = stage.nome || stage.descricao || '';
       sub.nodes.push({
          ...stage,
+         title,
          progress: Math.min(100, Math.max(0, Number(stage.percentualExecutado ?? 0))),
          plannedQuantity: Number(stage.quantidadeOrcada ?? 0),
          executedQuantity: Number(stage.quantidadeExecutada ?? 0),
@@ -102,8 +112,22 @@ export const TimelinePage: React.FC = () => {
   const completedCount = stages.filter(s => Number(s.percentualExecutado ?? 0) >= 100).length;
   const delayedCount = stages.filter(s => Boolean(s.motivoAtraso)).length;
 
-  if (obrasQuery.isLoading || etapasQuery.isLoading) {
-     return <div className="min-h-screen bg-background flex items-center justify-center blueprint-grid"><p className="animate-pulse text-muted-foreground font-bold font-mono">Carregando trilha...</p></div>;
+  if (obrasQuery.isLoading || etapasQuery.isLoading || stages.length === 0) {
+     return (
+       <div className="min-h-screen bg-background flex flex-col items-center justify-center blueprint-grid">
+         <p className="animate-pulse text-muted-foreground font-bold font-mono">Carregando trilha da obra…</p>
+         <div className="fixed bottom-6 right-5 z-30">
+           <button
+             type="button"
+             aria-label="Centralizar na etapa em execução"
+             title="Centralizar na etapa em execução"
+             className="size-12 rounded-full bg-primary text-white shadow-xl hover:bg-primary-soft flex items-center justify-center transition-all active:scale-95"
+           >
+             <HardHat className="size-6" />
+           </button>
+         </div>
+       </div>
+     );
   }
 
   if (!obra) {
@@ -235,10 +259,11 @@ export const TimelinePage: React.FC = () => {
             <div className="relative mt-8 mb-16 w-full max-w-4xl mx-auto">
                <div className="absolute left-1/2 top-4 bottom-4 w-0 border-l-2 border-dashed border-border -translate-x-1/2 z-0"></div>
                <div className="space-y-16">
-                  {activeSub?.nodes.map((node, index) => {
+                   {activeSub?.nodes.map((node, index) => {
                      const isDone = node.progress >= 100;
                      const isStarted = node.progress > 0 && !isDone;
                      const isLeft = index % 2 === 0;
+                     const delay = delays[node.id];
 
                      return (
                         <div key={node.id} className={`flex w-full items-start ${isLeft ? 'flex-row' : 'flex-row-reverse'}`}>
@@ -253,6 +278,13 @@ export const TimelinePage: React.FC = () => {
                                  </div>
 
                                  <h4 className="font-extrabold text-sm sm:text-base text-foreground uppercase leading-snug">{node.title}</h4>
+
+                                 {delay && (
+                                    <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-warning/15 border border-warning/30 text-warning-dark text-xs font-bold">
+                                       <AlertTriangle className="size-3.5 shrink-0 text-warning" />
+                                       Atraso: {delay.dias}d • {delay.motivo}
+                                    </div>
+                                 )}
                                  
                                  <p className="font-mono text-[9px] sm:text-[10px] text-muted-foreground mt-2 uppercase font-bold">
                                     {node.progress}% MEDIDO • {quantity.format(node.executedQuantity)} {node.unidadeOrcamento} DE {quantity.format(node.plannedQuantity)} {node.unidadeOrcamento}
@@ -263,15 +295,30 @@ export const TimelinePage: React.FC = () => {
                                     <span>Unitário {money.format(node.valorUnitarioOrcado)}</span>
                                     <span className="font-bold text-primary-deep text-xs">{money.format(node.budgetedValue)}</span>
                                  </div>
+
+                                 <button
+                                    type="button"
+                                    onClick={() => setSelectedStageForDelay({ id: node.id, nome: node.title, codigoEap: node.codigoEap })}
+                                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/25 bg-primary/5 hover:bg-primary/10 text-primary text-xs font-bold transition-all active:scale-95 shadow-sm"
+                                    title="Indicar atraso e consultar opções de adiantamento com IA"
+                                 >
+                                    <Sparkles className="size-3.5 text-gold-dark" />
+                                    Indicar Atraso & IA
+                                 </button>
                               </div>
                            </div>
 
                            <div className="relative flex justify-center shrink-0 w-0 z-10">
-                              <div className="absolute top-0 -translate-y-2 grid place-items-center w-12 h-12 sm:w-14 sm:h-14 bg-background border-[6px] border-muted/30 rounded-full shadow-sm z-10">
+                              <button
+                                 type="button"
+                                 onClick={() => setSelectedStageForDelay({ id: node.id, nome: node.title, codigoEap: node.codigoEap })}
+                                 title={`Reprogramar etapa ${node.codigoEap || ''} ${node.title}`}
+                                 className="absolute top-0 -translate-y-2 grid place-items-center w-12 h-12 sm:w-14 sm:h-14 bg-background border-[6px] border-muted/30 hover:border-primary/50 rounded-full shadow-sm z-10 transition-transform active:scale-95 cursor-pointer"
+                              >
                                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-border bg-white flex items-center justify-center">
-                                    <ClipboardList className="size-4 sm:size-5 text-primary-deep" />
+                                    {delay ? <AlertTriangle className="size-4 sm:size-5 text-warning" /> : <ClipboardList className="size-4 sm:size-5 text-primary-deep" />}
                                  </div>
-                              </div>
+                              </button>
                            </div>
                            
                            <div className="w-1/2"></div>
@@ -282,6 +329,40 @@ export const TimelinePage: React.FC = () => {
             </div>
          </section>
       </main>
+
+      <div className="fixed bottom-6 right-5 z-30">
+        <button
+          type="button"
+          onClick={() => {
+            const inProgressEl = document.querySelector('[data-status="in_progress"]');
+            if (inProgressEl) {
+              inProgressEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }}
+          aria-label="Centralizar na etapa em execução"
+          title="Centralizar na etapa em execução"
+          className="size-12 rounded-full bg-primary text-white shadow-xl hover:bg-primary-soft flex items-center justify-center transition-all active:scale-95"
+        >
+          <HardHat className="size-6" />
+        </button>
+      </div>
+
+      {selectedStageForDelay && obra?.id && (
+        <SugestaoAtrasoModal
+          isOpen={Boolean(selectedStageForDelay)}
+          onClose={() => setSelectedStageForDelay(null)}
+          etapa={selectedStageForDelay}
+          obraId={obra.id}
+          onSuccess={(res) => {
+            setDelays((prev) => ({
+              ...prev,
+              [res.etapaAtrasadaId]: { dias: res.diasAtraso, motivo: res.motivo },
+            }));
+          }}
+        />
+      )}
     </div>
   );
 };
