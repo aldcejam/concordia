@@ -2,12 +2,12 @@ package br.com.concordia.domain.obra;
 
 import br.com.concordia.domain.empresa.EmpresaRepository;
 import br.com.concordia.domain.empresa.entities.Empresa;
-import br.com.concordia.domain.obra.dtos.ObraInput;
-import br.com.concordia.domain.obra.dtos.ObraOutput;
 import br.com.concordia.domain.obra.dtos.EtapaInput;
 import br.com.concordia.domain.obra.dtos.EtapaOutput;
 import br.com.concordia.domain.obra.dtos.MedicaoInput;
 import br.com.concordia.domain.obra.dtos.MedicaoOutput;
+import br.com.concordia.domain.obra.dtos.ObraInput;
+import br.com.concordia.domain.obra.dtos.ObraOutput;
 import br.com.concordia.domain.obra.entities.EtapaObra;
 import br.com.concordia.domain.obra.entities.ItemEap;
 import br.com.concordia.domain.obra.entities.MedicaoEtapa;
@@ -138,8 +138,8 @@ public class ObraService {
         var item = obra.getEap().stream()
                 .filter(eap -> eap.getEtapa() != null && eap.getEtapa().getId().equals(etapaId))
                 .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Etapa com ID %s não foi encontrada na obra".formatted(etapaId)));
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Etapa com ID %s não foi encontrada na obra".formatted(etapaId)));
         item.atualizarDadosOrcamento(
                 request.nome(),
                 request.codigoEap(),
@@ -162,8 +162,8 @@ public class ObraService {
         var item = obra.getEap().stream()
                 .filter(eap -> eap.getEtapa() != null && eap.getEtapa().getId().equals(etapaId))
                 .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Etapa com ID %s não foi encontrada na obra".formatted(etapaId)));
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Etapa com ID %s não foi encontrada na obra".formatted(etapaId)));
         return toEtapaOutput(item);
     }
 
@@ -173,8 +173,8 @@ public class ObraService {
         var etapa = obra.getEtapas().stream()
                 .filter(item -> item.getId().equals(etapaId))
                 .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Etapa com ID %s não foi encontrada na obra".formatted(etapaId)));
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Etapa com ID %s não foi encontrada na obra".formatted(etapaId)));
         etapa.registrarMedicao(
                 request.percentualExecutado(),
                 request.quantidadeExecutada(),
@@ -206,7 +206,9 @@ public class ObraService {
     private EtapaOutput toEtapaOutput(ItemEap item) {
         var etapa = item.getEtapa();
         var medicoes = etapa.getMedicoes().stream().map(this::toMedicaoOutput).toList();
-        var ultimaMedicao = etapa.getMedicoes().isEmpty() ? null : etapa.getMedicoes().get(etapa.getMedicoes().size() - 1);
+        var ultimaMedicao = etapa.getMedicoes().isEmpty()
+                ? null
+                : etapa.getMedicoes().get(etapa.getMedicoes().size() - 1);
 
         return new EtapaOutput(
                 etapa.getId(),
@@ -245,5 +247,50 @@ public class ObraService {
                 medicao.getMotivoAtraso(),
                 medicao.getDiasAtraso(),
                 medicao.getRegistradaEm());
+    }
+
+    @Transactional
+    public List<EtapaOutput> reordenarEtapaLogoApos(UUID obraId, UUID etapaAtrasadaId, UUID etapaAdiantadaId) {
+        var obra = obterObra(obraId);
+        var itensComEtapa = obra.getEap().stream()
+                .filter(item -> item.getEtapa() != null)
+                .sorted(java.util.Comparator.comparing(ItemEap::getPosicao))
+                .toList();
+
+        var itemAtrasado = itensComEtapa.stream()
+                .filter(item -> (item.getEtapa() != null
+                                && etapaAtrasadaId.equals(item.getEtapa().getId()))
+                        || (item.getId() != null && etapaAtrasadaId.equals(item.getId())))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Etapa atrasada com ID %s não encontrada".formatted(etapaAtrasadaId)));
+
+        var itemAdiantado = itensComEtapa.stream()
+                .filter(item -> (item.getEtapa() != null
+                                && etapaAdiantadaId.equals(item.getEtapa().getId()))
+                        || (item.getId() != null && etapaAdiantadaId.equals(item.getId())))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Etapa adiantada com ID %s não encontrada".formatted(etapaAdiantadaId)));
+
+        if (!itemAtrasado.equals(itemAdiantado)) {
+            int idxAtrasado = itensComEtapa.indexOf(itemAtrasado);
+            Double posAtrasado = itemAtrasado.getPosicao();
+            Double proximaPosicao = (idxAtrasado + 1 < itensComEtapa.size())
+                    ? itensComEtapa.get(idxAtrasado + 1).getPosicao()
+                    : posAtrasado + 1000.0;
+
+            if (idxAtrasado + 1 < itensComEtapa.size() && itemAdiantado.equals(itensComEtapa.get(idxAtrasado + 1))) {
+                proximaPosicao = (idxAtrasado + 2 < itensComEtapa.size())
+                        ? itensComEtapa.get(idxAtrasado + 2).getPosicao()
+                        : posAtrasado + 1000.0;
+            }
+
+            Double novaPosicao = (posAtrasado + proximaPosicao) / 2.0;
+            itemAdiantado.moverParaLogoApos(itemAtrasado, novaPosicao);
+            obraRepository.save(obra);
+        }
+
+        return listarEtapas(obraId);
     }
 }

@@ -4,3 +4,4 @@ export * from './SiteDecoration';
 export * from './SectionBanner';
 export * from './StagePopover';
 export * from './SnakePath';
+export * from './SugestaoAtrasoModal';

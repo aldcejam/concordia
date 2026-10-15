@@ -1,7 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { useListar, useListarEtapas } from '@/api/generated/obras/obras';
 import type { BrComConcordiaInfrastructureObraDtosEtapaResponse } from '@/api/generated/models';
-import { ChevronDown, HardHat, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown, HardHat, ClipboardList, ChevronLeft, ChevronRight, AlertTriangle, Sparkles } from 'lucide-react';
+import { SugestaoAtrasoModal } from '@/components/molecules';
+import type { SugestaoItem, AnaliseAtrasoResult } from '@/components/molecules/SugestaoAtrasoModal';
+import { api } from '@/services/api';
 
 const PROJECT_DESCRIPTION =
   'COMPLEMENTAÇÃO DA OBRA DA ESCOLA MULTICAMPI DE CIÊNCIAS MÉDICAS (EMCM) - INFRAESTRUTURA E URBANIZAÇÃO - COM DESCONTO LINEAR';
@@ -19,12 +22,45 @@ interface GroupedData {
   }[];
 }
 
+function getNodeStatusStyle(isAdiantada: boolean, isDone: boolean, isStarted: boolean): string {
+  if (isAdiantada) return 'bg-amber-100 text-amber-900 border border-amber-300';
+  if (isDone) return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+  if (isStarted) return 'bg-blue-100 text-blue-800 border border-blue-200';
+  return 'bg-primary-deep text-white border border-primary-deep';
+}
+
+function getNodeStatusLabel(isAdiantada: boolean, isDone: boolean, isStarted: boolean, progress: number): string {
+  if (isAdiantada) return 'ADIANTADA PELA IA';
+  if (isDone) return 'CONCLUÍDO';
+  if (isStarted) return `${progress}% MEDIDO`;
+  return 'ORÇADO • SEM MEDIÇÃO';
+}
+
+function renderNodeIcon(hasDelay: boolean, isAdiantada: boolean) {
+  if (hasDelay) {
+    return <AlertTriangle className="size-4 sm:size-5 text-warning" />;
+  }
+  if (isAdiantada) {
+    return <Sparkles className="size-4 sm:size-5 text-gold-dark" />;
+  }
+  return <ClipboardList className="size-4 sm:size-5 text-primary-deep" />;
+}
+
 export const TimelinePage: React.FC = () => {
   const obrasQuery = useListar();
   const obras = obrasQuery.data?.data ?? [];
-  const obra = obras.find((item) => item.descricao === PROJECT_DESCRIPTION);
+  const obra = obras.find((item) => item.descricao === PROJECT_DESCRIPTION) ?? obras[0];
   const etapasQuery = useListarEtapas(obra?.id ?? '', { query: { enabled: Boolean(obra?.id) } });
   const stages = etapasQuery.data?.data ?? EMPTY_STAGES;
+
+  const [customStages, setCustomStages] = useState<BrComConcordiaInfrastructureObraDtosEtapaResponse[] | null>(null);
+  const [adiantadas, setAdiantadas] = useState<Record<string, { porEtapaId: string; justificativa?: string }>>({});
+  const [selectedStageForDelay, setSelectedStageForDelay] = useState<{
+    id: string;
+    nome: string;
+    codigoEap?: string;
+  } | null>(null);
+  const [delays, setDelays] = useState<Record<string, { dias: number; motivo: string }>>({});
 
   const scrollAnimationRef = React.useRef<number | null>(null);
 
@@ -46,14 +82,63 @@ export const TimelinePage: React.FC = () => {
     }
   };
 
+  const currentStages = useMemo(() => {
+    return customStages ?? stages;
+  }, [customStages, stages]);
+
+  const handleEscolherEtapa = async (sugestao: SugestaoItem, resultado: AnaliseAtrasoResult) => {
+    const etapaAtrasadaId = resultado.etapaAtrasadaId;
+    const etapaAdiantadaId = sugestao.etapaId;
+
+    setDelays((prev) => ({
+      ...prev,
+      [etapaAtrasadaId]: { dias: resultado.diasAtraso, motivo: resultado.motivo },
+    }));
+
+    setAdiantadas((prev) => ({
+      ...prev,
+      [etapaAdiantadaId]: {
+        porEtapaId: etapaAtrasadaId,
+        justificativa: sugestao.justificativa,
+      },
+    }));
+
+    const baseList = [...(customStages ?? stages)];
+    const itemAdiantadoIndex = baseList.findIndex((s) => s.id === etapaAdiantadaId);
+    if (itemAdiantadoIndex !== -1) {
+      const [itemAdiantado] = baseList.splice(itemAdiantadoIndex, 1);
+      const itemAtrasadoIndex = baseList.findIndex((s) => s.id === etapaAtrasadaId);
+      if (itemAtrasadoIndex !== -1) {
+        baseList.splice(itemAtrasadoIndex + 1, 0, itemAdiantado);
+        setCustomStages(baseList);
+      }
+    }
+
+    if (obra?.id) {
+      try {
+        await api.post(`/obras/${obra.id}/reordenar-etapa`, {
+          etapaAtrasadaId,
+          etapaAdiantadaId,
+        });
+      } catch (err) {
+        console.warn('Persistencia de reordenacao no backend:', err);
+      }
+    }
+  };
+
   const rootGroups = useMemo(() => {
     const map = new Map<string, GroupedData>();
-    stages.forEach(stage => {
-      const eap = stage.codigoEap || '';
-      const parts = eap.split('.');
+    currentStages.forEach(stage => {
+      const targetAtrasadaId = stage.id ? adiantadas[stage.id]?.porEtapaId : undefined;
+      const stageAtrasadaRef = targetAtrasadaId ? currentStages.find(s => s.id === targetAtrasadaId) : null;
+
+      const effectiveEap = stageAtrasadaRef?.codigoEap || stage.codigoEap || '';
+      const effectiveMacro = stageAtrasadaRef?.macroetapa || stage.macroetapa || 'GERAL';
+
+      const parts = effectiveEap.split('.');
       const rootId = parts[0] || '1';
       
-      const macroParts = (stage.macroetapa || 'GERAL').split('›').map(s => s.trim());
+      const macroParts = effectiveMacro.split('›').map(s => s.trim());
       const rootName = macroParts[0];
       
       const isDirectChild = parts.length <= 2;
@@ -71,8 +156,10 @@ export const TimelinePage: React.FC = () => {
         root.subGroups.push(sub);
       }
       
+      const title = stage.nome || stage.descricao || '';
       sub.nodes.push({
          ...stage,
+         title,
          progress: Math.min(100, Math.max(0, Number(stage.percentualExecutado ?? 0))),
          plannedQuantity: Number(stage.quantidadeOrcada ?? 0),
          executedQuantity: Number(stage.quantidadeExecutada ?? 0),
@@ -90,7 +177,7 @@ export const TimelinePage: React.FC = () => {
        return 0;
     }));
     return groups;
-  }, [stages]);
+  }, [currentStages, adiantadas]);
 
   const [activeRootId, setActiveRootId] = useState<string | null>(null);
   const [activeSubId, setActiveSubId] = useState<string | null>(null);
@@ -98,12 +185,26 @@ export const TimelinePage: React.FC = () => {
   const activeRoot = rootGroups.find(g => g.id === activeRootId) ?? rootGroups[0];
   const activeSub = activeRoot?.subGroups.find(s => s.id === activeSubId) ?? activeRoot?.subGroups[0];
 
-  const totalBudget = stages.reduce((acc, stage) => acc + Number(stage.valorTotalOrcado ?? 0), 0);
-  const completedCount = stages.filter(s => Number(s.percentualExecutado ?? 0) >= 100).length;
-  const delayedCount = stages.filter(s => Boolean(s.motivoAtraso)).length;
+  const totalBudget = currentStages.reduce((acc, stage) => acc + Number(stage.valorTotalOrcado ?? 0), 0);
+  const completedCount = currentStages.filter(s => Number(s.percentualExecutado ?? 0) >= 100).length;
+  const delayedCount = currentStages.filter(s => Boolean(s.motivoAtraso) || (s.id ? Boolean(delays[s.id]) : false)).length;
 
-  if (obrasQuery.isLoading || etapasQuery.isLoading) {
-     return <div className="min-h-screen bg-background flex items-center justify-center blueprint-grid"><p className="animate-pulse text-muted-foreground font-bold font-mono">Carregando trilha...</p></div>;
+  if (obrasQuery.isLoading || etapasQuery.isLoading || stages.length === 0) {
+     return (
+       <div className="min-h-screen bg-background flex flex-col items-center justify-center blueprint-grid">
+         <p className="animate-pulse text-muted-foreground font-bold font-mono">Carregando trilha da obra…</p>
+         <div className="fixed bottom-6 right-5 z-30">
+           <button
+             type="button"
+             aria-label="Centralizar na etapa em execução"
+             title="Centralizar na etapa em execução"
+             className="size-12 rounded-full bg-primary text-white shadow-xl hover:bg-primary-soft flex items-center justify-center transition-all active:scale-95"
+           >
+             <HardHat className="size-6" />
+           </button>
+         </div>
+       </div>
+     );
   }
 
   if (!obra) {
@@ -235,10 +336,12 @@ export const TimelinePage: React.FC = () => {
             <div className="relative mt-8 mb-16 w-full max-w-4xl mx-auto">
                <div className="absolute left-1/2 top-4 bottom-4 w-0 border-l-2 border-dashed border-border -translate-x-1/2 z-0"></div>
                <div className="space-y-16">
-                  {activeSub?.nodes.map((node, index) => {
+                   {activeSub?.nodes.map((node, index) => {
                      const isDone = node.progress >= 100;
                      const isStarted = node.progress > 0 && !isDone;
                      const isLeft = index % 2 === 0;
+                     const delay = delays[node.id];
+                     const adiantadaInfo = adiantadas[node.id];
 
                      return (
                         <div key={node.id} className={`flex w-full items-start ${isLeft ? 'flex-row' : 'flex-row-reverse'}`}>
@@ -247,12 +350,26 @@ export const TimelinePage: React.FC = () => {
                               <div className={`absolute top-6 w-8 sm:w-12 border-t-2 border-dashed border-border z-0 ${isLeft ? 'right-0' : 'left-0'}`}></div>
 
                               <div className={`flex flex-col relative z-10 w-full max-w-[320px] ${isLeft ? 'items-end text-right' : 'items-start text-left'}`}>
-                                 <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-extrabold tracking-widest uppercase shadow-sm cursor-pointer hover:opacity-90 mb-3 ${isDone ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : isStarted ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-primary-deep text-white border border-primary-deep'}`}>
-                                    {isDone ? 'CONCLUÍDO' : isStarted ? `${node.progress}% MEDIDO` : 'ORÇADO • SEM MEDIÇÃO'}
+                                 <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-extrabold tracking-widest uppercase shadow-sm cursor-pointer hover:opacity-90 mb-3 ${getNodeStatusStyle(Boolean(adiantadaInfo), isDone, isStarted)}`}>
+                                    {getNodeStatusLabel(Boolean(adiantadaInfo), isDone, isStarted, node.progress)}
                                     <ChevronDown className="size-3 ml-1 opacity-50" />
                                  </div>
 
                                  <h4 className="font-extrabold text-sm sm:text-base text-foreground uppercase leading-snug">{node.title}</h4>
+
+                                 {delay && (
+                                    <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-warning/15 border border-warning/30 text-warning-dark text-xs font-bold">
+                                       <AlertTriangle className="size-3.5 shrink-0 text-warning" />
+                                       Atraso: {delay.dias}d • {delay.motivo}
+                                    </div>
+                                 )}
+
+                                 {adiantadaInfo && (
+                                    <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gold/15 border border-gold/40 text-gold-dark text-xs font-bold shadow-sm">
+                                       <Sparkles className="size-3.5 shrink-0 text-gold-dark" />
+                                       Adiantada via IA para compensar atraso
+                                    </div>
+                                 )}
                                  
                                  <p className="font-mono text-[9px] sm:text-[10px] text-muted-foreground mt-2 uppercase font-bold">
                                     {node.progress}% MEDIDO • {quantity.format(node.executedQuantity)} {node.unidadeOrcamento} DE {quantity.format(node.plannedQuantity)} {node.unidadeOrcamento}
@@ -263,15 +380,30 @@ export const TimelinePage: React.FC = () => {
                                     <span>Unitário {money.format(node.valorUnitarioOrcado)}</span>
                                     <span className="font-bold text-primary-deep text-xs">{money.format(node.budgetedValue)}</span>
                                  </div>
+
+                                 <button
+                                    type="button"
+                                    onClick={() => setSelectedStageForDelay({ id: node.id, nome: node.title, codigoEap: node.codigoEap })}
+                                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/25 bg-primary/5 hover:bg-primary/10 text-primary text-xs font-bold transition-all active:scale-95 shadow-sm"
+                                    title="Indicar atraso e consultar opções de adiantamento com IA"
+                                 >
+                                    <Sparkles className="size-3.5 text-gold-dark" />
+                                    Indicar Atraso & IA
+                                 </button>
                               </div>
                            </div>
 
                            <div className="relative flex justify-center shrink-0 w-0 z-10">
-                              <div className="absolute top-0 -translate-y-2 grid place-items-center w-12 h-12 sm:w-14 sm:h-14 bg-background border-[6px] border-muted/30 rounded-full shadow-sm z-10">
+                              <button
+                                 type="button"
+                                 onClick={() => setSelectedStageForDelay({ id: node.id, nome: node.title, codigoEap: node.codigoEap })}
+                                 title={`Reprogramar etapa ${node.codigoEap || ''} ${node.title}`}
+                                 className={`absolute top-0 -translate-y-2 grid place-items-center w-12 h-12 sm:w-14 sm:h-14 bg-background border-[6px] ${adiantadaInfo ? 'border-gold/50 shadow-md ring-2 ring-gold/20' : 'border-muted/30 hover:border-primary/50'} rounded-full shadow-sm z-10 transition-transform active:scale-95 cursor-pointer`}
+                              >
                                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-border bg-white flex items-center justify-center">
-                                    <ClipboardList className="size-4 sm:size-5 text-primary-deep" />
+                                    {renderNodeIcon(Boolean(delay), Boolean(adiantadaInfo))}
                                  </div>
-                              </div>
+                              </button>
                            </div>
                            
                            <div className="w-1/2"></div>
@@ -282,6 +414,41 @@ export const TimelinePage: React.FC = () => {
             </div>
          </section>
       </main>
+
+      <div className="fixed bottom-6 right-5 z-30">
+        <button
+          type="button"
+          onClick={() => {
+            const inProgressEl = document.querySelector('[data-status="in_progress"]');
+            if (inProgressEl) {
+              inProgressEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }}
+          aria-label="Centralizar na etapa em execução"
+          title="Centralizar na etapa em execução"
+          className="size-12 rounded-full bg-primary text-white shadow-xl hover:bg-primary-soft flex items-center justify-center transition-all active:scale-95"
+        >
+          <HardHat className="size-6" />
+        </button>
+      </div>
+
+      {selectedStageForDelay && obra?.id && (
+        <SugestaoAtrasoModal
+          isOpen={Boolean(selectedStageForDelay)}
+          onClose={() => setSelectedStageForDelay(null)}
+          etapa={selectedStageForDelay}
+          obraId={obra.id}
+          onSuccess={(res) => {
+            setDelays((prev) => ({
+              ...prev,
+              [res.etapaAtrasadaId]: { dias: res.diasAtraso, motivo: res.motivo },
+            }));
+          }}
+          onEscolherEtapa={handleEscolherEtapa}
+        />
+      )}
     </div>
   );
 };
