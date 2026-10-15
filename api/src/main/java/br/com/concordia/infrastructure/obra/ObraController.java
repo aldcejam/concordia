@@ -11,6 +11,7 @@ import br.com.concordia.infrastructure.obra.dtos.MedicaoRequest;
 import br.com.concordia.infrastructure.obra.dtos.ObraParcialRequest;
 import br.com.concordia.infrastructure.obra.dtos.ObraRequest;
 import br.com.concordia.infrastructure.obra.dtos.ObraResponse;
+import br.com.concordia.infrastructure.obra.dtos.ReordenarEtapaRequest;
 import br.com.concordia.infrastructure.obra.dtos.ReprogramacaoSimplificadaResponse;
 import br.com.concordia.infrastructure.obra.dtos.SugestaoAtrasoRequest;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -197,5 +198,12 @@ public class ObraController {
     public ResponseEntity<ReprogramacaoSimplificadaResponse> analisarAtraso(
             @PathVariable UUID id, @RequestBody @Valid SugestaoAtrasoRequest request) {
         return ResponseEntity.ok(sugestaoService.analisarAtraso(id, request));
+    }
+
+    @PostMapping("/{id}/reordenar-etapa")
+    public ResponseEntity<List<EtapaResponse>> reordenarEtapa(
+            @PathVariable UUID id, @RequestBody @Valid ReordenarEtapaRequest request) {
+        var outputs = service.reordenarEtapaLogoApos(id, request.etapaAtrasadaId(), request.etapaAdiantadaId());
+        return ResponseEntity.ok(outputs.stream().map(EtapaResponse::from).toList());
     }
 }

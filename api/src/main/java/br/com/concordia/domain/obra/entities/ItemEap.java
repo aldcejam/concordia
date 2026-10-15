@@ -128,4 +128,18 @@ public class ItemEap {
         this.percentualBdi = percentualBdi;
         this.valorTotalOrcado = valorTotalOrcado;
     }
+
+    public void moverParaLogoApos(ItemEap referencia, Double novaPosicao) {
+        this.posicao = novaPosicao;
+        if (referencia != null && referencia.getPai() != null) {
+            if (this.pai != null && !this.pai.equals(referencia.getPai())) {
+                this.pai.getFilhos().remove(this);
+            }
+            this.pai = referencia.getPai();
+            if (!this.pai.getFilhos().contains(this)) {
+                this.pai.getFilhos().add(this);
+            }
+            this.macroetapa = referencia.getMacroetapa();
+        }
+    }
 }
