@@ -7,7 +7,6 @@ import br.com.concordia.infrastructure.ia.config.ConcordiaIaProperties;
 import br.com.concordia.infrastructure.ia.dtos.OpenAiChatMessage;
 import br.com.concordia.infrastructure.ia.dtos.OpenAiChatRequest;
 import br.com.concordia.infrastructure.ia.dtos.SugestaoIaPayload;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -98,35 +97,46 @@ public class OpenAiReprogramacaoClient implements IaReprogramacaoClient {
                         "Não foi possível interpretar a resposta estruturada da inteligência artificial.", List.of());
             }
 
-            List<SugestaoIaResultado> resultados = new ArrayList<>();
-            if (payload.sugestoes() != null) {
-                for (var item : payload.sugestoes()) {
-                    if (item.etapaId() != null && item.justificativa() != null) {
-                        try {
-                            UUID id = UUID.fromString(item.etapaId().trim());
-                            resultados.add(new SugestaoIaResultado(
-                                    id, item.justificativa().trim()));
-                        } catch (IllegalArgumentException ignored) {
-                            // Ignora itens com UUID inválido gerado pelo modelo
-                        }
-                    }
-                }
-            }
+            List<SugestaoIaResultado> resultados = extrairSugestoesValidas(payload);
 
             String mensagem = payload.mensagem();
             if (mensagem == null || mensagem.isBlank()) {
-                if (resultados.isEmpty()) {
-                    mensagem =
-                            "A inteligência artificial analisou o cronograma e não conseguiu identificar etapas passíveis de adiantamento para compensar este atraso com segurança técnica.";
-                } else {
-                    mensagem = "Etapas com potencial para adiantamento identificadas com sucesso.";
-                }
+                mensagem = resultados.isEmpty()
+                        ? "A inteligência artificial analisou o cronograma e não conseguiu identificar etapas passíveis de adiantamento para compensar este atraso com segurança técnica."
+                        : "Etapas com potencial para adiantamento identificadas com sucesso.";
             }
 
             return new RespostaIa(mensagem, resultados);
         } catch (Exception ex) {
             log.warn("Falha ao desserializar sugestões da IA: {}", ex.getMessage());
             return new RespostaIa("Falha ao interpretar as sugestões da inteligência artificial.", List.of());
+        }
+    }
+
+    private List<SugestaoIaResultado> extrairSugestoesValidas(SugestaoIaPayload payload) {
+        if (payload.sugestoes() == null || payload.sugestoes().isEmpty()) {
+            return List.of();
+        }
+
+        return payload.sugestoes().stream()
+                .map(this::converterItemParaSugestao)
+                .flatMap(java.util.Optional::stream)
+                .toList();
+    }
+
+    private java.util.Optional<SugestaoIaResultado> converterItemParaSugestao(
+            br.com.concordia.infrastructure.ia.dtos.SugestaoIaItem item) {
+        if (item == null || item.etapaId() == null || item.justificativa() == null) {
+            return java.util.Optional.empty();
+        }
+
+        try {
+            UUID etapaId = UUID.fromString(item.etapaId().trim());
+            return java.util.Optional.of(
+                    new SugestaoIaResultado(etapaId, item.justificativa().trim()));
+        } catch (IllegalArgumentException ignored) {
+            // Ignora itens com UUID inválido gerado pelo modelo
+            return java.util.Optional.empty();
         }
     }
 
@@ -140,6 +150,12 @@ public class OpenAiReprogramacaoClient implements IaReprogramacaoClient {
     }
 
     private String buildSystemPrompt() {
+        if (properties.prompt() != null
+                && properties.prompt().system() != null
+                && !properties.prompt().system().isBlank()) {
+            return properties.prompt().system().trim();
+        }
+
         return """
             Você é um engenheiro civil sênior especialista em planejamento e gestão de obras pelo método do caminho crítico (CPM) e EAP/SINAPI.
             Uma etapa da obra sofreu um atraso. Analise criteriosamente as outras etapas disponíveis no cronograma.

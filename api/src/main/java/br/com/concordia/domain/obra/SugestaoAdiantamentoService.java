@@ -1,17 +1,22 @@
 package br.com.concordia.domain.obra;
 
 import br.com.concordia.domain.obra.entities.ItemEap;
+import br.com.concordia.domain.obra.entities.Obra;
 import br.com.concordia.domain.obra.ports.IaReprogramacaoClient;
 import br.com.concordia.domain.obra.ports.IaReprogramacaoClient.EtapaCandidata;
 import br.com.concordia.domain.obra.ports.IaReprogramacaoClient.RespostaIa;
+import br.com.concordia.domain.obra.ports.IaReprogramacaoClient.SugestaoIaResultado;
 import br.com.concordia.infrastructure.obra.dtos.ReprogramacaoSimplificadaResponse;
 import br.com.concordia.infrastructure.obra.dtos.SugestaoAtrasoRequest;
 import br.com.concordia.infrastructure.obra.dtos.SugestaoEtapaResponse;
 import jakarta.persistence.EntityNotFoundException;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,104 +37,138 @@ public class SugestaoAdiantamentoService {
                 .findById(obraId)
                 .orElseThrow(() -> new EntityNotFoundException("Obra com ID %s não foi encontrada".formatted(obraId)));
 
-        var etapasItens = obra.getEap().stream()
-                .filter(item -> item.getEtapa() != null)
-                .sorted(Comparator.comparing(ItemEap::getPosicao))
-                .toList();
-
-        if (etapasItens.isEmpty()) {
+        List<ItemEap> etapasOrdenadas = extrairEtapasOrdenadas(obra);
+        if (etapasOrdenadas.isEmpty()) {
             throw new IllegalArgumentException("A obra não possui etapas cadastradas para análise.");
         }
 
-        var etapaAtrasadaItem = etapasItens.stream()
-                .filter(item -> (item.getEtapa() != null
-                                && item.getEtapa().getId() != null
-                                && item.getEtapa().getId().equals(request.etapaId()))
-                        || (item.getId() != null && item.getId().equals(request.etapaId())))
-                .findFirst()
-                .orElse(etapasItens.get(0));
+        ItemEap etapaAtrasada = identificarEtapaAtrasada(etapasOrdenadas, request.etapaId());
+        List<ItemEap> etapasDisponiveis = filtrarEtapasDisponiveisParaAdiantamento(etapasOrdenadas, etapaAtrasada);
 
-        var outrasEtapas = etapasItens.stream()
-                .filter(item -> item != etapaAtrasadaItem
-                        && (item.getId() == null
-                                || etapaAtrasadaItem.getId() == null
-                                || !item.getId().equals(etapaAtrasadaItem.getId())))
-                .toList();
-
-        final List<SugestaoEtapaResponse> sugestoes = new ArrayList<>();
-        String mensagem;
-
-        if (outrasEtapas.isEmpty()) {
-            mensagem = "A obra não possui outras etapas disponíveis no cronograma para adiantamento.";
-        } else {
-            UUID idAtrasada = etapaAtrasadaItem.getEtapa() != null
-                    ? etapaAtrasadaItem.getEtapa().getId()
-                    : etapaAtrasadaItem.getId();
-
-            var atrasadaCandidata = new EtapaCandidata(
-                    idAtrasada,
-                    etapaAtrasadaItem.getCodigoEap() != null ? etapaAtrasadaItem.getCodigoEap() : "",
-                    etapaAtrasadaItem.getNome());
-
-            var candidatas = outrasEtapas.stream()
-                    .map(item -> {
-                        UUID id = item.getEtapa() != null ? item.getEtapa().getId() : item.getId();
-                        return new EtapaCandidata(
-                                id, item.getCodigoEap() != null ? item.getCodigoEap() : "", item.getNome());
-                    })
-                    .toList();
-
-            RespostaIa respostaIa =
-                    iaClient.sugerirAdiantamento(atrasadaCandidata, request.motivo(), request.diasAtraso(), candidatas);
-
-            if (respostaIa != null
-                    && respostaIa.sugestoes() != null
-                    && !respostaIa.sugestoes().isEmpty()) {
-                for (var res : respostaIa.sugestoes()) {
-                    for (var it : outrasEtapas) {
-                        boolean match = (it.getEtapa() != null
-                                        && it.getEtapa().getId() != null
-                                        && it.getEtapa().getId().equals(res.etapaId()))
-                                || (it.getId() != null && it.getId().equals(res.etapaId()));
-                        if (match) {
-                            UUID retId = it.getEtapa() != null ? it.getEtapa().getId() : it.getId();
-                            sugestoes.add(new SugestaoEtapaResponse(
-                                    retId,
-                                    it.getCodigoEap() != null ? it.getCodigoEap() : "",
-                                    it.getNome(),
-                                    res.justificativa()));
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (sugestoes.isEmpty()) {
-                mensagem = (respostaIa != null
-                                && respostaIa.mensagem() != null
-                                && !respostaIa.mensagem().isBlank())
-                        ? respostaIa.mensagem()
-                        : "A inteligência artificial analisou o cronograma e não conseguiu identificar etapas passíveis de adiantamento com segurança técnica para compensar este atraso.";
-            } else {
-                mensagem = (respostaIa != null
-                                && respostaIa.mensagem() != null
-                                && !respostaIa.mensagem().isBlank())
-                        ? respostaIa.mensagem()
-                        : "Etapas com potencial para adiantamento identificadas com sucesso.";
-            }
+        if (etapasDisponiveis.isEmpty()) {
+            return criarRespostaSemEtapasDisponiveis(etapaAtrasada, request);
         }
 
-        UUID etapaIdRetorno = etapaAtrasadaItem.getEtapa() != null
-                ? etapaAtrasadaItem.getEtapa().getId()
-                : etapaAtrasadaItem.getId();
+        EtapaCandidata atrasadaCandidata = converterParaCandidata(etapaAtrasada);
+        List<EtapaCandidata> candidatas =
+                etapasDisponiveis.stream().map(this::converterParaCandidata).toList();
+
+        RespostaIa respostaIa =
+                iaClient.sugerirAdiantamento(atrasadaCandidata, request.motivo(), request.diasAtraso(), candidatas);
+
+        List<SugestaoEtapaResponse> sugestoes = correlacionarSugestoesComEtapas(respostaIa, etapasDisponiveis);
+        String parecerDescritivo = definirParecerFinal(respostaIa, !sugestoes.isEmpty());
 
         return new ReprogramacaoSimplificadaResponse(
-                etapaIdRetorno,
-                etapaAtrasadaItem.getCodigoEap() != null ? etapaAtrasadaItem.getCodigoEap() : "",
-                etapaAtrasadaItem.getNome(),
+                extrairIdEtapa(etapaAtrasada),
+                extrairCodigoEap(etapaAtrasada),
+                etapaAtrasada.getNome(),
                 request.motivo(),
                 request.diasAtraso(),
-                mensagem,
+                parecerDescritivo,
                 sugestoes);
+    }
+
+    private List<ItemEap> extrairEtapasOrdenadas(Obra obra) {
+        return obra.getEap().stream()
+                .filter(item -> item.getEtapa() != null)
+                .sorted(Comparator.comparing(ItemEap::getPosicao))
+                .toList();
+    }
+
+    private ItemEap identificarEtapaAtrasada(List<ItemEap> etapas, UUID etapaId) {
+        return etapas.stream()
+                .filter(item -> correspondeAoId(item, etapaId))
+                .findFirst()
+                .orElse(etapas.get(0));
+    }
+
+    private List<ItemEap> filtrarEtapasDisponiveisParaAdiantamento(List<ItemEap> etapas, ItemEap etapaAtrasada) {
+        UUID idAtrasada = extrairIdEtapa(etapaAtrasada);
+        return etapas.stream()
+                .filter(item -> item != etapaAtrasada && !correspondeAoId(item, idAtrasada))
+                .toList();
+    }
+
+    private List<SugestaoEtapaResponse> correlacionarSugestoesComEtapas(
+            RespostaIa respostaIa, List<ItemEap> etapasDisponiveis) {
+        if (respostaIa == null
+                || respostaIa.sugestoes() == null
+                || respostaIa.sugestoes().isEmpty()) {
+            return List.of();
+        }
+
+        Map<UUID, ItemEap> mapaEtapasPorId = indexarEtapasPorIdentificador(etapasDisponiveis);
+
+        return respostaIa.sugestoes().stream()
+                .map(sugestao -> montarSugestaoResponse(sugestao, mapaEtapasPorId.get(sugestao.etapaId())))
+                .flatMap(Optional::stream)
+                .toList();
+    }
+
+    private Map<UUID, ItemEap> indexarEtapasPorIdentificador(List<ItemEap> etapas) {
+        return etapas.stream()
+                .filter(item -> extrairIdEtapa(item) != null)
+                .collect(Collectors.toMap(
+                        this::extrairIdEtapa, Function.identity(), (existente, duplicado) -> existente));
+    }
+
+    private Optional<SugestaoEtapaResponse> montarSugestaoResponse(
+            SugestaoIaResultado sugestao, ItemEap itemCorrespondente) {
+        if (itemCorrespondente == null) {
+            return Optional.empty();
+        }
+        return Optional.of(new SugestaoEtapaResponse(
+                extrairIdEtapa(itemCorrespondente),
+                extrairCodigoEap(itemCorrespondente),
+                itemCorrespondente.getNome(),
+                sugestao.justificativa()));
+    }
+
+    private String definirParecerFinal(RespostaIa respostaIa, boolean possuiSugestoesValidas) {
+        if (respostaIa != null
+                && respostaIa.mensagem() != null
+                && !respostaIa.mensagem().isBlank()) {
+            return respostaIa.mensagem();
+        }
+
+        return possuiSugestoesValidas
+                ? "Etapas com potencial para adiantamento identificadas com sucesso."
+                : "A inteligência artificial analisou o cronograma e não conseguiu identificar etapas passíveis de adiantamento com segurança técnica para compensar este atraso.";
+    }
+
+    private ReprogramacaoSimplificadaResponse criarRespostaSemEtapasDisponiveis(
+            ItemEap etapaAtrasada, SugestaoAtrasoRequest request) {
+        return new ReprogramacaoSimplificadaResponse(
+                extrairIdEtapa(etapaAtrasada),
+                extrairCodigoEap(etapaAtrasada),
+                etapaAtrasada.getNome(),
+                request.motivo(),
+                request.diasAtraso(),
+                "A obra não possui outras etapas disponíveis no cronograma para adiantamento.",
+                List.of());
+    }
+
+    private EtapaCandidata converterParaCandidata(ItemEap item) {
+        return new EtapaCandidata(extrairIdEtapa(item), extrairCodigoEap(item), item.getNome());
+    }
+
+    private UUID extrairIdEtapa(ItemEap item) {
+        if (item == null) {
+            return null;
+        }
+        return item.getEtapa() != null ? item.getEtapa().getId() : item.getId();
+    }
+
+    private String extrairCodigoEap(ItemEap item) {
+        return (item != null && item.getCodigoEap() != null) ? item.getCodigoEap() : "";
+    }
+
+    private boolean correspondeAoId(ItemEap item, UUID targetId) {
+        if (item == null || targetId == null) {
+            return false;
+        }
+        UUID id = extrairIdEtapa(item);
+        return targetId.equals(id) || (item.getId() != null && targetId.equals(item.getId()));
     }
 }
