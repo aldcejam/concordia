@@ -9,4 +9,5 @@ public record ReprogramacaoSimplificadaResponse(
         String etapaAtrasadaNome,
         String motivo,
         Integer diasAtraso,
+        String mensagem,
         List<SugestaoEtapaResponse> sugestoes) {}

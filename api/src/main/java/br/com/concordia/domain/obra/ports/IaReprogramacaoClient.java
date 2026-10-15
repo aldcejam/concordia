@@ -13,6 +13,8 @@ public interface IaReprogramacaoClient {
 
     record SugestaoIaResultado(UUID etapaId, String justificativa) {}
 
-    List<SugestaoIaResultado> sugerirAdiantamento(
+    record RespostaIa(String mensagem, List<SugestaoIaResultado> sugestoes) {}
+
+    RespostaIa sugerirAdiantamento(
             EtapaCandidata etapaAtrasada, String motivo, int diasAtraso, List<EtapaCandidata> outrasEtapas);
 }

@@ -7,6 +7,7 @@ import br.com.concordia.domain.obra.entities.EtapaObra;
 import br.com.concordia.domain.obra.entities.ItemEap;
 import br.com.concordia.domain.obra.entities.Obra;
 import br.com.concordia.domain.obra.ports.IaReprogramacaoClient;
+import br.com.concordia.domain.obra.ports.IaReprogramacaoClient.RespostaIa;
 import br.com.concordia.domain.obra.ports.IaReprogramacaoClient.SugestaoIaResultado;
 import br.com.concordia.infrastructure.obra.dtos.SugestaoAtrasoRequest;
 import java.time.ZoneId;
@@ -31,13 +32,12 @@ class SugestaoAdiantamentoServiceTest {
     }
 
     @Test
-    void deveRetornarSugestoesFallbackQuandoIaRetornaVazio() {
+    void deveRetornarMensagemExplicativaQuandoIaNaoIdentificaEtapas() {
         UUID obraId = UUID.randomUUID();
         Obra obra = new Obra("Reforma Geral", UnidadeFederativa.CE, ZoneId.of("America/Fortaleza"), null);
 
         UUID idEtapa1 = UUID.randomUUID();
         UUID idEtapa2 = UUID.randomUUID();
-        UUID idEtapa3 = UUID.randomUUID();
 
         EtapaObra etapa1 = new EtapaObra("Demolição e Limpeza", null, 10);
         org.springframework.test.util.ReflectionTestUtils.setField(etapa1, "id", idEtapa1);
@@ -55,18 +55,12 @@ class SugestaoAdiantamentoServiceTest {
                 "Estrutura e Alvenaria", "1.2", null, null, null, null, null, null, null, null, null, null);
         obra.adicionarItemEap(item2);
 
-        EtapaObra etapa3 = new EtapaObra("Instalações Hidráulicas", null, 15);
-        org.springframework.test.util.ReflectionTestUtils.setField(etapa3, "id", idEtapa3);
-        ItemEap item3 = new ItemEap(obra, "Instalações Hidráulicas", 3000.0, etapa3);
-        org.springframework.test.util.ReflectionTestUtils.setField(item3, "id", UUID.randomUUID());
-        item3.atualizarDadosOrcamento(
-                "Instalações Hidráulicas", "1.3", null, null, null, null, null, null, null, null, null, null);
-        obra.adicionarItemEap(item3);
-
+        String mensagemIa =
+                "Devido à dependência estrutural direta, não foi possível identificar etapas passíveis de adiantamento.";
         Mockito.when(obraRepository.findById(obraId)).thenReturn(Optional.of(obra));
         Mockito.when(iaClient.sugerirAdiantamento(
                         Mockito.any(), Mockito.anyString(), Mockito.anyInt(), Mockito.anyList()))
-                .thenReturn(List.of());
+                .thenReturn(new RespostaIa(mensagemIa, List.of()));
 
         var request = new SugestaoAtrasoRequest(idEtapa1, "Chuva intensa", 7);
         var response = service.analisarAtraso(obraId, request);
@@ -76,8 +70,8 @@ class SugestaoAdiantamentoServiceTest {
         assertEquals("Demolição e Limpeza", response.etapaAtrasadaNome());
         assertEquals("Chuva intensa", response.motivo());
         assertEquals(7, response.diasAtraso());
-        assertFalse(response.sugestoes().isEmpty());
-        assertTrue(response.sugestoes().stream().anyMatch(s -> s.nome().equals("Estrutura e Alvenaria")));
+        assertTrue(response.sugestoes().isEmpty(), "Não deve conter sugestões inventadas de fallback");
+        assertEquals(mensagemIa, response.mensagem());
     }
 
     @Test
@@ -106,8 +100,10 @@ class SugestaoAdiantamentoServiceTest {
         Mockito.when(obraRepository.findById(obraId)).thenReturn(Optional.of(obra));
         Mockito.when(iaClient.sugerirAdiantamento(
                         Mockito.any(), Mockito.anyString(), Mockito.anyInt(), Mockito.anyList()))
-                .thenReturn(List.of(
-                        new SugestaoIaResultado(idEtapa2, "Pré-montagem das formas em paralelo na bancada de corte.")));
+                .thenReturn(new RespostaIa(
+                        "Etapas identificadas.",
+                        List.of(new SugestaoIaResultado(
+                                idEtapa2, "Pré-montagem das formas em paralelo na bancada de corte."))));
 
         var request = new SugestaoAtrasoRequest(idEtapa1, "Atraso no fornecimento de concreto", 5);
         var response = service.analisarAtraso(obraId, request);
@@ -118,5 +114,6 @@ class SugestaoAdiantamentoServiceTest {
         assertEquals(idEtapa2, sugestao.etapaId());
         assertEquals("Armação e Formas", sugestao.nome());
         assertEquals("Pré-montagem das formas em paralelo na bancada de corte.", sugestao.justificativa());
+        assertEquals("Etapas identificadas.", response.mensagem());
     }
 }

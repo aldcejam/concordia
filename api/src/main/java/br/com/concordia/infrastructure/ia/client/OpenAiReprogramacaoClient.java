@@ -1,6 +1,8 @@
 package br.com.concordia.infrastructure.ia.client;
 
 import br.com.concordia.domain.obra.ports.IaReprogramacaoClient;
+import br.com.concordia.domain.obra.ports.IaReprogramacaoClient.RespostaIa;
+import br.com.concordia.domain.obra.ports.IaReprogramacaoClient.SugestaoIaResultado;
 import br.com.concordia.infrastructure.ia.config.ConcordiaIaProperties;
 import br.com.concordia.infrastructure.ia.dtos.OpenAiChatMessage;
 import br.com.concordia.infrastructure.ia.dtos.OpenAiChatRequest;
@@ -31,11 +33,16 @@ public class OpenAiReprogramacaoClient implements IaReprogramacaoClient {
     }
 
     @Override
-    public List<SugestaoIaResultado> sugerirAdiantamento(
+    public RespostaIa sugerirAdiantamento(
             EtapaCandidata etapaAtrasada, String motivo, int diasAtraso, List<EtapaCandidata> outrasEtapas) {
 
-        if (!properties.isConfigured() || outrasEtapas == null || outrasEtapas.isEmpty()) {
-            return List.of();
+        if (!properties.isConfigured()) {
+            return new RespostaIa("Integração com IA não está configurada (chave de API não informada).", List.of());
+        }
+
+        if (outrasEtapas == null || outrasEtapas.isEmpty()) {
+            return new RespostaIa(
+                    "A obra não possui outras etapas disponíveis no cronograma para adiantamento.", List.of());
         }
 
         try {
@@ -57,49 +64,69 @@ public class OpenAiReprogramacaoClient implements IaReprogramacaoClient {
 
             if (rawResponse == null || rawResponse.isBlank()) {
                 log.warn("Resposta vazia retornada pelo provedor de IA");
-                return List.of();
+                return new RespostaIa(
+                        "O serviço de inteligência artificial não retornou dados para a análise do cronograma.",
+                        List.of());
             }
 
-            return extrairSugestoes(rawResponse);
+            return extrairResposta(rawResponse);
         } catch (Exception ex) {
-            log.warn("Falha de comunicação com o provedor de IA (ativando contingência): {}", ex.getMessage());
-            return List.of();
+            log.warn("Falha de comunicação com o provedor de IA: {}", ex.getMessage());
+            return new RespostaIa(
+                    "Não foi possível consultar a IA no momento para identificar etapas de adiantamento: "
+                            + ex.getMessage(),
+                    List.of());
         }
     }
 
-    private List<SugestaoIaResultado> extrairSugestoes(String rawResponse) {
+    private RespostaIa extrairResposta(String rawResponse) {
         try {
             JsonNode root = jsonMapper.readTree(rawResponse);
             JsonNode choices = root.path("choices");
             if (!choices.isArray() || choices.isEmpty()) {
                 log.warn("Provedor de IA retornou payload sem escolhas válidas");
-                return List.of();
+                return new RespostaIa(
+                        "O serviço de IA não forneceu alternativas válidas no formato esperado.", List.of());
             }
 
             String content = choices.get(0).path("message").path("content").asText("");
             String sanitizedContent = sanitizarJson(content);
 
             SugestaoIaPayload payload = jsonMapper.readValue(sanitizedContent, SugestaoIaPayload.class);
-            if (payload == null || payload.sugestoes() == null) {
-                return List.of();
+            if (payload == null) {
+                return new RespostaIa(
+                        "Não foi possível interpretar a resposta estruturada da inteligência artificial.", List.of());
             }
 
             List<SugestaoIaResultado> resultados = new ArrayList<>();
-            for (var item : payload.sugestoes()) {
-                if (item.etapaId() != null && item.justificativa() != null) {
-                    try {
-                        UUID id = UUID.fromString(item.etapaId().trim());
-                        resultados.add(
-                                new SugestaoIaResultado(id, item.justificativa().trim()));
-                    } catch (IllegalArgumentException ignored) {
-                        // Ignora itens com UUID inválido gerado pelo modelo
+            if (payload.sugestoes() != null) {
+                for (var item : payload.sugestoes()) {
+                    if (item.etapaId() != null && item.justificativa() != null) {
+                        try {
+                            UUID id = UUID.fromString(item.etapaId().trim());
+                            resultados.add(new SugestaoIaResultado(
+                                    id, item.justificativa().trim()));
+                        } catch (IllegalArgumentException ignored) {
+                            // Ignora itens com UUID inválido gerado pelo modelo
+                        }
                     }
                 }
             }
-            return resultados;
+
+            String mensagem = payload.mensagem();
+            if (mensagem == null || mensagem.isBlank()) {
+                if (resultados.isEmpty()) {
+                    mensagem =
+                            "A inteligência artificial analisou o cronograma e não conseguiu identificar etapas passíveis de adiantamento para compensar este atraso com segurança técnica.";
+                } else {
+                    mensagem = "Etapas com potencial para adiantamento identificadas com sucesso.";
+                }
+            }
+
+            return new RespostaIa(mensagem, resultados);
         } catch (Exception ex) {
             log.warn("Falha ao desserializar sugestões da IA: {}", ex.getMessage());
-            return List.of();
+            return new RespostaIa("Falha ao interpretar as sugestões da inteligência artificial.", List.of());
         }
     }
 
@@ -115,10 +142,12 @@ public class OpenAiReprogramacaoClient implements IaReprogramacaoClient {
     private String buildSystemPrompt() {
         return """
             Você é um engenheiro civil sênior especialista em planejamento e gestão de obras pelo método do caminho crítico (CPM) e EAP/SINAPI.
-            Uma etapa da obra sofreu um atraso. Analise as outras etapas disponíveis no cronograma e selecione de 2 a 3 etapas com alto potencial técnico e operacional para serem adiantadas ou executadas em frentes paralelas, compensando os dias perdidos.
-            Para cada etapa indicada, forneça uma justificativa técnica concisa e fundamentada na engenharia civil.
+            Uma etapa da obra sofreu um atraso. Analise criteriosamente as outras etapas disponíveis no cronograma.
+            Se houver etapas com real viabilidade técnica, operacional e lógica para serem adiantadas ou executadas em frentes paralelas para recuperar o prazo, selecione de 1 a 3 etapas e descreva suas justificativas técnicas em "sugestoes".
+            Caso NÃO encontre etapas viáveis para adiantamento (por exemplo, por restrições de precedência construtiva, dependência estrutural direta ou falta de frentes liberadas), deixe a lista "sugestoes" vazia [] e explique de forma clara em "mensagem" que não foi possível identificar etapas para adiantamento e o porquê.
             Responda EXCLUSIVAMENTE em formato JSON com o seguinte esquema:
             {
+              "mensagem": "Texto com o parecer geral da IA, ou texto explicando que não conseguiu identificar etapas para adiantamento",
               "sugestoes": [
                 {
                   "etapaId": "UUID_EXATO_DA_ETAPA",

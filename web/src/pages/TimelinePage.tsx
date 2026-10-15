@@ -22,6 +22,30 @@ interface GroupedData {
   }[];
 }
 
+function getNodeStatusStyle(isAdiantada: boolean, isDone: boolean, isStarted: boolean): string {
+  if (isAdiantada) return 'bg-amber-100 text-amber-900 border border-amber-300';
+  if (isDone) return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+  if (isStarted) return 'bg-blue-100 text-blue-800 border border-blue-200';
+  return 'bg-primary-deep text-white border border-primary-deep';
+}
+
+function getNodeStatusLabel(isAdiantada: boolean, isDone: boolean, isStarted: boolean, progress: number): string {
+  if (isAdiantada) return 'ADIANTADA PELA IA';
+  if (isDone) return 'CONCLUÍDO';
+  if (isStarted) return `${progress}% MEDIDO`;
+  return 'ORÇADO • SEM MEDIÇÃO';
+}
+
+function renderNodeIcon(hasDelay: boolean, isAdiantada: boolean) {
+  if (hasDelay) {
+    return <AlertTriangle className="size-4 sm:size-5 text-warning" />;
+  }
+  if (isAdiantada) {
+    return <Sparkles className="size-4 sm:size-5 text-gold-dark" />;
+  }
+  return <ClipboardList className="size-4 sm:size-5 text-primary-deep" />;
+}
+
 export const TimelinePage: React.FC = () => {
   const obrasQuery = useListar();
   const obras = obrasQuery.data?.data ?? [];
@@ -326,8 +350,8 @@ export const TimelinePage: React.FC = () => {
                               <div className={`absolute top-6 w-8 sm:w-12 border-t-2 border-dashed border-border z-0 ${isLeft ? 'right-0' : 'left-0'}`}></div>
 
                               <div className={`flex flex-col relative z-10 w-full max-w-[320px] ${isLeft ? 'items-end text-right' : 'items-start text-left'}`}>
-                                 <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-extrabold tracking-widest uppercase shadow-sm cursor-pointer hover:opacity-90 mb-3 ${adiantadaInfo ? 'bg-amber-100 text-amber-900 border border-amber-300' : isDone ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : isStarted ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-primary-deep text-white border border-primary-deep'}`}>
-                                    {adiantadaInfo ? 'ADIANTADA PELA IA' : isDone ? 'CONCLUÍDO' : isStarted ? `${node.progress}% MEDIDO` : 'ORÇADO • SEM MEDIÇÃO'}
+                                 <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-extrabold tracking-widest uppercase shadow-sm cursor-pointer hover:opacity-90 mb-3 ${getNodeStatusStyle(Boolean(adiantadaInfo), isDone, isStarted)}`}>
+                                    {getNodeStatusLabel(Boolean(adiantadaInfo), isDone, isStarted, node.progress)}
                                     <ChevronDown className="size-3 ml-1 opacity-50" />
                                  </div>
 
@@ -377,13 +401,7 @@ export const TimelinePage: React.FC = () => {
                                  className={`absolute top-0 -translate-y-2 grid place-items-center w-12 h-12 sm:w-14 sm:h-14 bg-background border-[6px] ${adiantadaInfo ? 'border-gold/50 shadow-md ring-2 ring-gold/20' : 'border-muted/30 hover:border-primary/50'} rounded-full shadow-sm z-10 transition-transform active:scale-95 cursor-pointer`}
                               >
                                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-border bg-white flex items-center justify-center">
-                                    {delay ? (
-                                      <AlertTriangle className="size-4 sm:size-5 text-warning" />
-                                    ) : adiantadaInfo ? (
-                                      <Sparkles className="size-4 sm:size-5 text-gold-dark" />
-                                    ) : (
-                                      <ClipboardList className="size-4 sm:size-5 text-primary-deep" />
-                                    )}
+                                    {renderNodeIcon(Boolean(delay), Boolean(adiantadaInfo))}
                                  </div>
                               </button>
                            </div>

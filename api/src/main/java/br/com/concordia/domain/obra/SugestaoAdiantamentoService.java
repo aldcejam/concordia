@@ -3,7 +3,7 @@ package br.com.concordia.domain.obra;
 import br.com.concordia.domain.obra.entities.ItemEap;
 import br.com.concordia.domain.obra.ports.IaReprogramacaoClient;
 import br.com.concordia.domain.obra.ports.IaReprogramacaoClient.EtapaCandidata;
-import br.com.concordia.domain.obra.ports.IaReprogramacaoClient.SugestaoIaResultado;
+import br.com.concordia.domain.obra.ports.IaReprogramacaoClient.RespostaIa;
 import br.com.concordia.infrastructure.obra.dtos.ReprogramacaoSimplificadaResponse;
 import br.com.concordia.infrastructure.obra.dtos.SugestaoAtrasoRequest;
 import br.com.concordia.infrastructure.obra.dtos.SugestaoEtapaResponse;
@@ -56,9 +56,12 @@ public class SugestaoAdiantamentoService {
                                 || !item.getId().equals(etapaAtrasadaItem.getId())))
                 .toList();
 
-        List<SugestaoEtapaResponse> sugestoes = new ArrayList<>();
+        final List<SugestaoEtapaResponse> sugestoes = new ArrayList<>();
+        String mensagem;
 
-        if (!outrasEtapas.isEmpty()) {
+        if (outrasEtapas.isEmpty()) {
+            mensagem = "A obra não possui outras etapas disponíveis no cronograma para adiantamento.";
+        } else {
             UUID idAtrasada = etapaAtrasadaItem.getEtapa() != null
                     ? etapaAtrasadaItem.getEtapa().getId()
                     : etapaAtrasadaItem.getId();
@@ -76,11 +79,13 @@ public class SugestaoAdiantamentoService {
                     })
                     .toList();
 
-            List<SugestaoIaResultado> resultadosIa =
+            RespostaIa respostaIa =
                     iaClient.sugerirAdiantamento(atrasadaCandidata, request.motivo(), request.diasAtraso(), candidatas);
 
-            if (resultadosIa != null && !resultadosIa.isEmpty()) {
-                for (var res : resultadosIa) {
+            if (respostaIa != null
+                    && respostaIa.sugestoes() != null
+                    && !respostaIa.sugestoes().isEmpty()) {
+                for (var res : respostaIa.sugestoes()) {
                     for (var it : outrasEtapas) {
                         boolean match = (it.getEtapa() != null
                                         && it.getEtapa().getId() != null
@@ -98,11 +103,20 @@ public class SugestaoAdiantamentoService {
                     }
                 }
             }
-        }
 
-        if (sugestoes.isEmpty()) {
-            sugestoes.addAll(
-                    gerarSugestoesFallback(etapaAtrasadaItem, request.motivo(), request.diasAtraso(), outrasEtapas));
+            if (sugestoes.isEmpty()) {
+                mensagem = (respostaIa != null
+                                && respostaIa.mensagem() != null
+                                && !respostaIa.mensagem().isBlank())
+                        ? respostaIa.mensagem()
+                        : "A inteligência artificial analisou o cronograma e não conseguiu identificar etapas passíveis de adiantamento com segurança técnica para compensar este atraso.";
+            } else {
+                mensagem = (respostaIa != null
+                                && respostaIa.mensagem() != null
+                                && !respostaIa.mensagem().isBlank())
+                        ? respostaIa.mensagem()
+                        : "Etapas com potencial para adiantamento identificadas com sucesso.";
+            }
         }
 
         UUID etapaIdRetorno = etapaAtrasadaItem.getEtapa() != null
@@ -115,35 +129,7 @@ public class SugestaoAdiantamentoService {
                 etapaAtrasadaItem.getNome(),
                 request.motivo(),
                 request.diasAtraso(),
+                mensagem,
                 sugestoes);
-    }
-
-    private List<SugestaoEtapaResponse> gerarSugestoesFallback(
-            ItemEap atrasada, String motivo, int diasAtraso, List<ItemEap> outrasEtapas) {
-        if (outrasEtapas.isEmpty()) {
-            return List.of();
-        }
-
-        List<SugestaoEtapaResponse> fallback = new ArrayList<>();
-        int count = Math.min(3, outrasEtapas.size());
-        for (int i = 0; i < count; i++) {
-            var item = outrasEtapas.get(i);
-            UUID retId = item.getEtapa() != null ? item.getEtapa().getId() : item.getId();
-            String just;
-            if (i == 0) {
-                just =
-                        "Atividade com baixa dependência direta da etapa atrasada; a mobilização antecipada de frentes paralelas permite absorver o atraso de "
-                                + diasAtraso + " dias.";
-            } else if (i == 1) {
-                just =
-                        "Serviço com insumos padronizados e disponível para pré-montagem em canteiro, reduzindo o tempo de execução no caminho crítico.";
-            } else {
-                just = "Pode ser adiantada mediante alocação de equipe adicional nas áreas desimpedidas da obra.";
-            }
-
-            fallback.add(new SugestaoEtapaResponse(
-                    retId, item.getCodigoEap() != null ? item.getCodigoEap() : "", item.getNome(), just));
-        }
-        return fallback;
     }
 }

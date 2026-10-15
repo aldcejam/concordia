@@ -437,7 +437,7 @@ components:
           type: string
     ReprogramacaoSimplificadaResponse:
       type: object
-      required: [etapaAtrasadaId, etapaAtrasadaCodigo, etapaAtrasadaNome, motivo, diasAtraso, sugestoes]
+      required: [etapaAtrasadaId, etapaAtrasadaCodigo, etapaAtrasadaNome, motivo, diasAtraso, mensagem, sugestoes]
       properties:
         etapaAtrasadaId:
           type: string
@@ -450,6 +450,9 @@ components:
           type: string
         diasAtraso:
           type: integer
+        mensagem:
+          type: string
+          description: Parecer técnico descritivo da IA ou justificativa caso não tenha conseguido identificar etapas
         sugestoes:
           type: array
           items:

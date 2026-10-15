@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertTriangle, Bot, CheckCircle2, Loader2, Sparkles, X } from 'lucide-react';
+import { AlertTriangle, Bot, CheckCircle2, Loader2, Sparkles, X, Info } from 'lucide-react';
 import { api } from '@/services/api';
 
 export interface SugestaoItem {
@@ -15,6 +15,7 @@ export interface AnaliseAtrasoResult {
   etapaAtrasadaNome: string;
   motivo: string;
   diasAtraso: number;
+  mensagem?: string;
   sugestoes: SugestaoItem[];
 }
 
@@ -123,7 +124,7 @@ export const SugestaoAtrasoModal: React.FC<SugestaoAtrasoModalProps> = ({
             <div className="bg-warning/10 border border-warning/30 rounded-xl p-4 flex items-start gap-3 text-warning-dark">
               <AlertTriangle className="size-5 shrink-0 text-warning mt-0.5" />
               <div className="text-xs leading-relaxed text-foreground">
-                <strong className="block font-bold mb-1 text-warning">Indicar Atraso na Etapa:</strong>
+                <strong className="block font-bold mb-1 text-warning">Indicar Atraso na Etapa:</strong>{' '}
                 Informe os detalhes do atraso ocorrido. O sistema enviará o cronograma completo para a IA analisar
                 e sugerir etapas subsequentes que podem ser adiantadas ou executadas em paralelo.
               </div>
@@ -214,7 +215,18 @@ export const SugestaoAtrasoModal: React.FC<SugestaoAtrasoModalProps> = ({
               <CheckCircle2 className="size-6 text-primary shrink-0" />
             </div>
 
-            {/* Suggestions list */}
+            {/* AI opinion / message */}
+            {resultado.mensagem && (
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-3.5 text-xs text-muted-foreground leading-relaxed flex items-start gap-2.5">
+                <Sparkles className="size-4 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-foreground font-semibold block mb-0.5">Parecer Técnico da IA:</strong>
+                  {resultado.mensagem}
+                </div>
+              </div>
+            )}
+
+            {/* Suggestions list or empty notice */}
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-xs font-extrabold uppercase tracking-wider text-foreground">
@@ -223,44 +235,59 @@ export const SugestaoAtrasoModal: React.FC<SugestaoAtrasoModalProps> = ({
                 <span className="text-[10px] text-muted-foreground">Gerado pela IA do Concordia</span>
               </div>
 
-              <div className="space-y-3">
-                {resultado.sugestoes.map((sugestao, idx) => (
-                  <div
-                    key={sugestao.etapaId || idx}
-                    className="p-4 rounded-xl border border-border bg-background shadow-sm hover:border-primary/40 transition-all"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <span className="inline-block text-[10px] font-mono font-extrabold uppercase px-2 py-0.5 rounded bg-gold/15 text-gold-dark mb-1">
-                          {sugestao.codigoEap || `Opção ${idx + 1}`}
+              {resultado.sugestoes.length === 0 ? (
+                <div className="p-6 rounded-xl border border-dashed border-border bg-muted/20 text-center">
+                  <div className="size-10 rounded-full bg-warning/15 text-warning flex items-center justify-center mx-auto mb-2.5">
+                    <Info className="size-5" />
+                  </div>
+                  <h5 className="text-sm font-bold text-foreground">
+                    Nenhuma etapa viável para adiantamento
+                  </h5>
+                  <p className="text-xs text-muted-foreground mt-2 max-w-md mx-auto leading-relaxed">
+                    {resultado.mensagem ||
+                      'A inteligência artificial analisou o cronograma e concluiu que não há etapas passíveis de adiantamento com segurança técnica para compensar este atraso.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {resultado.sugestoes.map((sugestao, idx) => (
+                    <div
+                      key={sugestao.etapaId || idx}
+                      className="p-4 rounded-xl border border-border bg-background shadow-sm hover:border-primary/40 transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <span className="inline-block text-[10px] font-mono font-extrabold uppercase px-2 py-0.5 rounded bg-gold/15 text-gold-dark mb-1">
+                            {sugestao.codigoEap || `Opção ${idx + 1}`}
+                          </span>
+                          <h5 className="text-sm font-bold text-foreground leading-snug">{sugestao.nome}</h5>
+                        </div>
+                      </div>
+                      <div className="mt-2.5 pt-2.5 border-t border-border/60 text-xs leading-relaxed text-muted-foreground">
+                        <strong className="text-primary font-semibold block mb-0.5">💡 Justificativa Técnica da IA:</strong>
+                        {sugestao.justificativa}
+                      </div>
+                      <div className="mt-3 pt-2.5 border-t border-border/60 flex items-center justify-between gap-3">
+                        <span className="text-[11px] font-semibold text-muted-foreground">
+                          Posicionar logo após o atraso
                         </span>
-                        <h5 className="text-sm font-bold text-foreground leading-snug">{sugestao.nome}</h5>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onEscolherEtapa?.(sugestao, resultado);
+                            onClose();
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-white text-xs font-bold shadow hover:bg-primary-soft transition-all active:scale-95 cursor-pointer"
+                          title={`Adiantar ${sugestao.nome} para logo após a etapa atrasada`}
+                        >
+                          <Sparkles className="size-3.5" />
+                          Adiantar esta Etapa
+                        </button>
                       </div>
                     </div>
-                    <div className="mt-2.5 pt-2.5 border-t border-border/60 text-xs leading-relaxed text-muted-foreground">
-                      <strong className="text-primary font-semibold block mb-0.5">💡 Justificativa Técnica da IA:</strong>
-                      {sugestao.justificativa}
-                    </div>
-                    <div className="mt-3 pt-2.5 border-t border-border/60 flex items-center justify-between gap-3">
-                      <span className="text-[11px] font-semibold text-muted-foreground">
-                        Posicionar logo após o atraso
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onEscolherEtapa?.(sugestao, resultado);
-                          onClose();
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-white text-xs font-bold shadow hover:bg-primary-soft transition-all active:scale-95 cursor-pointer"
-                        title={`Adiantar ${sugestao.nome} para logo após a etapa atrasada`}
-                      >
-                        <Sparkles className="size-3.5" />
-                        Adiantar esta Etapa
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Footer */}
@@ -268,14 +295,14 @@ export const SugestaoAtrasoModal: React.FC<SugestaoAtrasoModalProps> = ({
               <button
                 type="button"
                 onClick={handleReset}
-                className="text-xs font-bold text-primary hover:underline"
+                className="text-xs font-bold text-primary hover:underline cursor-pointer"
               >
                 ← Realizar Nova Análise
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-md hover:bg-primary-soft transition-all"
+                className="px-5 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-md hover:bg-primary-soft transition-all cursor-pointer"
               >
                 Concluir
               </button>

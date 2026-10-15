@@ -203,3 +203,41 @@ test('não tem violações críticas de acessibilidade na trilha', async ({ page
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations.filter((v) => v.impact === 'critical')).toEqual([]);
 });
+
+test('exibe parecer descritivo da IA quando não houver etapas para adiantar', async ({ page }) => {
+  await setupApi(page);
+
+  // Sobrescreve rota de analise-atraso para retornar sem sugestões e com mensagem
+  await page.route('**/api/obras/**/analise-atraso', async (route) => {
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        etapaAtrasadaId: 'etapa-1',
+        etapaAtrasadaCodigo: '1.1.1',
+        etapaAtrasadaNome: 'Placa de obra',
+        motivo: 'Chuva intensa',
+        diasAtraso: 5,
+        mensagem: 'Não foi possível identificar etapas seguras para adiantamento devido a dependências físicas.',
+        sugestoes: [],
+      }),
+    });
+  });
+
+  await page.goto('/');
+  await page.getByRole('button', { name: /Indicar Atraso & IA/i }).first().click();
+
+  const modal = page.getByRole('dialog');
+  await expect(modal).toBeVisible();
+
+  await page.getByLabel(/Motivo do Atraso/i).fill('Chuva intensa');
+  await page.getByLabel(/Dias Estimados de Atraso/i).fill('5');
+  await page.getByRole('button', { name: /Consultar IA para Opções de Adiantamento/i }).click();
+
+  // Verifica exibição do parecer descritivo e ausência de cards de sugestão
+  await expect(page.getByText('Parecer Técnico da IA:')).toBeVisible();
+  await expect(page.getByText(/Não foi possível identificar etapas seguras para adiantamento/).first()).toBeVisible();
+  await expect(page.getByText('Nenhuma etapa viável para adiantamento')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Adiantar esta Etapa/i })).toHaveCount(0);
+});
+

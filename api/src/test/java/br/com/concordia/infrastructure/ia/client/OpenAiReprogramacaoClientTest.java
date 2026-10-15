@@ -13,7 +13,7 @@ import tools.jackson.databind.json.JsonMapper;
 class OpenAiReprogramacaoClientTest {
 
     @Test
-    void deveRetornarListaVaziaQuandoNaoConfigurado() {
+    void deveRetornarMensagemExplicativaQuandoNaoConfigurado() {
         var properties = new ConcordiaIaProperties("", "https://api.openai.com/v1", "gpt-4o-mini", 20, 0.2);
         var restClient = RestClient.builder().build();
         var jsonMapper = JsonMapper.builder().build();
@@ -23,13 +23,15 @@ class OpenAiReprogramacaoClientTest {
         var atrasada = new EtapaCandidata(UUID.randomUUID(), "1.1", "Fundação");
         var candidatas = List.of(new EtapaCandidata(UUID.randomUUID(), "1.2", "Alvenaria"));
 
-        var sugestoes = client.sugerirAdiantamento(atrasada, "Chuva", 3, candidatas);
-        assertNotNull(sugestoes);
-        assertTrue(sugestoes.isEmpty());
+        var resposta = client.sugerirAdiantamento(atrasada, "Chuva", 3, candidatas);
+        assertNotNull(resposta);
+        assertTrue(resposta.sugestoes().isEmpty());
+        assertNotNull(resposta.mensagem());
+        assertTrue(resposta.mensagem().contains("não está configurada"));
     }
 
     @Test
-    void deveRetornarListaVaziaQuandoNaoHaEtapasCandidatas() {
+    void deveRetornarMensagemExplicativaQuandoNaoHaEtapasCandidatas() {
         var properties = new ConcordiaIaProperties("sk-teste", "https://api.openai.com/v1", "gpt-4o-mini", 20, 0.2);
         var restClient = RestClient.builder().build();
         var jsonMapper = JsonMapper.builder().build();
@@ -38,8 +40,10 @@ class OpenAiReprogramacaoClientTest {
 
         var atrasada = new EtapaCandidata(UUID.randomUUID(), "1.1", "Fundação");
 
-        var sugestoes = client.sugerirAdiantamento(atrasada, "Chuva", 3, List.of());
-        assertNotNull(sugestoes);
-        assertTrue(sugestoes.isEmpty());
+        var resposta = client.sugerirAdiantamento(atrasada, "Chuva", 3, List.of());
+        assertNotNull(resposta);
+        assertTrue(resposta.sugestoes().isEmpty());
+        assertNotNull(resposta.mensagem());
+        assertTrue(resposta.mensagem().contains("não possui outras etapas"));
     }
 }
