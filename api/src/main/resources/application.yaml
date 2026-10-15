@@ -20,3 +20,5 @@ concordia:
     api-key: ${OPENAI_API_KEY:}
     base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
     model: ${OPENAI_MODEL:gpt-4o-mini}
+    timeout-seconds: ${OPENAI_TIMEOUT_SECONDS:20}
+    temperature: ${OPENAI_TEMPERATURE:0.2}
