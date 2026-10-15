@@ -19,10 +19,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 @Service
+@Transactional(readOnly = true)
 public class SugestaoAdiantamentoService {
     private static final Logger log = LoggerFactory.getLogger(SugestaoAdiantamentoService.class);
 
@@ -42,10 +44,20 @@ public class SugestaoAdiantamentoService {
         this.obraRepository = obraRepository;
         this.json = json;
         this.apiKey = apiKey;
-        this.endpoint = URI.create(baseUrl.replaceAll("/+$", "") + "/chat/completions");
-        this.model = model;
+
+        String resolvedBaseUrl = baseUrl;
+        String resolvedModel = model;
+        if (apiKey != null && apiKey.matches("^sk-[a-fA-F0-9]{32}$") && "https://api.openai.com/v1".equals(baseUrl)) {
+            resolvedBaseUrl = "https://api.deepseek.com";
+            if ("gpt-4o-mini".equals(model)) {
+                resolvedModel = "deepseek-chat";
+            }
+        }
+
+        this.endpoint = URI.create(resolvedBaseUrl.replaceAll("/+$", "") + "/chat/completions");
+        this.model = resolvedModel;
         this.httpClient =
-                HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
+                HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
     }
 
     public ReprogramacaoSimplificadaResponse analisarAtraso(UUID obraId, SugestaoAtrasoRequest request) {
