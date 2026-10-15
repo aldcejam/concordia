@@ -8,7 +8,6 @@ import br.com.concordia.infrastructure.ia.dtos.OpenAiChatMessage;
 import br.com.concordia.infrastructure.ia.dtos.OpenAiChatRequest;
 import br.com.concordia.infrastructure.ia.dtos.SugestaoIaPayload;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +50,7 @@ public class OpenAiReprogramacaoClient implements IaReprogramacaoClient {
             var request = new OpenAiChatRequest(
                     properties.getResolvedModel(),
                     List.of(new OpenAiChatMessage("system", systemPrompt), new OpenAiChatMessage("user", userPrompt)),
-                    Map.of("type", "json_object"),
+                    null,
                     properties.temperature());
 
             String rawResponse = restClient

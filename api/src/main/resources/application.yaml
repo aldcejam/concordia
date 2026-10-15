@@ -17,11 +17,11 @@ springdoc:
 
 concordia:
   ia:
-    api-key: ${OPENAI_API_KEY:}
-    base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
-    model: ${OPENAI_MODEL:gpt-4o-mini}
-    timeout-seconds: ${OPENAI_TIMEOUT_SECONDS:20}
-    temperature: ${OPENAI_TEMPERATURE:0.2}
+    api-key: ${OPENROUTER_API_KEY:${CONCORDIA_IA_API_KEY:${OPENAI_API_KEY:}}}
+    base-url: ${OPENROUTER_BASE_URL:${CONCORDIA_IA_BASE_URL:${OPENAI_BASE_URL:https://openrouter.ai/api/v1}}}
+    model: ${OPENROUTER_MODEL:${CONCORDIA_IA_MODEL:${OPENAI_MODEL:openai/gpt-4o-mini}}}
+    timeout-seconds: ${OPENROUTER_TIMEOUT_SECONDS:${CONCORDIA_IA_TIMEOUT_SECONDS:${OPENAI_TIMEOUT_SECONDS:30}}}
+    temperature: ${CONCORDIA_IA_TEMPERATURE:${OPENAI_TEMPERATURE:0.2}}
     prompt:
       system: |
         Você é um engenheiro civil sênior especialista em planejamento e gestão de obras pelo método do caminho crítico (CPM) e EAP/SINAPI.

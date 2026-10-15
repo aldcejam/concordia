@@ -26,6 +26,8 @@ public class IaConfig {
         if (properties.isConfigured()) {
             builder.defaultHeader(
                     HttpHeaders.AUTHORIZATION, "Bearer " + properties.apiKey().trim());
+            builder.defaultHeader("HTTP-Referer", "https://concordia.app");
+            builder.defaultHeader("X-Title", "Concordia");
         }
 
         return builder.build();

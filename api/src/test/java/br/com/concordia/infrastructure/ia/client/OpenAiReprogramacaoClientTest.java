@@ -14,7 +14,7 @@ class OpenAiReprogramacaoClientTest {
 
     @Test
     void deveRetornarMensagemExplicativaQuandoNaoConfigurado() {
-        var properties = ConcordiaIaProperties.of("", "https://api.openai.com/v1", "gpt-4o-mini", 20, 0.2);
+        var properties = ConcordiaIaProperties.of("", "https://openrouter.ai/api/v1", "openai/gpt-4o-mini", 30, 0.2);
         var restClient = RestClient.builder().build();
         var jsonMapper = JsonMapper.builder().build();
 
@@ -32,7 +32,8 @@ class OpenAiReprogramacaoClientTest {
 
     @Test
     void deveRetornarMensagemExplicativaQuandoNaoHaEtapasCandidatas() {
-        var properties = ConcordiaIaProperties.of("sk-teste", "https://api.openai.com/v1", "gpt-4o-mini", 20, 0.2);
+        var properties =
+                ConcordiaIaProperties.of("sk-teste", "https://openrouter.ai/api/v1", "openai/gpt-4o-mini", 30, 0.2);
         var restClient = RestClient.builder().build();
         var jsonMapper = JsonMapper.builder().build();
 

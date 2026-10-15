@@ -20,13 +20,13 @@ public record ConcordiaIaProperties(
 
     public ConcordiaIaProperties {
         if (baseUrl == null || baseUrl.isBlank()) {
-            baseUrl = "https://api.openai.com/v1";
+            baseUrl = "https://openrouter.ai/api/v1";
         }
         if (model == null || model.isBlank()) {
-            model = "gpt-4o-mini";
+            model = "openai/gpt-4o-mini";
         }
         if (timeoutSeconds == null || timeoutSeconds <= 0) {
-            timeoutSeconds = 20;
+            timeoutSeconds = 30;
         }
         if (temperature == null) {
             temperature = 0.2;
