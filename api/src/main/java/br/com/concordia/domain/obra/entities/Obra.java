@@ -95,7 +95,7 @@ public class Obra {
             throw new IllegalArgumentException("O item da EAP pertence a outra obra.");
         }
         eap.add(item);
-        if (item.getPai() != null) {
+        if (item.getPai() != null && !item.getPai().getFilhos().contains(item)) {
             item.getPai().getFilhos().add(item);
         }
     }

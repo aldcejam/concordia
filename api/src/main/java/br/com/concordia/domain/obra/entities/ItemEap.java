@@ -128,5 +128,4 @@ public class ItemEap {
         this.percentualBdi = percentualBdi;
         this.valorTotalOrcado = valorTotalOrcado;
     }
-
 }

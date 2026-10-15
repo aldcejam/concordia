@@ -66,7 +66,8 @@ public class EtapaObra {
             String observacao,
             String motivoAtraso,
             Integer diasAtraso) {
-        var medicao = new MedicaoEtapa(this, percentualExecutado, quantidadeExecutada, observacao, motivoAtraso, diasAtraso);
+        var medicao =
+                new MedicaoEtapa(this, percentualExecutado, quantidadeExecutada, observacao, motivoAtraso, diasAtraso);
         medicoes.add(medicao);
         return medicao;
     }

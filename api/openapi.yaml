@@ -161,6 +161,36 @@ paths:
                 $ref: '#/components/schemas/EtapaResponse'
         '404':
           description: Obra ou etapa não encontrada
+  /api/obras/{id}/analise-atraso:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags:
+        - Obras
+      operationId: analisarAtrasoObra
+      summary: Analisa atraso de uma etapa e sugere opções de adiantamento com IA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SugestaoAtrasoRequest'
+      responses:
+        '200':
+          description: Sugestões de etapas para adiantamento geradas pela IA
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReprogramacaoSimplificadaResponse'
+        '400':
+          description: Dados inválidos
+        '404':
+          description: Obra não encontrada
 components:
   schemas:
     HealthResponse:
@@ -353,3 +383,46 @@ components:
         registradaEm:
           type: string
           format: date-time
+    SugestaoAtrasoRequest:
+      type: object
+      required: [etapaId, motivo, diasAtraso]
+      properties:
+        etapaId:
+          type: string
+          format: uuid
+        motivo:
+          type: string
+        diasAtraso:
+          type: integer
+    SugestaoEtapaResponse:
+      type: object
+      required: [etapaId, codigoEap, nome, justificativa]
+      properties:
+        etapaId:
+          type: string
+          format: uuid
+        codigoEap:
+          type: string
+        nome:
+          type: string
+        justificativa:
+          type: string
+    ReprogramacaoSimplificadaResponse:
+      type: object
+      required: [etapaAtrasadaId, etapaAtrasadaCodigo, etapaAtrasadaNome, motivo, diasAtraso, sugestoes]
+      properties:
+        etapaAtrasadaId:
+          type: string
+          format: uuid
+        etapaAtrasadaCodigo:
+          type: string
+        etapaAtrasadaNome:
+          type: string
+        motivo:
+          type: string
+        diasAtraso:
+          type: integer
+        sugestoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SugestaoEtapaResponse'
