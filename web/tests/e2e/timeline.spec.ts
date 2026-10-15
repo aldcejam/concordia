@@ -107,6 +107,14 @@ async function setupApi(page: Page) {
       });
     }
 
+    if (path.endsWith('/reordenar-etapa')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      });
+    }
+
     return route.continue();
   });
 }
@@ -150,6 +158,41 @@ test('exibe a trilha de etapas da obra e permite indicar atraso com IA', async (
   await page.getByRole('button', { name: 'Concluir' }).click();
   await expect(modal).not.toBeVisible();
   await expect(page.getByText(/Atraso: 7d/)).toBeVisible();
+});
+
+test('ao escolher etapa sugerida pela IA posiciona logo apos a etapa atrasada', async ({ page }) => {
+  await setupApi(page);
+  await page.goto('/');
+
+  await expect(page.getByText('Placa de obra')).toBeVisible();
+
+  // Clica no botão de indicar atraso na primeira etapa
+  await page.getByRole('button', { name: /Indicar Atraso & IA/i }).first().click();
+
+  const modal = page.getByRole('dialog');
+  await expect(modal).toBeVisible();
+
+  // Consulta IA
+  await page.getByRole('button', { name: /Consultar IA para Opções de Adiantamento/i }).click();
+  await expect(page.getByText('Diagnóstico de Atraso')).toBeVisible();
+
+  // Clica em 'Adiantar esta Etapa' na opção 'Instalações elétricas embutidas' (que originalmente era a 3ª)
+  const btnAdiantar = modal.getByRole('button', { name: /Adiantar esta Etapa/i }).nth(1);
+  await btnAdiantar.click();
+
+  // Modal fecha
+  await expect(modal).not.toBeVisible();
+
+  // Verifica que o badge de etapa adiantada via IA aparece na tela
+  await expect(page.getByText('Adiantada via IA para compensar atraso')).toBeVisible();
+
+  // Verifica a ordem no DOM da trilha: Instalações elétricas embutidas deve aparecer logo após Placa de obra
+  const headings = await page.locator('h4').allTextContents();
+  const indexPlaca = headings.findIndex((h) => h.toUpperCase().includes('PLACA DE OBRA'));
+  const indexEletrica = headings.findIndex((h) => h.toUpperCase().includes('INSTALAÇÕES ELÉTRICAS'));
+
+  expect(indexPlaca).toBeGreaterThanOrEqual(0);
+  expect(indexEletrica).toBe(indexPlaca + 1);
 });
 
 test('não tem violações críticas de acessibilidade na trilha', async ({ page }) => {

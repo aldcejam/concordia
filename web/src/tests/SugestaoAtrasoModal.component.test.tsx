@@ -51,6 +51,24 @@ async function runTests() {
     unmount();
   });
 
+  await testCase('aceita callback onEscolherEtapa nas props', () => {
+    let selecionado = false;
+    const { container, unmount } = render(
+      <SugestaoAtrasoModal
+        isOpen={true}
+        onClose={() => {}}
+        onEscolherEtapa={() => {
+          selecionado = true;
+        }}
+        etapa={{ id: 'etapa-1', codigoEap: '1.2.3', nome: 'Alvenaria' }}
+        obraId="obra-1"
+      />
+    );
+    assert.ok(container.querySelector('[role="dialog"]'));
+    assert.equal(selecionado, false);
+    unmount();
+  });
+
   printSummary();
 }
 

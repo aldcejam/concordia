@@ -3,6 +3,8 @@ import { useListar, useListarEtapas } from '@/api/generated/obras/obras';
 import type { BrComConcordiaInfrastructureObraDtosEtapaResponse } from '@/api/generated/models';
 import { ChevronDown, HardHat, ClipboardList, ChevronLeft, ChevronRight, AlertTriangle, Sparkles } from 'lucide-react';
 import { SugestaoAtrasoModal } from '@/components/molecules';
+import type { SugestaoItem, AnaliseAtrasoResult } from '@/components/molecules/SugestaoAtrasoModal';
+import { api } from '@/services/api';
 
 const PROJECT_DESCRIPTION =
   'COMPLEMENTAÇÃO DA OBRA DA ESCOLA MULTICAMPI DE CIÊNCIAS MÉDICAS (EMCM) - INFRAESTRUTURA E URBANIZAÇÃO - COM DESCONTO LINEAR';
@@ -27,6 +29,8 @@ export const TimelinePage: React.FC = () => {
   const etapasQuery = useListarEtapas(obra?.id ?? '', { query: { enabled: Boolean(obra?.id) } });
   const stages = etapasQuery.data?.data ?? EMPTY_STAGES;
 
+  const [customStages, setCustomStages] = useState<BrComConcordiaInfrastructureObraDtosEtapaResponse[] | null>(null);
+  const [adiantadas, setAdiantadas] = useState<Record<string, { porEtapaId: string; justificativa?: string }>>({});
   const [selectedStageForDelay, setSelectedStageForDelay] = useState<{
     id: string;
     nome: string;
@@ -54,14 +58,63 @@ export const TimelinePage: React.FC = () => {
     }
   };
 
+  const currentStages = useMemo(() => {
+    return customStages ?? stages;
+  }, [customStages, stages]);
+
+  const handleEscolherEtapa = async (sugestao: SugestaoItem, resultado: AnaliseAtrasoResult) => {
+    const etapaAtrasadaId = resultado.etapaAtrasadaId;
+    const etapaAdiantadaId = sugestao.etapaId;
+
+    setDelays((prev) => ({
+      ...prev,
+      [etapaAtrasadaId]: { dias: resultado.diasAtraso, motivo: resultado.motivo },
+    }));
+
+    setAdiantadas((prev) => ({
+      ...prev,
+      [etapaAdiantadaId]: {
+        porEtapaId: etapaAtrasadaId,
+        justificativa: sugestao.justificativa,
+      },
+    }));
+
+    const baseList = [...(customStages ?? stages)];
+    const itemAdiantadoIndex = baseList.findIndex((s) => s.id === etapaAdiantadaId);
+    if (itemAdiantadoIndex !== -1) {
+      const [itemAdiantado] = baseList.splice(itemAdiantadoIndex, 1);
+      const itemAtrasadoIndex = baseList.findIndex((s) => s.id === etapaAtrasadaId);
+      if (itemAtrasadoIndex !== -1) {
+        baseList.splice(itemAtrasadoIndex + 1, 0, itemAdiantado);
+        setCustomStages(baseList);
+      }
+    }
+
+    if (obra?.id) {
+      try {
+        await api.post(`/obras/${obra.id}/reordenar-etapa`, {
+          etapaAtrasadaId,
+          etapaAdiantadaId,
+        });
+      } catch (err) {
+        console.warn('Persistencia de reordenacao no backend:', err);
+      }
+    }
+  };
+
   const rootGroups = useMemo(() => {
     const map = new Map<string, GroupedData>();
-    stages.forEach(stage => {
-      const eap = stage.codigoEap || '';
-      const parts = eap.split('.');
+    currentStages.forEach(stage => {
+      const targetAtrasadaId = stage.id ? adiantadas[stage.id]?.porEtapaId : undefined;
+      const stageAtrasadaRef = targetAtrasadaId ? currentStages.find(s => s.id === targetAtrasadaId) : null;
+
+      const effectiveEap = stageAtrasadaRef?.codigoEap || stage.codigoEap || '';
+      const effectiveMacro = stageAtrasadaRef?.macroetapa || stage.macroetapa || 'GERAL';
+
+      const parts = effectiveEap.split('.');
       const rootId = parts[0] || '1';
       
-      const macroParts = (stage.macroetapa || 'GERAL').split('›').map(s => s.trim());
+      const macroParts = effectiveMacro.split('›').map(s => s.trim());
       const rootName = macroParts[0];
       
       const isDirectChild = parts.length <= 2;
@@ -100,7 +153,7 @@ export const TimelinePage: React.FC = () => {
        return 0;
     }));
     return groups;
-  }, [stages]);
+  }, [currentStages, adiantadas]);
 
   const [activeRootId, setActiveRootId] = useState<string | null>(null);
   const [activeSubId, setActiveSubId] = useState<string | null>(null);
@@ -108,9 +161,9 @@ export const TimelinePage: React.FC = () => {
   const activeRoot = rootGroups.find(g => g.id === activeRootId) ?? rootGroups[0];
   const activeSub = activeRoot?.subGroups.find(s => s.id === activeSubId) ?? activeRoot?.subGroups[0];
 
-  const totalBudget = stages.reduce((acc, stage) => acc + Number(stage.valorTotalOrcado ?? 0), 0);
-  const completedCount = stages.filter(s => Number(s.percentualExecutado ?? 0) >= 100).length;
-  const delayedCount = stages.filter(s => Boolean(s.motivoAtraso)).length;
+  const totalBudget = currentStages.reduce((acc, stage) => acc + Number(stage.valorTotalOrcado ?? 0), 0);
+  const completedCount = currentStages.filter(s => Number(s.percentualExecutado ?? 0) >= 100).length;
+  const delayedCount = currentStages.filter(s => Boolean(s.motivoAtraso) || (s.id ? Boolean(delays[s.id]) : false)).length;
 
   if (obrasQuery.isLoading || etapasQuery.isLoading || stages.length === 0) {
      return (
@@ -264,6 +317,7 @@ export const TimelinePage: React.FC = () => {
                      const isStarted = node.progress > 0 && !isDone;
                      const isLeft = index % 2 === 0;
                      const delay = delays[node.id];
+                     const adiantadaInfo = adiantadas[node.id];
 
                      return (
                         <div key={node.id} className={`flex w-full items-start ${isLeft ? 'flex-row' : 'flex-row-reverse'}`}>
@@ -272,8 +326,8 @@ export const TimelinePage: React.FC = () => {
                               <div className={`absolute top-6 w-8 sm:w-12 border-t-2 border-dashed border-border z-0 ${isLeft ? 'right-0' : 'left-0'}`}></div>
 
                               <div className={`flex flex-col relative z-10 w-full max-w-[320px] ${isLeft ? 'items-end text-right' : 'items-start text-left'}`}>
-                                 <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-extrabold tracking-widest uppercase shadow-sm cursor-pointer hover:opacity-90 mb-3 ${isDone ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : isStarted ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-primary-deep text-white border border-primary-deep'}`}>
-                                    {isDone ? 'CONCLUÍDO' : isStarted ? `${node.progress}% MEDIDO` : 'ORÇADO • SEM MEDIÇÃO'}
+                                 <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-extrabold tracking-widest uppercase shadow-sm cursor-pointer hover:opacity-90 mb-3 ${adiantadaInfo ? 'bg-amber-100 text-amber-900 border border-amber-300' : isDone ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : isStarted ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-primary-deep text-white border border-primary-deep'}`}>
+                                    {adiantadaInfo ? 'ADIANTADA PELA IA' : isDone ? 'CONCLUÍDO' : isStarted ? `${node.progress}% MEDIDO` : 'ORÇADO • SEM MEDIÇÃO'}
                                     <ChevronDown className="size-3 ml-1 opacity-50" />
                                  </div>
 
@@ -283,6 +337,13 @@ export const TimelinePage: React.FC = () => {
                                     <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-warning/15 border border-warning/30 text-warning-dark text-xs font-bold">
                                        <AlertTriangle className="size-3.5 shrink-0 text-warning" />
                                        Atraso: {delay.dias}d • {delay.motivo}
+                                    </div>
+                                 )}
+
+                                 {adiantadaInfo && (
+                                    <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gold/15 border border-gold/40 text-gold-dark text-xs font-bold shadow-sm">
+                                       <Sparkles className="size-3.5 shrink-0 text-gold-dark" />
+                                       Adiantada via IA para compensar atraso
                                     </div>
                                  )}
                                  
@@ -313,10 +374,16 @@ export const TimelinePage: React.FC = () => {
                                  type="button"
                                  onClick={() => setSelectedStageForDelay({ id: node.id, nome: node.title, codigoEap: node.codigoEap })}
                                  title={`Reprogramar etapa ${node.codigoEap || ''} ${node.title}`}
-                                 className="absolute top-0 -translate-y-2 grid place-items-center w-12 h-12 sm:w-14 sm:h-14 bg-background border-[6px] border-muted/30 hover:border-primary/50 rounded-full shadow-sm z-10 transition-transform active:scale-95 cursor-pointer"
+                                 className={`absolute top-0 -translate-y-2 grid place-items-center w-12 h-12 sm:w-14 sm:h-14 bg-background border-[6px] ${adiantadaInfo ? 'border-gold/50 shadow-md ring-2 ring-gold/20' : 'border-muted/30 hover:border-primary/50'} rounded-full shadow-sm z-10 transition-transform active:scale-95 cursor-pointer`}
                               >
                                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-border bg-white flex items-center justify-center">
-                                    {delay ? <AlertTriangle className="size-4 sm:size-5 text-warning" /> : <ClipboardList className="size-4 sm:size-5 text-primary-deep" />}
+                                    {delay ? (
+                                      <AlertTriangle className="size-4 sm:size-5 text-warning" />
+                                    ) : adiantadaInfo ? (
+                                      <Sparkles className="size-4 sm:size-5 text-gold-dark" />
+                                    ) : (
+                                      <ClipboardList className="size-4 sm:size-5 text-primary-deep" />
+                                    )}
                                  </div>
                               </button>
                            </div>
@@ -361,6 +428,7 @@ export const TimelinePage: React.FC = () => {
               [res.etapaAtrasadaId]: { dias: res.diasAtraso, motivo: res.motivo },
             }));
           }}
+          onEscolherEtapa={handleEscolherEtapa}
         />
       )}
     </div>

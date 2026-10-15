@@ -28,6 +28,7 @@ export interface SugestaoAtrasoModalProps {
   } | null;
   obraId: string;
   onSuccess?: (resultado: AnaliseAtrasoResult) => void;
+  onEscolherEtapa?: (sugestao: SugestaoItem, resultado: AnaliseAtrasoResult) => void;
 }
 
 export const SugestaoAtrasoModal: React.FC<SugestaoAtrasoModalProps> = ({
@@ -36,6 +37,7 @@ export const SugestaoAtrasoModal: React.FC<SugestaoAtrasoModalProps> = ({
   etapa,
   obraId,
   onSuccess,
+  onEscolherEtapa,
 }) => {
   const [motivo, setMotivo] = useState('Atraso no fornecimento de insumos e condições climáticas adversas');
   const [diasAtraso, setDiasAtraso] = useState<number>(5);
@@ -238,6 +240,23 @@ export const SugestaoAtrasoModal: React.FC<SugestaoAtrasoModalProps> = ({
                     <div className="mt-2.5 pt-2.5 border-t border-border/60 text-xs leading-relaxed text-muted-foreground">
                       <strong className="text-primary font-semibold block mb-0.5">💡 Justificativa Técnica da IA:</strong>
                       {sugestao.justificativa}
+                    </div>
+                    <div className="mt-3 pt-2.5 border-t border-border/60 flex items-center justify-between gap-3">
+                      <span className="text-[11px] font-semibold text-muted-foreground">
+                        Posicionar logo após o atraso
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onEscolherEtapa?.(sugestao, resultado);
+                          onClose();
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-white text-xs font-bold shadow hover:bg-primary-soft transition-all active:scale-95 cursor-pointer"
+                        title={`Adiantar ${sugestao.nome} para logo após a etapa atrasada`}
+                      >
+                        <Sparkles className="size-3.5" />
+                        Adiantar esta Etapa
+                      </button>
                     </div>
                   </div>
                 ))}
