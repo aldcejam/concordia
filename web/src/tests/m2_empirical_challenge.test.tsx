@@ -1,6 +1,7 @@
 import ReactDOMServer from 'react-dom/server';
 import assert from 'node:assert/strict';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
 
 // -----------------------------------------------------------------------------
 // 1. UNIFIED ROOT BARREL IMPORT VERIFICATION (@/components)
@@ -31,7 +32,7 @@ import { TimelineNodeData } from '@/types/timeline';
 const renderTimelinePage = () => {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return ReactDOMServer.renderToStaticMarkup(
-    <QueryClientProvider client={queryClient}><TimelinePage /></QueryClientProvider>
+    <QueryClientProvider client={queryClient}><MemoryRouter><TimelinePage /></MemoryRouter></QueryClientProvider>
   );
 };
 

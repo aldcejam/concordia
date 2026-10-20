@@ -3,6 +3,7 @@ package br.com.concordia.domain.obra;
 import static org.junit.jupiter.api.Assertions.*;
 
 import br.com.concordia.domain.common.enums.UnidadeFederativa;
+import br.com.concordia.domain.obra.dependencia.DependenciaEtapaRepository;
 import br.com.concordia.domain.obra.entities.EtapaObra;
 import br.com.concordia.domain.obra.entities.ItemEap;
 import br.com.concordia.domain.obra.entities.Obra;
@@ -28,7 +29,8 @@ class SugestaoAdiantamentoServiceTest {
     void setUp() {
         obraRepository = Mockito.mock(ObraRepository.class);
         iaClient = Mockito.mock(IaReprogramacaoClient.class);
-        service = new SugestaoAdiantamentoService(obraRepository, iaClient);
+        service = new SugestaoAdiantamentoService(
+                obraRepository, iaClient, Mockito.mock(DependenciaEtapaRepository.class));
     }
 
     @Test

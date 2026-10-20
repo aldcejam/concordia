@@ -30,4 +30,8 @@ public record EtapaOutput(
         BigDecimal valorUnitarioBase,
         BigDecimal percentualBdi,
         BigDecimal valorTotalOrcado,
-        List<MedicaoOutput> medicoes) {}
+        List<MedicaoOutput> medicoes,
+        BigDecimal pesoPercentual,
+        boolean bloqueada,
+        List<VinculoEtapaOutput> predecessoras,
+        List<VinculoEtapaOutput> sucessoras) {}

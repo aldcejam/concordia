@@ -31,7 +31,11 @@ public record EtapaResponse(
         BigDecimal valorUnitarioBase,
         BigDecimal percentualBdi,
         BigDecimal valorTotalOrcado,
-        List<MedicaoResponse> medicoes) {
+        List<MedicaoResponse> medicoes,
+        BigDecimal pesoPercentual,
+        boolean bloqueada,
+        List<VinculoEtapaResponse> predecessoras,
+        List<VinculoEtapaResponse> sucessoras) {
     public static EtapaResponse from(EtapaOutput output) {
         return new EtapaResponse(
                 output.id(),
@@ -58,6 +62,10 @@ public record EtapaResponse(
                 output.valorUnitarioBase(),
                 output.percentualBdi(),
                 output.valorTotalOrcado(),
-                output.medicoes().stream().map(MedicaoResponse::from).toList());
+                output.medicoes().stream().map(MedicaoResponse::from).toList(),
+                output.pesoPercentual(),
+                output.bloqueada(),
+                output.predecessoras().stream().map(VinculoEtapaResponse::from).toList(),
+                output.sucessoras().stream().map(VinculoEtapaResponse::from).toList());
     }
 }

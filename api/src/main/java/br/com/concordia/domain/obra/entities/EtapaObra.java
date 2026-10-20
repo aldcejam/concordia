@@ -36,16 +36,6 @@ public class EtapaObra {
     @Embedded
     private CpmInfo cpm = new CpmInfo();
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "etapa_obra_cpm",
-            joinColumns = @JoinColumn(name = "id_etapa_sucessora"),
-            inverseJoinColumns = @JoinColumn(name = "id_etapa_predecessora"))
-    private List<EtapaObra> predecessores = new ArrayList<>();
-
-    @ManyToMany(mappedBy = "predecessores", fetch = FetchType.LAZY)
-    private List<EtapaObra> sucessores = new ArrayList<>();
-
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "id_etapa_obra", nullable = false)
     private List<ItemOrcamento> orcamentos = new ArrayList<>();
@@ -58,6 +48,13 @@ public class EtapaObra {
         this.descricao = descricao;
         this.inicio = inicio;
         this.prazoEsperadoDias = prazoEsperadoDias;
+    }
+
+    /** Percentual executado segundo a medição mais recente (0 quando ainda não houve medição). */
+    public BigDecimal percentualAtual() {
+        return medicoes.isEmpty()
+                ? BigDecimal.ZERO
+                : medicoes.get(medicoes.size() - 1).getPercentualExecutado();
     }
 
     public MedicaoEtapa registrarMedicao(

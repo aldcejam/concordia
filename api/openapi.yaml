@@ -102,6 +102,8 @@ paths:
           description: Dados da medição inválidos
         '404':
           description: Obra ou etapa não encontrada
+        '409':
+          description: Etapa bloqueada por predecessora obrigatória pendente (RN02)
   /api/obras/{id}/etapas/{etapaId}:
     parameters:
       - name: id
@@ -219,6 +221,189 @@ paths:
           description: Dados inválidos
         '404':
           description: Obra ou etapa não encontrada
+  /api/obras/importacoes/pre-visualizacao:
+    post:
+      tags:
+        - Importação de Orçamento
+      operationId: preVisualizarPlanilha
+      summary: UC01 — valida a planilha orçamentária e devolve o resumo da EAP sem persistir
+      description: >-
+        Reconhece a planilha analítica SINAPI (blocos de composição) e a planilha sintética com cabeçalhos
+        sinônimos (RNF05). Sempre responde 200; erros de parsing vêm em `erros` e `valida` indica se é possível importar.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [arquivo]
+              properties:
+                arquivo:
+                  type: string
+                  format: binary
+                  description: Planilha .xlsx ou .xls (até 20 MB)
+      responses:
+        '200':
+          description: Resumo da importação (válida ou com relatório de erros)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumoImportacaoResponse'
+        '400':
+          description: Arquivo ausente, vazio ou com extensão não suportada
+        '413':
+          description: Arquivo maior que 20 MB
+  /api/obras/importacoes:
+    post:
+      tags:
+        - Importação de Orçamento
+      operationId: importarPlanilha
+      summary: UC01 — cria a obra com macroetapas, subetapas e itens de serviço a partir da planilha
+      parameters:
+        - name: descricao
+          in: query
+          required: false
+          description: Descrição da obra; quando omitida usa o nome encontrado na planilha
+          schema:
+            type: string
+        - name: uf
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [AC, AL, AP, AM, BA, CE, DF, ES, GO, MA, MT, MS, MG, PA, PB, PR, PE, PI, RJ, RN, RS, RO, RR, SC, SP, SE, TO]
+        - name: fusoHorario
+          in: query
+          required: false
+          schema:
+            type: string
+            default: America/Sao_Paulo
+        - name: idEmpresa
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [arquivo]
+              properties:
+                arquivo:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Obra criada e EAP persistida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportacaoPlanilhaResponse'
+        '400':
+          description: Arquivo ou parâmetros inválidos
+        '404':
+          description: Empresa não encontrada
+        '422':
+          description: Planilha inválida; `erros` traz o relatório por linha/coluna
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PlanilhaInvalidaProblem'
+  /api/obras/{id}/dependencias:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - Dependências
+      operationId: listarDependencias
+      summary: UC06 — lista os vínculos de precedência da obra
+      responses:
+        '200':
+          description: Dependências configuradas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DependenciaResponse'
+        '404':
+          description: Obra não encontrada
+    post:
+      tags:
+        - Dependências
+      operationId: criarDependencia
+      summary: UC06 — cria um vínculo de precedência entre duas etapas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DependenciaRequest'
+      responses:
+        '201':
+          description: Vínculo criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependenciaResponse'
+        '400':
+          description: Dados inválidos ou etapa dependendo de si mesma
+        '404':
+          description: Obra ou etapa não encontrada
+        '409':
+          description: Vínculo duplicado ou que criaria um ciclo na EAP (o caminho do ciclo vem em `detail`)
+  /api/obras/{id}/dependencias/{dependenciaId}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: dependenciaId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      tags:
+        - Dependências
+      operationId: atualizarDependencia
+      summary: UC06 — altera tipo, desfasamento ou obrigatoriedade do vínculo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DependenciaParcialRequest'
+      responses:
+        '200':
+          description: Vínculo atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependenciaResponse'
+        '404':
+          description: Obra ou dependência não encontrada
+    delete:
+      tags:
+        - Dependências
+      operationId: removerDependencia
+      summary: UC06 — remove o vínculo de precedência
+      responses:
+        '204':
+          description: Vínculo removido
+        '404':
+          description: Obra ou dependência não encontrada
 components:
   schemas:
     HealthResponse:
@@ -388,6 +573,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MedicaoResponse'
+        pesoPercentual:
+          type: number
+          description: Participação do item no valor total orçado da obra (%)
+        bloqueada:
+          type: boolean
+          description: RN02 — verdadeiro enquanto houver predecessora obrigatória não satisfeita
+        predecessoras:
+          type: array
+          items:
+            $ref: '#/components/schemas/VinculoEtapaResponse'
+        sucessoras:
+          type: array
+          items:
+            $ref: '#/components/schemas/VinculoEtapaResponse'
     MedicaoResponse:
       type: object
       required: [id, percentualExecutado, quantidadeExecutada, registradaEm]
@@ -467,3 +666,201 @@ components:
         etapaAdiantadaId:
           type: string
           format: uuid
+    TipoDependencia:
+      type: string
+      enum: [FI, II, FF]
+      description: FI = Fim→Início, II = Início→Início, FF = Fim→Fim
+    DependenciaRequest:
+      type: object
+      required: [predecessoraId, sucessoraId]
+      properties:
+        predecessoraId:
+          type: string
+          format: uuid
+        sucessoraId:
+          type: string
+          format: uuid
+        tipo:
+          $ref: '#/components/schemas/TipoDependencia'
+        desfasamentoDias:
+          type: integer
+          minimum: -365
+          maximum: 365
+          default: 0
+        obrigatoria:
+          type: boolean
+          default: true
+    DependenciaParcialRequest:
+      type: object
+      properties:
+        tipo:
+          $ref: '#/components/schemas/TipoDependencia'
+        desfasamentoDias:
+          type: integer
+          minimum: -365
+          maximum: 365
+        obrigatoria:
+          type: boolean
+    EtapaDependenciaResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        codigoEap:
+          type: string
+          nullable: true
+        nome:
+          type: string
+    DependenciaResponse:
+      type: object
+      required: [id, predecessora, sucessora, tipo, desfasamentoDias, obrigatoria, satisfeita]
+      properties:
+        id:
+          type: string
+          format: uuid
+        predecessora:
+          $ref: '#/components/schemas/EtapaDependenciaResponse'
+        sucessora:
+          $ref: '#/components/schemas/EtapaDependenciaResponse'
+        tipo:
+          $ref: '#/components/schemas/TipoDependencia'
+        desfasamentoDias:
+          type: integer
+        obrigatoria:
+          type: boolean
+        satisfeita:
+          type: boolean
+          description: Se a predecessora já permite o início da sucessora
+        criadaEm:
+          type: string
+          format: date-time
+    VinculoEtapaResponse:
+      type: object
+      properties:
+        dependenciaId:
+          type: string
+          format: uuid
+        etapaId:
+          type: string
+          format: uuid
+        codigoEap:
+          type: string
+          nullable: true
+        nome:
+          type: string
+        tipo:
+          $ref: '#/components/schemas/TipoDependencia'
+        desfasamentoDias:
+          type: integer
+        obrigatoria:
+          type: boolean
+        satisfeita:
+          type: boolean
+    ErroImportacaoResponse:
+      type: object
+      properties:
+        linha:
+          type: integer
+          nullable: true
+        coluna:
+          type: string
+          nullable: true
+        mensagem:
+          type: string
+    NoEapResumoResponse:
+      type: object
+      properties:
+        codigoEap:
+          type: string
+        nome:
+          type: string
+        itemServico:
+          type: boolean
+        banco:
+          type: string
+          nullable: true
+          description: Banco de referência; itens sem banco são "Composição Própria"
+        codigoComposicao:
+          type: string
+          nullable: true
+        unidade:
+          type: string
+          nullable: true
+        quantidade:
+          type: number
+          nullable: true
+        valorTotal:
+          type: number
+        pesoPercentual:
+          type: number
+        quantidadeItens:
+          type: integer
+        filhos:
+          type: array
+          items:
+            $ref: '#/components/schemas/NoEapResumoResponse'
+    ResumoImportacaoResponse:
+      type: object
+      properties:
+        formato:
+          type: string
+        nomeObra:
+          type: string
+          nullable: true
+        percentualBdi:
+          type: number
+          nullable: true
+        totalItens:
+          type: integer
+        totalMacroetapas:
+          type: integer
+        totalSubetapas:
+          type: integer
+        composicoesProprias:
+          type: integer
+        valorTotalSemBdi:
+          type: number
+        valorTotalComBdi:
+          type: number
+        somaPesos:
+          type: number
+        valida:
+          type: boolean
+        eap:
+          type: array
+          items:
+            $ref: '#/components/schemas/NoEapResumoResponse'
+        erros:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErroImportacaoResponse'
+        avisos:
+          type: array
+          items:
+            type: string
+    ImportacaoPlanilhaResponse:
+      type: object
+      properties:
+        idObra:
+          type: string
+          format: uuid
+        descricaoObra:
+          type: string
+        resumo:
+          $ref: '#/components/schemas/ResumoImportacaoResponse'
+    PlanilhaInvalidaProblem:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Planilha Inválida
+        status:
+          type: integer
+          example: 422
+        detail:
+          type: string
+        erros:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErroImportacaoResponse'

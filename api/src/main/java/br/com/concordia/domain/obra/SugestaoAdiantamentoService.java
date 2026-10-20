@@ -1,5 +1,9 @@
 package br.com.concordia.domain.obra;
 
+import br.com.concordia.domain.obra.dependencia.DependenciaEtapaRepository;
+import br.com.concordia.domain.obra.dependencia.GrafoDependencias;
+import br.com.concordia.domain.obra.dependencia.RegraLiberacao;
+import br.com.concordia.domain.obra.entities.DependenciaEtapa;
 import br.com.concordia.domain.obra.entities.ItemEap;
 import br.com.concordia.domain.obra.entities.Obra;
 import br.com.concordia.domain.obra.ports.IaReprogramacaoClient;
@@ -14,6 +18,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -26,10 +31,15 @@ public class SugestaoAdiantamentoService {
 
     private final ObraRepository obraRepository;
     private final IaReprogramacaoClient iaClient;
+    private final DependenciaEtapaRepository dependenciaRepository;
 
-    public SugestaoAdiantamentoService(ObraRepository obraRepository, IaReprogramacaoClient iaClient) {
+    public SugestaoAdiantamentoService(
+            ObraRepository obraRepository,
+            IaReprogramacaoClient iaClient,
+            DependenciaEtapaRepository dependenciaRepository) {
         this.obraRepository = obraRepository;
         this.iaClient = iaClient;
+        this.dependenciaRepository = dependenciaRepository;
     }
 
     public ReprogramacaoSimplificadaResponse analisarAtraso(UUID obraId, SugestaoAtrasoRequest request) {
@@ -43,7 +53,8 @@ public class SugestaoAdiantamentoService {
         }
 
         ItemEap etapaAtrasada = identificarEtapaAtrasada(etapasOrdenadas, request.etapaId());
-        List<ItemEap> etapasDisponiveis = filtrarEtapasDisponiveisParaAdiantamento(etapasOrdenadas, etapaAtrasada);
+        List<ItemEap> etapasDisponiveis = filtrarEtapasDisponiveisParaAdiantamento(
+                etapasOrdenadas, etapaAtrasada, dependenciaRepository.findByObraId(obraId));
 
         if (etapasDisponiveis.isEmpty()) {
             return criarRespostaSemEtapasDisponiveis(etapaAtrasada, request);
@@ -83,10 +94,28 @@ public class SugestaoAdiantamentoService {
                 .orElse(etapas.get(0));
     }
 
-    private List<ItemEap> filtrarEtapasDisponiveisParaAdiantamento(List<ItemEap> etapas, ItemEap etapaAtrasada) {
+    /**
+     * RN03: candidatas não podem depender (direta ou indiretamente) da etapa atrasada e precisam ter as predecessoras
+     * obrigatórias satisfeitas (UC06).
+     */
+    private List<ItemEap> filtrarEtapasDisponiveisParaAdiantamento(
+            List<ItemEap> etapas, ItemEap etapaAtrasada, List<DependenciaEtapa> dependencias) {
         UUID idAtrasada = extrairIdEtapa(etapaAtrasada);
+        var grafo = new GrafoDependencias(dependencias.stream()
+                .map(d -> new GrafoDependencias.Aresta(
+                        d.getPredecessora().getId(), d.getSucessora().getId()))
+                .toList());
+        Set<UUID> dependentesDaAtrasada = grafo.descendentes(idAtrasada);
+        Set<UUID> bloqueadas = dependencias.stream()
+                .filter(DependenciaEtapa::isObrigatoria)
+                .filter(d -> !RegraLiberacao.satisfeita(
+                        d.getTipo(), d.getPredecessora().percentualAtual()))
+                .map(d -> d.getSucessora().getId())
+                .collect(Collectors.toSet());
         return etapas.stream()
                 .filter(item -> item != etapaAtrasada && !correspondeAoId(item, idAtrasada))
+                .filter(item -> !dependentesDaAtrasada.contains(extrairIdEtapa(item)))
+                .filter(item -> !bloqueadas.contains(extrairIdEtapa(item)))
                 .toList();
     }
 

@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import br.com.concordia.domain.common.enums.UnidadeFederativa;
 import br.com.concordia.domain.empresa.EmpresaRepository;
+import br.com.concordia.domain.obra.dependencia.DependenciaEtapaRepository;
 import br.com.concordia.domain.obra.entities.EtapaObra;
 import br.com.concordia.domain.obra.entities.ItemEap;
 import br.com.concordia.domain.obra.entities.Obra;
@@ -27,7 +28,8 @@ class ObraServiceReordenacaoTest {
         obraRepository = mock(ObraRepository.class);
         empresaRepository = mock(EmpresaRepository.class);
         obraMapper = mock(ObraMapper.class);
-        obraService = new ObraService(obraRepository, empresaRepository, obraMapper);
+        obraService =
+                new ObraService(obraRepository, empresaRepository, obraMapper, mock(DependenciaEtapaRepository.class));
     }
 
     @Test

@@ -1,7 +1,22 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useListar, useListarEtapas } from '@/api/generated/obras/obras';
 import type { BrComConcordiaInfrastructureObraDtosEtapaResponse } from '@/api/generated/models';
-import { ChevronDown, HardHat, ClipboardList, ChevronLeft, ChevronRight, AlertTriangle, Sparkles } from 'lucide-react';
+import {
+  ChevronDown,
+  HardHat,
+  ClipboardList,
+  ChevronLeft,
+  ChevronRight,
+  AlertTriangle,
+  Sparkles,
+  LockKeyhole,
+  FileUp,
+  GitBranch,
+  RefreshCw,
+} from 'lucide-react';
+import { TactileButton } from '@/components/atoms/TactileButton/TactileButton';
+import { problemMessage } from '@/services/apiProblem';
 import { SugestaoAtrasoModal } from '@/components/molecules';
 import type { SugestaoItem, AnaliseAtrasoResult } from '@/components/molecules/SugestaoAtrasoModal';
 import { api } from '@/services/api';
@@ -22,21 +37,32 @@ interface GroupedData {
   }[];
 }
 
-function getNodeStatusStyle(isAdiantada: boolean, isDone: boolean, isStarted: boolean): string {
+function getNodeStatusStyle(isAdiantada: boolean, isDone: boolean, isStarted: boolean, isLocked = false): string {
+  if (isLocked && !isDone) return 'bg-muted text-muted-foreground border border-concrete/40';
   if (isAdiantada) return 'bg-amber-100 text-amber-900 border border-amber-300';
   if (isDone) return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
   if (isStarted) return 'bg-blue-100 text-blue-800 border border-blue-200';
   return 'bg-primary-deep text-white border border-primary-deep';
 }
 
-function getNodeStatusLabel(isAdiantada: boolean, isDone: boolean, isStarted: boolean, progress: number): string {
+function getNodeStatusLabel(
+  isAdiantada: boolean,
+  isDone: boolean,
+  isStarted: boolean,
+  progress: number,
+  pendentes: string[] = [],
+): string {
+  if (pendentes.length > 0 && !isDone) return `BLOQUEADA • AGUARDA ${pendentes.join(', ')}`;
   if (isAdiantada) return 'ADIANTADA PELA IA';
   if (isDone) return 'CONCLUÍDO';
   if (isStarted) return `${progress}% MEDIDO`;
   return 'ORÇADO • SEM MEDIÇÃO';
 }
 
-function renderNodeIcon(hasDelay: boolean, isAdiantada: boolean) {
+function renderNodeIcon(hasDelay: boolean, isAdiantada: boolean, isLocked = false) {
+  if (isLocked) {
+    return <LockKeyhole className="size-4 sm:size-5 text-concrete" />;
+  }
   if (hasDelay) {
     return <AlertTriangle className="size-4 sm:size-5 text-warning" />;
   }
@@ -47,9 +73,13 @@ function renderNodeIcon(hasDelay: boolean, isAdiantada: boolean) {
 }
 
 export const TimelinePage: React.FC = () => {
+  const { obraId } = useParams();
+  const navigate = useNavigate();
   const obrasQuery = useListar();
   const obras = obrasQuery.data?.data ?? [];
-  const obra = obras.find((item) => item.descricao === PROJECT_DESCRIPTION) ?? obras[0];
+  const obra = obraId
+    ? obras.find((item) => item.id === obraId)
+    : (obras.find((item) => item.descricao === PROJECT_DESCRIPTION) ?? obras[0]);
   const etapasQuery = useListarEtapas(obra?.id ?? '', { query: { enabled: Boolean(obra?.id) } });
   const stages = etapasQuery.data?.data ?? EMPTY_STAGES;
 
@@ -188,8 +218,60 @@ export const TimelinePage: React.FC = () => {
   const totalBudget = currentStages.reduce((acc, stage) => acc + Number(stage.valorTotalOrcado ?? 0), 0);
   const completedCount = currentStages.filter(s => Number(s.percentualExecutado ?? 0) >= 100).length;
   const delayedCount = currentStages.filter(s => Boolean(s.motivoAtraso) || (s.id ? Boolean(delays[s.id]) : false)).length;
+  const lockedCount = currentStages.filter(s => s.bloqueada).length;
 
-  if (obrasQuery.isLoading || etapasQuery.isLoading || stages.length === 0) {
+  if (obrasQuery.isError || etapasQuery.isError) {
+     return (
+       <div className="min-h-screen bg-background flex items-center justify-center blueprint-grid p-4">
+         <div role="alert" className="max-w-md rounded-2xl border border-warning/30 bg-card p-8 text-center shadow-sm">
+           <AlertTriangle className="mx-auto size-10 text-warning" />
+           <h1 className="mt-3 text-lg font-extrabold text-foreground">Não foi possível carregar a trilha</h1>
+           <p className="mt-1 text-sm text-muted-foreground">{problemMessage(obrasQuery.error ?? etapasQuery.error)}</p>
+           <TactileButton
+             className="mt-5"
+             variant="outline"
+             onClick={() => { void obrasQuery.refetch(); void etapasQuery.refetch(); }}
+             leftIcon={<RefreshCw className="size-4" />}
+           >
+             Tentar novamente
+           </TactileButton>
+         </div>
+       </div>
+     );
+  }
+
+  if (!obrasQuery.isLoading && (!obra || (!etapasQuery.isLoading && stages.length === 0))) {
+     const semObras = obras.length === 0;
+     return (
+       <div className="min-h-screen bg-background flex items-center justify-center blueprint-grid p-4">
+         <div className="max-w-lg rounded-2xl border border-dashed border-border bg-card p-8 text-center shadow-sm">
+           <HardHat className="mx-auto size-10 text-primary" />
+           <h1 className="mt-3 text-xl font-extrabold text-foreground">
+             {semObras ? 'Nenhuma obra cadastrada' : !obra ? 'Obra não encontrada' : obra.descricao}
+           </h1>
+           <p className="mt-1 text-sm text-muted-foreground">
+             {semObras
+               ? 'Importe a planilha orçamentária para gerar a primeira trilha.'
+               : !obra
+                 ? 'A obra informada não existe ou foi removida.'
+                 : 'Esta obra ainda não possui etapas. Importe o orçamento para montar a trilha.'}
+           </p>
+           <div className="mt-5 flex flex-wrap justify-center gap-3">
+             <TactileButton variant="action" onClick={() => navigate('/obras/nova')} leftIcon={<FileUp className="size-4" />}>
+               Importar orçamento
+             </TactileButton>
+             {!semObras && (
+               <TactileButton variant="outline" onClick={() => navigate('/')}>
+                 Ver obra principal
+               </TactileButton>
+             )}
+           </div>
+         </div>
+       </div>
+     );
+  }
+
+  if (obrasQuery.isLoading || etapasQuery.isLoading) {
      return (
        <div className="min-h-screen bg-background flex flex-col items-center justify-center blueprint-grid">
          <p className="animate-pulse text-muted-foreground font-bold font-mono">Carregando trilha da obra…</p>
@@ -224,8 +306,40 @@ export const TimelinePage: React.FC = () => {
                 <p className="text-primary-soft mt-1 font-mono text-sm">{rootGroups.length} macroetapas • Orçamento total <span className="font-bold text-white">{money.format(totalBudget)}</span></p>
              </div>
           </div>
+
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+             {obras.length > 1 && (
+                <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary-soft">
+                   <span className="sr-only sm:not-sr-only">Obra</span>
+                   <select
+                     aria-label="Selecionar obra"
+                     value={obra.id}
+                     onChange={(event) => navigate(`/obras/${event.target.value}`)}
+                     className="h-10 max-w-[260px] rounded-full border border-white/20 bg-white/10 px-4 text-xs font-bold normal-case tracking-normal text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                   >
+                      {obras.map((item) => (
+                         <option key={item.id} value={item.id} className="text-foreground">{item.descricao}</option>
+                      ))}
+                   </select>
+                </label>
+             )}
+             <button
+               type="button"
+               onClick={() => navigate(`/obras/${obra.id}/dependencias`)}
+               className="inline-flex h-10 items-center gap-2 rounded-full bg-white/10 px-4 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+             >
+                <GitBranch className="size-4" /> Dependências
+             </button>
+             <button
+               type="button"
+               onClick={() => navigate('/obras/nova')}
+               className="inline-flex h-10 items-center gap-2 rounded-full bg-action px-4 text-xs font-bold uppercase tracking-widest text-action-foreground shadow-action transition-transform hover:-translate-y-0.5 active:translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+             >
+                <FileUp className="size-4" /> Nova obra
+             </button>
+          </div>
           
-          <div className="grid grid-cols-3 divide-x divide-white/20 border-y border-white/20 mt-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-white/20 border-y border-white/20 mt-6">
              <div className="py-4 text-center">
                 <div className="font-bold text-xs tracking-widest text-primary-soft uppercase">
                    <span className="text-xl sm:text-2xl text-white mr-2">{stages.length}</span>SERVIÇOS
@@ -239,6 +353,11 @@ export const TimelinePage: React.FC = () => {
              <div className="py-4 text-center">
                 <div className="font-bold text-xs tracking-widest text-warning uppercase">
                    <span className="text-xl sm:text-2xl mr-2">{delayedCount}</span>ALERTA CRÍTICO
+                </div>
+             </div>
+             <div className="py-4 text-center">
+                <div className="font-bold text-xs tracking-widest text-primary-soft uppercase">
+                   <span className="text-xl sm:text-2xl text-white mr-2">{lockedCount}</span>BLOQUEADAS
                 </div>
              </div>
           </div>
@@ -342,6 +461,12 @@ export const TimelinePage: React.FC = () => {
                      const isLeft = index % 2 === 0;
                      const delay = delays[node.id];
                      const adiantadaInfo = adiantadas[node.id];
+                     const pendentes: string[] = node.bloqueada
+                       ? (node.predecessoras ?? [])
+                           .filter((p: { satisfeita?: boolean; obrigatoria?: boolean }) => !p.satisfeita && p.obrigatoria !== false)
+                           .map((p: { codigoEap?: string; nome?: string }) => p.codigoEap ?? p.nome ?? '')
+                       : [];
+                     const isLocked = pendentes.length > 0 && !isDone;
 
                      return (
                         <div key={node.id} className={`flex w-full items-start ${isLeft ? 'flex-row' : 'flex-row-reverse'}`}>
@@ -350,8 +475,9 @@ export const TimelinePage: React.FC = () => {
                               <div className={`absolute top-6 w-8 sm:w-12 border-t-2 border-dashed border-border z-0 ${isLeft ? 'right-0' : 'left-0'}`}></div>
 
                               <div className={`flex flex-col relative z-10 w-full max-w-[320px] ${isLeft ? 'items-end text-right' : 'items-start text-left'}`}>
-                                 <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-extrabold tracking-widest uppercase shadow-sm cursor-pointer hover:opacity-90 mb-3 ${getNodeStatusStyle(Boolean(adiantadaInfo), isDone, isStarted)}`}>
-                                    {getNodeStatusLabel(Boolean(adiantadaInfo), isDone, isStarted, node.progress)}
+                                 <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-extrabold tracking-widest uppercase shadow-sm cursor-pointer hover:opacity-90 mb-3 ${getNodeStatusStyle(Boolean(adiantadaInfo), isDone, isStarted, isLocked)}`}>
+                                    {isLocked && <LockKeyhole className="size-3" />}
+                                    {getNodeStatusLabel(Boolean(adiantadaInfo), isDone, isStarted, node.progress, isLocked ? pendentes : [])}
                                     <ChevronDown className="size-3 ml-1 opacity-50" />
                                  </div>
 
@@ -401,7 +527,7 @@ export const TimelinePage: React.FC = () => {
                                  className={`absolute top-0 -translate-y-2 grid place-items-center w-12 h-12 sm:w-14 sm:h-14 bg-background border-[6px] ${adiantadaInfo ? 'border-gold/50 shadow-md ring-2 ring-gold/20' : 'border-muted/30 hover:border-primary/50'} rounded-full shadow-sm z-10 transition-transform active:scale-95 cursor-pointer`}
                               >
                                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-border bg-white flex items-center justify-center">
-                                    {renderNodeIcon(Boolean(delay), Boolean(adiantadaInfo))}
+                                    {renderNodeIcon(Boolean(delay), Boolean(adiantadaInfo), isLocked)}
                                  </div>
                               </button>
                            </div>

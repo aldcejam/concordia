@@ -19,6 +19,8 @@ SUITES=(
   "src/tests/m1_empirical_stress.test.tsx"
   "src/tests/m2_drawer_stress.test.tsx"
   "src/tests/m2_empirical_challenge.test.tsx"
+  "src/tests/ImportacaoPlanilha.component.test.tsx"
+  "src/tests/Dependencias.component.test.tsx"
 )
 
 TOTAL_SUITES=${#SUITES[@]}

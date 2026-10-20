@@ -1,21 +1,30 @@
 package br.com.concordia.domain.obra;
 
+import br.com.concordia.domain.common.exceptions.ConflitoException;
 import br.com.concordia.domain.empresa.EmpresaRepository;
 import br.com.concordia.domain.empresa.entities.Empresa;
+import br.com.concordia.domain.obra.dependencia.DependenciaEtapaRepository;
+import br.com.concordia.domain.obra.dependencia.RegraLiberacao;
 import br.com.concordia.domain.obra.dtos.EtapaInput;
 import br.com.concordia.domain.obra.dtos.EtapaOutput;
 import br.com.concordia.domain.obra.dtos.MedicaoInput;
 import br.com.concordia.domain.obra.dtos.MedicaoOutput;
 import br.com.concordia.domain.obra.dtos.ObraInput;
 import br.com.concordia.domain.obra.dtos.ObraOutput;
+import br.com.concordia.domain.obra.dtos.VinculoEtapaOutput;
+import br.com.concordia.domain.obra.entities.DependenciaEtapa;
 import br.com.concordia.domain.obra.entities.EtapaObra;
 import br.com.concordia.domain.obra.entities.ItemEap;
 import br.com.concordia.domain.obra.entities.MedicaoEtapa;
 import br.com.concordia.domain.obra.entities.Obra;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
@@ -27,11 +36,17 @@ public class ObraService {
     private final ObraRepository obraRepository;
     private final EmpresaRepository empresaRepository;
     private final ObraMapper mapper;
+    private final DependenciaEtapaRepository dependenciaRepository;
 
-    public ObraService(ObraRepository obraRepository, EmpresaRepository empresaRepository, ObraMapper mapper) {
+    public ObraService(
+            ObraRepository obraRepository,
+            EmpresaRepository empresaRepository,
+            ObraMapper mapper,
+            DependenciaEtapaRepository dependenciaRepository) {
         this.obraRepository = obraRepository;
         this.empresaRepository = empresaRepository;
         this.mapper = mapper;
+        this.dependenciaRepository = dependenciaRepository;
     }
 
     @Transactional
@@ -90,10 +105,11 @@ public class ObraService {
     @Transactional(readOnly = true)
     public List<EtapaOutput> listarEtapas(UUID obraId) {
         var obra = obterObra(obraId);
+        var contexto = contexto(obra);
         return obra.getEap().stream()
                 .filter(item -> item.getEtapa() != null)
                 .sorted(java.util.Comparator.comparing(ItemEap::getPosicao))
-                .map(this::toEtapaOutput)
+                .map(item -> toEtapaOutput(item, contexto))
                 .toList();
     }
 
@@ -129,7 +145,7 @@ public class ObraService {
         obra.adicionarEtapa(etapa);
         obra.adicionarItemEap(item);
         obraRepository.save(obra);
-        return toEtapaOutput(item);
+        return toEtapaOutput(item, contexto(obra));
     }
 
     @Transactional
@@ -153,7 +169,7 @@ public class ObraService {
                 request.valorUnitarioBase(),
                 request.percentualBdi(),
                 request.valorTotalOrcado());
-        return toEtapaOutput(item);
+        return toEtapaOutput(item, contexto(obra));
     }
 
     @Transactional(readOnly = true)
@@ -164,7 +180,7 @@ public class ObraService {
                 .findFirst()
                 .orElseThrow(() ->
                         new EntityNotFoundException("Etapa com ID %s não foi encontrada na obra".formatted(etapaId)));
-        return toEtapaOutput(item);
+        return toEtapaOutput(item, contexto(obra));
     }
 
     @Transactional
@@ -175,6 +191,14 @@ public class ObraService {
                 .findFirst()
                 .orElseThrow(() ->
                         new EntityNotFoundException("Etapa com ID %s não foi encontrada na obra".formatted(etapaId)));
+        if (request.percentualExecutado().signum() > 0) {
+            var pendentes = contexto(obra).predecessorasPendentes(etapaId);
+            if (!pendentes.isEmpty()) {
+                throw new ConflitoException(
+                        "Etapa bloqueada: aguarda %s. Conclua as predecessoras ou ajuste as dependências antes de medir."
+                                .formatted(String.join(", ", pendentes)));
+            }
+        }
         etapa.registrarMedicao(
                 request.percentualExecutado(),
                 request.quantidadeExecutada(),
@@ -203,8 +227,75 @@ public class ObraService {
         return empresa;
     }
 
-    private EtapaOutput toEtapaOutput(ItemEap item) {
+    /** Dados da obra necessários para montar cada etapa: total orçado (pesos) e grafo de dependências (RN02). */
+    private record ContextoEtapas(
+            BigDecimal totalOrcado,
+            Map<UUID, ItemEap> itensPorEtapa,
+            Map<UUID, List<DependenciaEtapa>> porSucessora,
+            Map<UUID, List<DependenciaEtapa>> porPredecessora) {
+
+        List<String> predecessorasPendentes(UUID etapaId) {
+            return porSucessora.getOrDefault(etapaId, List.of()).stream()
+                    .filter(DependenciaEtapa::isObrigatoria)
+                    .filter(d -> !RegraLiberacao.satisfeita(
+                            d.getTipo(), d.getPredecessora().percentualAtual()))
+                    .map(d -> {
+                        var item = itensPorEtapa.get(d.getPredecessora().getId());
+                        return item == null || item.getCodigoEap() == null
+                                ? d.getPredecessora().getDescricao()
+                                : item.getCodigoEap();
+                    })
+                    .toList();
+        }
+
+        VinculoEtapaOutput vinculo(DependenciaEtapa dependencia, boolean ladoPredecessora) {
+            var outra = ladoPredecessora ? dependencia.getPredecessora() : dependencia.getSucessora();
+            var item = itensPorEtapa.get(outra.getId());
+            return new VinculoEtapaOutput(
+                    dependencia.getId(),
+                    outra.getId(),
+                    item == null ? null : item.getCodigoEap(),
+                    item == null ? outra.getDescricao() : item.getNome(),
+                    dependencia.getTipo(),
+                    dependencia.getDesfasamentoDias(),
+                    dependencia.isObrigatoria(),
+                    RegraLiberacao.satisfeita(
+                            dependencia.getTipo(), dependencia.getPredecessora().percentualAtual()));
+        }
+    }
+
+    private ContextoEtapas contexto(Obra obra) {
+        var itens =
+                obra.getEap().stream().filter(item -> item.getEtapa() != null).toList();
+        var total = itens.stream()
+                .map(ItemEap::getValorTotalOrcado)
+                .filter(java.util.Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        var dependencias =
+                obra.getId() == null ? List.<DependenciaEtapa>of() : dependenciaRepository.findByObraId(obra.getId());
+        return new ContextoEtapas(
+                total,
+                itens.stream()
+                        .collect(Collectors.toMap(item -> item.getEtapa().getId(), Function.identity(), (a, b) -> a)),
+                dependencias.stream()
+                        .collect(Collectors.groupingBy(d -> d.getSucessora().getId())),
+                dependencias.stream()
+                        .collect(Collectors.groupingBy(d -> d.getPredecessora().getId())));
+    }
+
+    private EtapaOutput toEtapaOutput(ItemEap item, ContextoEtapas contexto) {
         var etapa = item.getEtapa();
+        var peso = item.getValorTotalOrcado() == null || contexto.totalOrcado().signum() == 0
+                ? BigDecimal.ZERO
+                : item.getValorTotalOrcado()
+                        .multiply(BigDecimal.valueOf(100))
+                        .divide(contexto.totalOrcado(), 4, RoundingMode.HALF_UP);
+        var predecessoras = contexto.porSucessora().getOrDefault(etapa.getId(), List.of()).stream()
+                .map(d -> contexto.vinculo(d, true))
+                .toList();
+        var sucessoras = contexto.porPredecessora().getOrDefault(etapa.getId(), List.of()).stream()
+                .map(d -> contexto.vinculo(d, false))
+                .toList();
         var medicoes = etapa.getMedicoes().stream().map(this::toMedicaoOutput).toList();
         var ultimaMedicao = etapa.getMedicoes().isEmpty()
                 ? null
@@ -235,7 +326,11 @@ public class ObraService {
                 item.getValorUnitarioBase(),
                 item.getPercentualBdi(),
                 item.getValorTotalOrcado(),
-                medicoes);
+                medicoes,
+                peso,
+                !contexto.predecessorasPendentes(etapa.getId()).isEmpty(),
+                predecessoras,
+                sucessoras);
     }
 
     private MedicaoOutput toMedicaoOutput(MedicaoEtapa medicao) {
