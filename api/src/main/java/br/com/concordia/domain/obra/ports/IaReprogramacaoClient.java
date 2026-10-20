@@ -13,7 +13,15 @@ public interface IaReprogramacaoClient {
 
     record SugestaoIaResultado(UUID etapaId, String justificativa) {}
 
-    record RespostaIa(String mensagem, List<SugestaoIaResultado> sugestoes) {}
+    record RespostaIa(String mensagem, List<SugestaoIaResultado> sugestoes, boolean disponivel) {
+        public RespostaIa(String mensagem, List<SugestaoIaResultado> sugestoes) {
+            this(mensagem, sugestoes, true);
+        }
+
+        public static RespostaIa indisponivel(String mensagem) {
+            return new RespostaIa(mensagem, List.of(), false);
+        }
+    }
 
     RespostaIa sugerirAdiantamento(
             EtapaCandidata etapaAtrasada, String motivo, int diasAtraso, List<EtapaCandidata> outrasEtapas);

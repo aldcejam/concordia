@@ -28,6 +28,7 @@ class OpenAiReprogramacaoClientTest {
         assertTrue(resposta.sugestoes().isEmpty());
         assertNotNull(resposta.mensagem());
         assertTrue(resposta.mensagem().contains("não está configurada"));
+        assertFalse(resposta.disponivel());
     }
 
     @Test

@@ -50,7 +50,6 @@ public class EtapaObra {
         this.prazoEsperadoDias = prazoEsperadoDias;
     }
 
-    /** Percentual executado segundo a medição mais recente (0 quando ainda não houve medição). */
     public BigDecimal percentualAtual() {
         return medicoes.isEmpty()
                 ? BigDecimal.ZERO

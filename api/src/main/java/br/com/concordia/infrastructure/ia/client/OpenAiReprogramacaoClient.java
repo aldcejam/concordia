@@ -35,7 +35,7 @@ public class OpenAiReprogramacaoClient implements IaReprogramacaoClient {
             EtapaCandidata etapaAtrasada, String motivo, int diasAtraso, List<EtapaCandidata> outrasEtapas) {
 
         if (!properties.isConfigured()) {
-            return new RespostaIa("Integração com IA não está configurada (chave de API não informada).", List.of());
+            return RespostaIa.indisponivel("Integração com IA não está configurada (chave de API não informada).");
         }
 
         if (outrasEtapas == null || outrasEtapas.isEmpty()) {
@@ -62,18 +62,13 @@ public class OpenAiReprogramacaoClient implements IaReprogramacaoClient {
 
             if (rawResponse == null || rawResponse.isBlank()) {
                 log.warn("Resposta vazia retornada pelo provedor de IA");
-                return new RespostaIa(
-                        "O serviço de inteligência artificial não retornou dados para a análise do cronograma.",
-                        List.of());
+                return RespostaIa.indisponivel("O serviço de inteligência artificial não retornou dados para a análise do cronograma.");
             }
 
             return extrairResposta(rawResponse);
         } catch (Exception ex) {
             log.warn("Falha de comunicação com o provedor de IA: {}", ex.getMessage());
-            return new RespostaIa(
-                    "Não foi possível consultar a IA no momento para identificar etapas de adiantamento: "
-                            + ex.getMessage(),
-                    List.of());
+            return RespostaIa.indisponivel("Não foi possível consultar a IA no momento.");
         }
     }
 
@@ -83,8 +78,7 @@ public class OpenAiReprogramacaoClient implements IaReprogramacaoClient {
             JsonNode choices = root.path("choices");
             if (!choices.isArray() || choices.isEmpty()) {
                 log.warn("Provedor de IA retornou payload sem escolhas válidas");
-                return new RespostaIa(
-                        "O serviço de IA não forneceu alternativas válidas no formato esperado.", List.of());
+                return RespostaIa.indisponivel("O serviço de IA não forneceu alternativas válidas no formato esperado.");
             }
 
             String content = choices.get(0).path("message").path("content").asText("");
@@ -92,8 +86,7 @@ public class OpenAiReprogramacaoClient implements IaReprogramacaoClient {
 
             SugestaoIaPayload payload = jsonMapper.readValue(sanitizedContent, SugestaoIaPayload.class);
             if (payload == null) {
-                return new RespostaIa(
-                        "Não foi possível interpretar a resposta estruturada da inteligência artificial.", List.of());
+                return RespostaIa.indisponivel("Não foi possível interpretar a resposta estruturada da inteligência artificial.");
             }
 
             List<SugestaoIaResultado> resultados = extrairSugestoesValidas(payload);
@@ -108,7 +101,7 @@ public class OpenAiReprogramacaoClient implements IaReprogramacaoClient {
             return new RespostaIa(mensagem, resultados);
         } catch (Exception ex) {
             log.warn("Falha ao desserializar sugestões da IA: {}", ex.getMessage());
-            return new RespostaIa("Falha ao interpretar as sugestões da inteligência artificial.", List.of());
+            return RespostaIa.indisponivel("Falha ao interpretar as sugestões da inteligência artificial.");
         }
     }
 

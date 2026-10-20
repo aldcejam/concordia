@@ -36,7 +36,7 @@ async function runTests() {
 
     const title = container.querySelector('#modal-title');
     assert.ok(title, 'Título do modal deve existir');
-    assert.ok(title.textContent?.includes('Reprogramação com IA'));
+    assert.ok(title.textContent?.includes('Reprogramação de etapas'));
 
     assert.ok(container.textContent?.includes('Alvenaria de Vedação'));
     assert.ok(container.textContent?.includes('1.2.3'));

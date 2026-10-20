@@ -67,7 +67,7 @@ export const SugestaoAtrasoModal: React.FC<SugestaoAtrasoModalProps> = ({
       setResultado(data);
       onSuccess?.(data);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Falha ao consultar sugestões de IA';
+      const msg = err instanceof Error ? err.message : 'Falha ao consultar sugestões de adiantamento';
       setError(msg);
     } finally {
       setIsLoading(false);
@@ -96,10 +96,10 @@ export const SugestaoAtrasoModal: React.FC<SugestaoAtrasoModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 id="modal-title" className="text-lg font-extrabold text-foreground">
-                  Reprogramação com IA
+                  Reprogramação de etapas
                 </h3>
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-gold/15 text-gold-dark border border-gold/30">
-                  <Sparkles className="size-3" /> Assistido por IA
+                  <Sparkles className="size-3" /> Análise do cronograma
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -125,8 +125,8 @@ export const SugestaoAtrasoModal: React.FC<SugestaoAtrasoModalProps> = ({
               <AlertTriangle className="size-5 shrink-0 text-warning mt-0.5" />
               <div className="text-xs leading-relaxed text-foreground">
                 <strong className="block font-bold mb-1 text-warning">Indicar Atraso na Etapa:</strong>{' '}
-                Informe os detalhes do atraso ocorrido. O sistema enviará o cronograma completo para a IA analisar
-                e sugerir etapas subsequentes que podem ser adiantadas ou executadas em paralelo.
+                Informe os detalhes do atraso ocorrido. O sistema analisará o cronograma e as dependências cadastradas
+                para sugerir candidatas ao adiantamento ou à execução em paralelo.
               </div>
             </div>
 
@@ -187,12 +187,12 @@ export const SugestaoAtrasoModal: React.FC<SugestaoAtrasoModalProps> = ({
                 {isLoading ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    Consultando IA...
+                    Analisando cronograma...
                   </>
                 ) : (
                   <>
                     <Sparkles className="size-4" />
-                    Consultar IA para Opções de Adiantamento
+                    Buscar opções de adiantamento
                   </>
                 )}
               </button>
@@ -220,7 +220,7 @@ export const SugestaoAtrasoModal: React.FC<SugestaoAtrasoModalProps> = ({
               <div className="rounded-xl border border-primary/20 bg-primary/5 p-3.5 text-xs text-muted-foreground leading-relaxed flex items-start gap-2.5">
                 <Sparkles className="size-4 text-primary shrink-0 mt-0.5" />
                 <div>
-                  <strong className="text-foreground font-semibold block mb-0.5">Parecer Técnico da IA:</strong>
+                  <strong className="text-foreground font-semibold block mb-0.5">Parecer da análise:</strong>
                   {resultado.mensagem}
                 </div>
               </div>
@@ -232,7 +232,7 @@ export const SugestaoAtrasoModal: React.FC<SugestaoAtrasoModalProps> = ({
                 <h4 className="text-xs font-extrabold uppercase tracking-wider text-foreground">
                   Opções de Etapas para Adiantamento ({resultado.sugestoes.length})
                 </h4>
-                <span className="text-[10px] text-muted-foreground">Gerado pela IA do Concordia</span>
+                <span className="text-[10px] text-muted-foreground">Sugestões do Concordia</span>
               </div>
 
               {resultado.sugestoes.length === 0 ? (
@@ -264,7 +264,7 @@ export const SugestaoAtrasoModal: React.FC<SugestaoAtrasoModalProps> = ({
                         </div>
                       </div>
                       <div className="mt-2.5 pt-2.5 border-t border-border/60 text-xs leading-relaxed text-muted-foreground">
-                        <strong className="text-primary font-semibold block mb-0.5">💡 Justificativa Técnica da IA:</strong>
+                        <strong className="text-primary font-semibold block mb-0.5">💡 Justificativa da sugestão:</strong>
                         {sugestao.justificativa}
                       </div>
                       <div className="mt-3 pt-2.5 border-t border-border/60 flex items-center justify-between gap-3">

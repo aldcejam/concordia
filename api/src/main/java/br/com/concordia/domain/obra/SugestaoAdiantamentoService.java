@@ -14,6 +14,7 @@ import br.com.concordia.infrastructure.obra.dtos.ReprogramacaoSimplificadaRespon
 import br.com.concordia.infrastructure.obra.dtos.SugestaoAtrasoRequest;
 import br.com.concordia.infrastructure.obra.dtos.SugestaoEtapaResponse;
 import jakarta.persistence.EntityNotFoundException;
+import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +68,9 @@ public class SugestaoAdiantamentoService {
         RespostaIa respostaIa =
                 iaClient.sugerirAdiantamento(atrasadaCandidata, request.motivo(), request.diasAtraso(), candidatas);
 
+        if (respostaIa == null || !respostaIa.disponivel()) {
+            respostaIa = sugerirLocalmente(etapasDisponiveis);
+        }
         List<SugestaoEtapaResponse> sugestoes = correlacionarSugestoesComEtapas(respostaIa, etapasDisponiveis);
         String parecerDescritivo = definirParecerFinal(respostaIa, !sugestoes.isEmpty());
 
@@ -114,9 +118,30 @@ public class SugestaoAdiantamentoService {
                 .collect(Collectors.toSet());
         return etapas.stream()
                 .filter(item -> item != etapaAtrasada && !correspondeAoId(item, idAtrasada))
+                .filter(item -> item.getEtapa().percentualAtual().signum() == 0)
                 .filter(item -> !dependentesDaAtrasada.contains(extrairIdEtapa(item)))
                 .filter(item -> !bloqueadas.contains(extrairIdEtapa(item)))
                 .toList();
+    }
+
+    private RespostaIa sugerirLocalmente(List<ItemEap> candidatas) {
+        var sugestoes = candidatas.stream()
+                .sorted(Comparator.<ItemEap, BigDecimal>comparing(
+                                item -> item.getValorTotalOrcado() == null ? BigDecimal.ZERO : item.getValorTotalOrcado())
+                        .reversed()
+                        .thenComparing(ItemEap::getPosicao))
+                .limit(3)
+                .map(item -> new SugestaoIaResultado(
+                        extrairIdEtapa(item),
+                        "Etapa não iniciada, sem dependência cadastrada da etapa atrasada e sem predecessoras "
+                                + "obrigatórias pendentes. Priorizada pelo valor no orçamento. Confirme a frente "
+                                + "de trabalho, equipe e insumos antes de antecipar."))
+                .toList();
+        return new RespostaIa(
+                "Análise local: IA indisponível. Candidatas selecionadas pelas dependências cadastradas e pelo "
+                        + "peso no orçamento. A ausência de vínculos cadastrados não garante independência técnica; "
+                        + "revise as dependências e a viabilidade de execução antes de aplicar.",
+                sugestoes);
     }
 
     private List<SugestaoEtapaResponse> correlacionarSugestoesComEtapas(

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
 import { SugestaoAtrasoModal } from './SugestaoAtrasoModal';
 
 const meta: Meta<typeof SugestaoAtrasoModal> = {
@@ -13,7 +14,7 @@ const meta: Meta<typeof SugestaoAtrasoModal> = {
       codigoEap: '1.2.1',
       nome: 'Execução de Alvenaria Estrutural',
     },
-    onClose: () => console.log('Fechar modal'),
+    onClose: fn(),
   },
 };
 
