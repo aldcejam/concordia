@@ -3,14 +3,13 @@ package br.com.concordia.domain.obra;
 import static org.junit.jupiter.api.Assertions.*;
 
 import br.com.concordia.domain.common.enums.UnidadeFederativa;
-import br.com.concordia.domain.obra.dependencia.DependenciaEtapaRepository;
+import br.com.concordia.domain.obra.dtos.SugestaoAtrasoInput;
 import br.com.concordia.domain.obra.entities.EtapaObra;
 import br.com.concordia.domain.obra.entities.ItemEap;
 import br.com.concordia.domain.obra.entities.Obra;
 import br.com.concordia.domain.obra.ports.IaReprogramacaoClient;
 import br.com.concordia.domain.obra.ports.IaReprogramacaoClient.RespostaIa;
 import br.com.concordia.domain.obra.ports.IaReprogramacaoClient.SugestaoIaResultado;
-import br.com.concordia.infrastructure.obra.dtos.SugestaoAtrasoRequest;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
@@ -64,7 +63,7 @@ class SugestaoAdiantamentoServiceTest {
                         Mockito.any(), Mockito.anyString(), Mockito.anyInt(), Mockito.anyList()))
                 .thenReturn(new RespostaIa(mensagemIa, List.of()));
 
-        var request = new SugestaoAtrasoRequest(idEtapa1, "Chuva intensa", 7);
+        var request = new SugestaoAtrasoInput(idEtapa1, "Chuva intensa", 7);
         var response = service.analisarAtraso(obraId, request);
 
         assertNotNull(response);
@@ -107,7 +106,7 @@ class SugestaoAdiantamentoServiceTest {
                         List.of(new SugestaoIaResultado(
                                 idEtapa2, "Pré-montagem das formas em paralelo na bancada de corte."))));
 
-        var request = new SugestaoAtrasoRequest(idEtapa1, "Atraso no fornecimento de concreto", 5);
+        var request = new SugestaoAtrasoInput(idEtapa1, "Atraso no fornecimento de concreto", 5);
         var response = service.analisarAtraso(obraId, request);
 
         assertNotNull(response);
@@ -130,14 +129,24 @@ class SugestaoAdiantamentoServiceTest {
         var iniciada = adicionarEtapa(obra, "Iniciada", 6, 1000);
         iniciada.getEtapa().registrarMedicao(java.math.BigDecimal.TEN, java.math.BigDecimal.TEN, null, null, 0);
         var concluida = adicionarEtapa(obra, "Concluída", 7, 2000);
-        concluida.getEtapa().registrarMedicao(java.math.BigDecimal.valueOf(100), java.math.BigDecimal.TEN, null, null, 0);
+        concluida
+                .getEtapa()
+                .registrarMedicao(java.math.BigDecimal.valueOf(100), java.math.BigDecimal.TEN, null, null, 0);
         var obraId = UUID.randomUUID();
         Mockito.when(obraRepository.findById(obraId)).thenReturn(Optional.of(obra));
-        Mockito.when(iaClient.sugerirAdiantamento(Mockito.any(), Mockito.anyString(), Mockito.anyInt(), Mockito.anyList()))
+        Mockito.when(iaClient.sugerirAdiantamento(
+                        Mockito.any(), Mockito.anyString(), Mockito.anyInt(), Mockito.anyList()))
                 .thenReturn(RespostaIa.indisponivel("Sem chave"));
-        var resposta = service.analisarAtraso(obraId, new SugestaoAtrasoRequest(atrasada.getEtapa().getId(), "Chuva", 5));
-        assertEquals(List.of(maior.getEtapa().getId(), segunda.getEtapa().getId(), terceira.getEtapa().getId()),
-                resposta.sugestoes().stream().map(sugestao -> sugestao.etapaId()).toList());
+        var resposta = service.analisarAtraso(
+                obraId, new SugestaoAtrasoInput(atrasada.getEtapa().getId(), "Chuva", 5));
+        assertEquals(
+                List.of(
+                        maior.getEtapa().getId(),
+                        segunda.getEtapa().getId(),
+                        terceira.getEtapa().getId()),
+                resposta.sugestoes().stream()
+                        .map(sugestao -> sugestao.etapaId())
+                        .toList());
         assertTrue(resposta.mensagem().contains("Análise local"));
     }
 
@@ -152,13 +161,22 @@ class SugestaoAdiantamentoServiceTest {
         var deps = Mockito.mock(DependenciaEtapaRepository.class);
         var obraId = UUID.randomUUID();
         Mockito.when(obraRepository.findById(obraId)).thenReturn(Optional.of(obra));
-        Mockito.when(deps.findByObraId(obraId)).thenReturn(List.of(
-                dependencia(obra, atrasada, direta), dependencia(obra, direta, indireta), dependencia(obra, livre, bloqueada)));
-        Mockito.when(iaClient.sugerirAdiantamento(Mockito.any(), Mockito.anyString(), Mockito.anyInt(), Mockito.anyList()))
+        Mockito.when(deps.findByObraId(obraId))
+                .thenReturn(List.of(
+                        dependencia(obra, atrasada, direta),
+                        dependencia(obra, direta, indireta),
+                        dependencia(obra, livre, bloqueada)));
+        Mockito.when(iaClient.sugerirAdiantamento(
+                        Mockito.any(), Mockito.anyString(), Mockito.anyInt(), Mockito.anyList()))
                 .thenReturn(RespostaIa.indisponivel("Sem chave"));
         var resposta = new SugestaoAdiantamentoService(obraRepository, iaClient, deps)
-                .analisarAtraso(obraId, new SugestaoAtrasoRequest(atrasada.getEtapa().getId(), "Chuva", 5));
-        assertEquals(List.of(livre.getEtapa().getId()), resposta.sugestoes().stream().map(sugestao -> sugestao.etapaId()).toList());
+                .analisarAtraso(
+                        obraId, new SugestaoAtrasoInput(atrasada.getEtapa().getId(), "Chuva", 5));
+        assertEquals(
+                List.of(livre.getEtapa().getId()),
+                resposta.sugestoes().stream()
+                        .map(sugestao -> sugestao.etapaId())
+                        .toList());
     }
 
     private br.com.concordia.domain.obra.entities.DependenciaEtapa dependencia(Obra obra, ItemEap de, ItemEap para) {
@@ -171,8 +189,19 @@ class SugestaoAdiantamentoServiceTest {
         org.springframework.test.util.ReflectionTestUtils.setField(etapa, "id", UUID.randomUUID());
         var item = new ItemEap(obra, nome, (double) posicao, etapa);
         org.springframework.test.util.ReflectionTestUtils.setField(item, "id", UUID.randomUUID());
-        item.atualizarDadosOrcamento(nome, "1." + posicao, null, null, null, null, null,
-                null, null, null, null, java.math.BigDecimal.valueOf(valor));
+        item.atualizarDadosOrcamento(
+                nome,
+                "1." + posicao,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                java.math.BigDecimal.valueOf(valor));
         obra.adicionarItemEap(item);
         return item;
     }

@@ -17,6 +17,7 @@ public interface ObraMapper {
     @Mapping(target = "eap", ignore = true)
     Obra toEntity(ObraInput request, Empresa empresa);
 
+    @Mapping(target = "id_empresa", source = "empresa.id")
     ObraOutput toOutputDto(Obra obra);
 
     List<ObraOutput> toOutputDto(List<Obra> obras);

@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DIM0138 - Projeto Detalhado de Software | Framework de Cronogramas</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #2b2d30;
+      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #000000;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Palco de Apresentação (16:9) */
+    .slide-wrapper {
+      position: relative;
+      width: 1180px;
+      height: 664px;
+      background: #ffffff;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      height: 100%;
+      padding: 2.6rem 3.8rem;
+      position: relative;
+    }
+
+    .slide.diagram-slide {
+      padding: 1.2rem 1.8rem 2.4rem 1.8rem;
+    }
+
+    .slide.active {
+      display: flex;
+      flex-direction: column;
+      animation: fadeIn 0.18s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0.7; }
+      to { opacity: 1; }
+    }
+
+    /* Tipografia inspirada nos slides da Aula 11 */
+    .title-centered {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: #0000d6;
+      text-align: center;
+      margin-bottom: 1.8rem;
+    }
+
+    .title-diagram {
+      font-size: 1.85rem;
+      font-weight: 700;
+      color: #000000;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle-centered {
+      font-size: 1.5rem;
+      color: #222222;
+      text-align: center;
+      margin-top: 1.2rem;
+      line-height: 1.5;
+    }
+
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      font-size: 1.32rem;
+      line-height: 1.58;
+      color: #111111;
+      padding: 0 1rem;
+    }
+
+    .svg-container {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .svg-container svg {
+      width: 100%;
+      height: 100%;
+      max-height: 560px;
+    }
+
+    /* Listas estilo PowerPoint Aula 11 */
+    .bullet-list {
+      list-style-type: disc;
+      padding-left: 2.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .bullet-list > li {
+      font-size: 1.3rem;
+      color: #000000;
+    }
+
+    .bullet-sublist {
+      list-style-type: circle;
+      padding-left: 2.4rem;
+      margin-top: 0.55rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .bullet-sublist > li {
+      font-size: 1.15rem;
+      color: #222222;
+      line-height: 1.42;
+    }
+
+    /* Tabela da Matriz de Instanciação */
+    table.matrix {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 1rem;
+      border: 1px solid #b0b0b0;
+    }
+
+    table.matrix th {
+      background-color: #e8eef5;
+      color: #0000d6;
+      font-weight: bold;
+      padding: 0.75rem 0.9rem;
+      border: 1px solid #b0b0b0;
+      text-align: left;
+    }
+
+    table.matrix td {
+      padding: 0.75rem 0.9rem;
+      border: 1px solid #c8c8c8;
+      vertical-align: top;
+      line-height: 1.4;
+      font-size: 0.96rem;
+    }
+
+    table.matrix tr:nth-child(even) {
+      background-color: #f9fbfd;
+    }
+
+    .hl-var {
+      font-weight: bold;
+      color: #000099;
+    }
+
+    /* Rodapé interno do slide */
+    .slide-footer-meta {
+      position: absolute;
+      bottom: 0.7rem;
+      left: 2.2rem;
+      right: 2.2rem;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #777777;
+      border-top: 1px solid #e5e5e5;
+      padding-top: 0.35rem;
+    }
+
+    /* Barra de Controle Externa */
+    .controls-bar {
+      margin-top: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 1180px;
+      color: #cccccc;
+      font-size: 0.88rem;
+    }
+
+    .btn-control {
+      background: #40444b;
+      color: #ffffff;
+      border: none;
+      padding: 0.45rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: background 0.15s;
+    }
+
+    .btn-control:hover:not(:disabled) {
+      background: #0000d6;
+    }
+
+    .btn-control:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .kbd-tag {
+      background: #40444b;
+      padding: 0.15rem 0.45rem;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+
+    @page {
+      size: 1180px 664px;
+      margin: 0;
+    }
+
+    @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body {
+        background: #ffffff !important;
+        display: block !important;
+        overflow: visible !important;
+      }
+      .controls-bar {
+        display: none !important;
+      }
+      .slide-wrapper {
+        width: 1180px !important;
+        height: auto !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
+        display: block !important;
+      }
+      .slide {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 1180px !important;
+        height: 664px !important;
+        overflow: hidden !important;
+        page-break-after: always;
+        break-after: page;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .slide:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="slide-wrapper" id="slideStage">
+
+    <!-- ========================================================== -->
+    <!-- SLIDE 1: CAPA (Idêntico ao Slide 1 do PDF)                 -->
+    <!-- ========================================================== -->
+    <section class="slide active">
+      <div class="content-area" style="text-align: center;">
+        <div style="font-size: 2.5rem; color: #000000; margin-bottom: 0.4rem;">DIM0138</div>
+        <h1 class="title-centered" style="font-size: 2.9rem; margin-bottom: 1.8rem;">
+          Projeto Detalhado de Software
+        </h1>
+        <div style="font-size: 1.55rem; color: #000000; margin-bottom: 0.5rem;">
+          Professor: Uirá Kulesza
+        </div>
+        <div style="font-size: 1.45rem; color: #333333;">
+          DIMAp / UFRN
+        </div>
+
+        <div style="margin-top: 2.2rem; padding-top: 1.4rem; border-top: 1px solid #d0d0d0; display: inline-block; width: 65%; margin-left: auto; margin-right: auto;">
+          <div style="font-size: 1.25rem; font-weight: bold; color: #0000d6; margin-bottom: 0.45rem;">
+            Alunos:
+          </div>
+          <div style="font-size: 1.38rem; color: #000000; line-height: 1.55;">
+            Aldcejam Paulino Morais Junior<br>
+            Rafael Araújo de Andrade
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer-meta">
+        <span>DIM0138 — Projeto Detalhado de Software</span>
+        <span>Slide 1</span>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- SLIDE 2: TÍTULO DO FRAMEWORK (Modelo Slide 3 do PDF)       -->
+    <!-- ========================================================== -->
+    <section class="slide">
+      <div class="content-area" style="text-align: center;">
+        <h1 class="title-centered" style="font-size: 3.1rem; line-height: 1.3;">
+          Framework de Gerência e<br>Reprogramação de Cronogramas
+        </h1>
+      </div>
+      <div class="slide-footer-meta">
+        <span>ChronosFramework / Concordia Core</span>
+        <span>Slide 2</span>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- SLIDE 3: DESCRIÇÃO DO DOMÍNIO + (I) 3 APLICAÇÕES ALVO      -->
+    <!-- (Modelo Slide 4 do PDF)                                    -->
+    <!-- ========================================================== -->
+    <section class="slide">
+      <h2 class="title-centered" style="color: #000000;">Descrição do Domínio</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li>Aplicações que realizam o controle hierárquico de etapas/atividades (EAP/WBS), verificação de dependências e reprogramação adaptativa frente a atrasos</li>
+          <li>Podem ser utilizadas para instanciar aplicações de diferentes domínios
+            <ul class="bullet-sublist">
+              <li><strong>Acompanhamento físico-financeiro de obras civis (Concordia)</strong> — <em>[Aplicação da Fase 1]</em></li>
+              <li><strong>Gestão de sprints e entregas de software ágil (DevFlow)</strong></li>
+              <li><strong>Planejamento e execução de TCC e pesquisa científica (ThesisFlow)</strong></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div class="slide-footer-meta">
+        <span>Descrição do Domínio e 3 Aplicações-Alvo</span>
+        <span>Slide 3</span>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- SLIDE 4: (II) PONTOS FIXOS (Modelo Slide 5 do PDF)         -->
+    <!-- ========================================================== -->
+    <section class="slide">
+      <h2 class="title-centered" style="color: #000000;">Pontos Fixos</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li>Gerência e estruturação hierárquica de etapas (árvore EAP/WBS com consolidação ascendente)</li>
+          <li>Gerência e validação do grafo de precedências (bloqueio e desbloqueio automático de etapas)</li>
+          <li>Controle de ciclo de vida, medições de avanço e verificação de prazos</li>
+          <li>Identificação de etapas independentes elegíveis para antecipação quando há atraso</li>
+          <li>Apresentação de sugestões de adiantamento no frontend e aplicação da etapa escolhida pelo usuário</li>
+        </ul>
+      </div>
+      <div class="slide-footer-meta">
+        <span>Pontos Fixos do Framework (Frozen Spots)</span>
+        <span>Slide 4</span>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- SLIDE 5: (III) 3 PONTOS VARIÁVEIS DE DOMÍNIO               -->
+    <!-- (Modelo Slide 6 do PDF)                                    -->
+    <!-- ========================================================== -->
+    <section class="slide">
+      <h2 class="title-centered" style="color: #000000;">Pontos Variáveis</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li><strong>Recurso / Item de trabalho a ser executado e controlado na EAP</strong> (atributos de domínio e unidade de medição da atividade)</li>
+          <li><strong>Regras para cálculo de progresso e ponderação de peso</strong> (critério para medir o avanço percentual e o impacto relativo da etapa no projeto)</li>
+          <li><strong>Estratégia para recomendação e adiantamento de etapas</strong> (heurística de priorização de atividades paralelas para mitigar atrasos)</li>
+        </ul>
+      </div>
+      <div class="slide-footer-meta">
+        <span>3 Pontos Variáveis Obrigatórios do Domínio (Hot Spots)</span>
+        <span>Slide 5</span>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- SLIDE 6: DIAGRAMA DE CLASSES 1 — NÚCLEO DO FRAMEWORK       -->
+    <!-- (Modelo exato do Slide 7 do PDF: Boundary, Control, DAO)   -->
+    <!-- ========================================================== -->
+    <section class="slide diagram-slide">
+      <div class="svg-container">
+        <svg viewBox="0 0 1100 580" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+          <defs>
+            <marker id="arrowOpen" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+              <path d="M1,1 L9,5 L1,9" fill="none" stroke="#333" stroke-width="1.3"/>
+            </marker>
+            <marker id="triangleHollow" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto">
+              <polygon points="1,1 11,6 1,11" fill="#ffffff" stroke="#333" stroke-width="1.3"/>
+            </marker>
+          </defs>
+
+          <!-- Pacote Control -->
+          <rect x="20" y="135" width="1060" height="215" fill="none" stroke="#666" stroke-width="1.2"/>
+          <rect x="20" y="117" width="80" height="18" fill="#ffffff" stroke="#666" stroke-width="1.2"/>
+          <text x="60" y="130" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">control</text>
+
+          <!-- Pacote Repositories -->
+          <rect x="20" y="370" width="760" height="200" fill="none" stroke="#666" stroke-width="1.2"/>
+          <rect x="20" y="352" width="90" height="18" fill="#ffffff" stroke="#666" stroke-width="1.2"/>
+          <text x="65" y="365" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">repositories</text>
+
+          <!-- ==================== BOUNDARIES (TOPO - ROSA) ==================== -->
+          <!-- UI 1 -->
+          <g transform="translate(50, 12)">
+            <rect width="230" height="86" fill="#f8cecc" stroke="#b85450" stroke-width="1.3"/>
+            <line x1="0" y1="36" x2="230" y2="36" stroke="#b85450" stroke-width="1"/>
+            <text x="115" y="13" font-size="9.5" text-anchor="middle" fill="#333">&lt;&lt;boundary&gt;&gt;</text>
+            <text x="115" y="24" font-size="9.5" text-anchor="middle" fill="#333">&lt;&lt;interface&gt;&gt;</text>
+            <text x="115" y="34" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#000">UIGerenciamentoEtapas</text>
+            <text x="8" y="51" font-size="9.5" font-style="italic" fill="#111">+ cadastrarEtapa(): void</text>
+            <text x="8" y="64" font-size="9.5" font-style="italic" fill="#111">+ configurarDependencia(): void</text>
+            <text x="8" y="77" font-size="9.5" font-style="italic" fill="#111">+ listarArvoreEap(): void</text>
+          </g>
+
+          <!-- UI 2 -->
+          <g transform="translate(340, 12)">
+            <rect width="230" height="86" fill="#f8cecc" stroke="#b85450" stroke-width="1.3"/>
+            <line x1="0" y1="36" x2="230" y2="36" stroke="#b85450" stroke-width="1"/>
+            <text x="115" y="13" font-size="9.5" text-anchor="middle" fill="#333">&lt;&lt;boundary&gt;&gt;</text>
+            <text x="115" y="24" font-size="9.5" text-anchor="middle" fill="#333">&lt;&lt;interface&gt;&gt;</text>
+            <text x="115" y="34" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#000">UIGerenciamentoProjetos</text>
+            <text x="8" y="51" font-size="9.5" font-style="italic" fill="#111">+ criarProjeto(): void</text>
+            <text x="8" y="64" font-size="9.5" font-style="italic" fill="#111">+ importarCronograma(): void</text>
+            <text x="8" y="77" font-size="9.5" font-style="italic" fill="#111">+ consultarProgressoGlobal(): void</text>
+          </g>
+
+          <!-- UI 3 -->
+          <g transform="translate(635, 12)">
+            <rect width="265" height="86" fill="#f8cecc" stroke="#b85450" stroke-width="1.3"/>
+            <line x1="0" y1="36" x2="265" y2="36" stroke="#b85450" stroke-width="1"/>
+            <text x="132" y="13" font-size="9.5" text-anchor="middle" fill="#333">&lt;&lt;boundary&gt;&gt;</text>
+            <text x="132" y="24" font-size="9.5" text-anchor="middle" fill="#333">&lt;&lt;interface&gt;&gt;</text>
+            <text x="132" y="34" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#000">UIGerenciamentoMedicoes</text>
+            <text x="8" y="51" font-size="9.5" font-style="italic" fill="#111">+ registrarMedicao(): void</text>
+            <text x="8" y="64" font-size="9.5" font-style="italic" fill="#111">+ verificarAtrasosERecomendar(): void</text>
+            <text x="8" y="77" font-size="9.5" font-style="italic" fill="#111">+ aplicarReprogramacao(): void</text>
+          </g>
+
+          <!-- ==================== CONTROLLERS (MEIO - AZUL) ==================== -->
+          <!-- GerenciadorEtapas -->
+          <g transform="translate(38, 225)">
+            <rect width="245" height="108" fill="#cfe2f3" stroke="#4a76a8" stroke-width="1.3"/>
+            <line x1="0" y1="28" x2="245" y2="28" stroke="#4a76a8" stroke-width="1"/>
+            <text x="122" y="13" font-size="9.5" text-anchor="middle" fill="#333">&lt;&lt;control&gt;&gt;</text>
+            <text x="122" y="24" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#000">GerenciadorEtapas</text>
+            <text x="7" y="42" font-size="9" fill="#111">+ cadastrarEtapa(etapa : ComponenteEap) : void</text>
+            <text x="7" y="54" font-size="9" fill="#111">+ adicionarDependencia(orig, dest) : void</text>
+            <text x="7" y="66" font-size="9" fill="#111">+ validarPrecedencias(etapa : EtapaFolha) : boolean</text>
+            <text x="7" y="78" font-size="9" fill="#111">+ listarEtapasLiberadas(projId : Long) : List</text>
+            <text x="7" y="90" font-size="9" fill="#111">+ propagarAvancoAscendente(etapa) : void</text>
+          </g>
+
+          <!-- GerenciadorProjetos -->
+          <g transform="translate(305, 225)">
+            <rect width="235" height="108" fill="#cfe2f3" stroke="#4a76a8" stroke-width="1.3"/>
+            <line x1="0" y1="28" x2="235" y2="28" stroke="#4a76a8" stroke-width="1"/>
+            <text x="117" y="13" font-size="9.5" text-anchor="middle" fill="#333">&lt;&lt;control&gt;&gt;</text>
+            <text x="117" y="24" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#000">GerenciadorProjetos</text>
+            <text x="7" y="42" font-size="9" fill="#111">+ criarProjeto(p : Projeto) : void</text>
+            <text x="7" y="54" font-size="9" fill="#111">+ importarEap(builder : CronogramaBuilder) : Projeto</text>
+            <text x="7" y="66" font-size="9" fill="#111">+ getProjeto(codigo : Long) : Projeto</text>
+            <text x="7" y="78" font-size="9" fill="#111">+ calcularProgressoTotal(p : Projeto) : double</text>
+            <text x="7" y="90" font-size="9" fill="#111">+ listarProjetos() : List</text>
+          </g>
+
+          <!-- GerenciadorMedicoes (Principal no topo direito do pacote control) -->
+          <g transform="translate(330, 143)">
+            <rect width="730" height="72" fill="#cfe2f3" stroke="#4a76a8" stroke-width="1.3"/>
+            <line x1="0" y1="25" x2="730" y2="25" stroke="#4a76a8" stroke-width="1"/>
+            <text x="365" y="11" font-size="9.5" text-anchor="middle" fill="#333">&lt;&lt;control&gt;&gt;</text>
+            <text x="365" y="22" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#000">GerenciadorMedicoes</text>
+            <text x="8" y="38" font-size="9" fill="#111">+ GerenciadorMedicoes(regraProgresso : CalculoProgressoStrategy, regraRecomendacao : RecomendacaoAdiantamentoStrategy)</text>
+            <text x="8" y="50" font-size="9" fill="#111">+ registrarMedicao(etapa : EtapaFolha, valorMedido : double, dataAtual : Date) : ComprovanteMedicao</text>
+            <text x="8" y="62" font-size="9" fill="#111">+ verificarPrazosERecomendar(projeto : Projeto) : PlanoReprogramacao</text>
+          </g>
+
+          <!-- VerificadorAtrasos -->
+          <g transform="translate(570, 235)">
+            <rect width="490" height="98" fill="#cfe2f3" stroke="#4a76a8" stroke-width="1.3"/>
+            <line x1="0" y1="26" x2="490" y2="26" stroke="#4a76a8" stroke-width="1"/>
+            <text x="245" y="12" font-size="9.5" text-anchor="middle" fill="#333">&lt;&lt;control&gt;&gt;</text>
+            <text x="245" y="23" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#000">VerificadorAtrasosERecomendacao</text>
+            <text x="8" y="40" font-size="9" fill="#111">+ VerificadorAtrasosERecomendacao(regraRec : RecomendacaoAdiantamentoStrategy)</text>
+            <text x="8" y="53" font-size="9" fill="#111">+ buscarCandidatasIndependentes(etapaAtrasada : EtapaFolha, grafo : GrafoDependencias) : List</text>
+            <text x="8" y="66" font-size="9" fill="#111">+ gerarRecomendacoesAdiantamento(etapaAtrasada : EtapaFolha) : PlanoReprogramacao</text>
+            <text x="8" y="79" font-size="9" fill="#111">+ aplicarAdiantamentoSelecionado(etapaEscolhida : EtapaFolha) : void</text>
+          </g>
+
+          <!-- ==================== REPOSITORIES (BASE - AMARELO) ==================== -->
+          <!-- EtapaRepository Interface -->
+          <g transform="translate(45, 382)">
+            <rect width="215" height="82" fill="#fff2cc" stroke="#d6b656" stroke-width="1.3"/>
+            <line x1="0" y1="32" x2="215" y2="32" stroke="#d6b656" stroke-width="1"/>
+            <text x="107" y="12" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="107" y="21" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;interface&gt;&gt;</text>
+            <text x="107" y="30" font-size="10" font-weight="bold" text-anchor="middle" fill="#000">EtapaRepository</text>
+            <text x="8" y="45" font-size="9" font-style="italic" fill="#111">+ save(etapa : ComponenteEap) : void</text>
+            <text x="8" y="57" font-size="9" font-style="italic" fill="#111">+ findById(id : UUID) : Optional</text>
+            <text x="8" y="69" font-size="9" font-style="italic" fill="#111">+ findByProjetoId(id : UUID) : List</text>
+          </g>
+
+          <!-- EtapaRepositoryImpl -->
+          <g transform="translate(45, 488)">
+            <rect width="215" height="72" fill="#fff2cc" stroke="#d6b656" stroke-width="1.3"/>
+            <line x1="0" y1="24" x2="215" y2="24" stroke="#d6b656" stroke-width="1"/>
+            <text x="107" y="11" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="107" y="21" font-size="10" font-weight="bold" text-anchor="middle" fill="#000">EtapaRepositoryImpl</text>
+            <text x="8" y="37" font-size="9" fill="#111">+ save(etapa : ComponenteEap) : void</text>
+            <text x="8" y="49" font-size="9" fill="#111">+ findById(id : UUID) : Optional</text>
+            <text x="8" y="61" font-size="9" fill="#111">+ findByProjetoId(id : UUID) : List</text>
+          </g>
+
+          <!-- ProjetoRepository Interface -->
+          <g transform="translate(295, 382)">
+            <rect width="215" height="82" fill="#fff2cc" stroke="#d6b656" stroke-width="1.3"/>
+            <line x1="0" y1="32" x2="215" y2="32" stroke="#d6b656" stroke-width="1"/>
+            <text x="107" y="12" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="107" y="21" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;interface&gt;&gt;</text>
+            <text x="107" y="30" font-size="10" font-weight="bold" text-anchor="middle" fill="#000">ProjetoRepository</text>
+            <text x="8" y="45" font-size="9" font-style="italic" fill="#111">+ save(projeto : Projeto) : void</text>
+            <text x="8" y="57" font-size="9" font-style="italic" fill="#111">+ findById(id : UUID) : Optional</text>
+            <text x="8" y="69" font-size="9" font-style="italic" fill="#111">+ findAll() : List</text>
+          </g>
+
+          <!-- ProjetoRepositoryImpl -->
+          <g transform="translate(295, 488)">
+            <rect width="215" height="72" fill="#fff2cc" stroke="#d6b656" stroke-width="1.3"/>
+            <line x1="0" y1="24" x2="215" y2="24" stroke="#d6b656" stroke-width="1"/>
+            <text x="107" y="11" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="107" y="21" font-size="10" font-weight="bold" text-anchor="middle" fill="#000">ProjetoRepositoryImpl</text>
+            <text x="8" y="37" font-size="9" fill="#111">+ save(projeto : Projeto) : void</text>
+            <text x="8" y="49" font-size="9" fill="#111">+ findById(id : UUID) : Optional</text>
+            <text x="8" y="61" font-size="9" fill="#111">+ findAll() : List</text>
+          </g>
+
+          <!-- MedicaoRepository Interface -->
+          <g transform="translate(545, 382)">
+            <rect width="215" height="82" fill="#fff2cc" stroke="#d6b656" stroke-width="1.3"/>
+            <line x1="0" y1="32" x2="215" y2="32" stroke="#d6b656" stroke-width="1"/>
+            <text x="107" y="12" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="107" y="21" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;interface&gt;&gt;</text>
+            <text x="107" y="30" font-size="10" font-weight="bold" text-anchor="middle" fill="#000">MedicaoRepository</text>
+            <text x="8" y="45" font-size="9" font-style="italic" fill="#111">+ save(medicao : Medicao) : void</text>
+            <text x="8" y="57" font-size="9" font-style="italic" fill="#111">+ findById(id : UUID) : Optional</text>
+            <text x="8" y="69" font-size="9" font-style="italic" fill="#111">+ findAll() : List</text>
+          </g>
+
+          <!-- MedicaoRepositoryImpl -->
+          <g transform="translate(545, 488)">
+            <rect width="215" height="72" fill="#fff2cc" stroke="#d6b656" stroke-width="1.3"/>
+            <line x1="0" y1="24" x2="215" y2="24" stroke="#d6b656" stroke-width="1"/>
+            <text x="107" y="11" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="107" y="21" font-size="10" font-weight="bold" text-anchor="middle" fill="#000">MedicaoRepositoryImpl</text>
+            <text x="8" y="37" font-size="9" fill="#111">+ save(medicao : Medicao) : void</text>
+            <text x="8" y="49" font-size="9" fill="#111">+ findById(id : UUID) : Optional</text>
+            <text x="8" y="61" font-size="9" fill="#111">+ findAll() : List</text>
+          </g>
+
+          <!-- ==================== LINHAS E ASSOCIAÇÕES ==================== -->
+          <!-- UI -> Controllers -->
+          <line x1="160" y1="98" x2="160" y2="225" stroke="#333" stroke-width="1.2" marker-end="url(#arrowOpen)"/>
+          <line x1="450" y1="98" x2="450" y2="143" stroke="#333" stroke-width="1.2" marker-end="url(#arrowOpen)"/>
+          <line x1="765" y1="98" x2="765" y2="143" stroke="#333" stroke-width="1.2" marker-end="url(#arrowOpen)"/>
+
+          <!-- GerenciadorMedicoes -> outros controllers -->
+          <line x1="330" y1="180" x2="200" y2="225" stroke="#333" stroke-width="1.2" marker-end="url(#arrowOpen)"/>
+          <line x1="420" y1="215" x2="420" y2="225" stroke="#333" stroke-width="1.2" marker-end="url(#arrowOpen)"/>
+          <line x1="790" y1="215" x2="790" y2="235" stroke="#333" stroke-width="1.2" marker-end="url(#arrowOpen)"/>
+
+          <!-- Controllers -> DAOs -->
+          <line x1="152" y1="333" x2="152" y2="382" stroke="#333" stroke-width="1.2" marker-end="url(#arrowOpen)"/>
+          <line x1="402" y1="333" x2="402" y2="382" stroke="#333" stroke-width="1.2" marker-end="url(#arrowOpen)"/>
+          <line x1="652" y1="333" x2="652" y2="382" stroke="#333" stroke-width="1.2" marker-end="url(#arrowOpen)"/>
+
+          <!-- Realizações DAO -->
+          <line x1="152" y1="488" x2="152" y2="464" stroke="#333" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#triangleHollow)"/>
+          <line x1="402" y1="488" x2="402" y2="464" stroke="#333" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#triangleHollow)"/>
+          <line x1="652" y1="488" x2="652" y2="464" stroke="#333" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#triangleHollow)"/>
+
+          <!-- Rótulo Grande Canto Direito (Idêntico ao Slide 7 do PDF) -->
+          <text x="935" y="455" font-size="38" font-weight="bold" text-anchor="middle" fill="#000">Núcleo do</text>
+          <text x="935" y="502" font-size="38" font-weight="bold" text-anchor="middle" fill="#000">Framework</text>
+        </svg>
+      </div>
+      <div class="slide-footer-meta">
+        <span>Arquitetura — Núcleo do Framework (Boundary, Control e Repositories)</span>
+        <span>Slide 6</span>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- SLIDE 7: DIAGRAMA DE CLASSES 2 — PONTOS FLEXÍVEIS + INSTÂNCIAS (PARTE 1) -->
+    <!-- (Modelo exato do Slide 8 do PDF: Entidades Abstratas + 3 Instâncias) -->
+    <!-- ========================================================== -->
+    <section class="slide diagram-slide">
+      <div class="svg-container">
+        <svg viewBox="0 0 1100 580" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+          <defs>
+            <marker id="arrow2" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+              <path d="M1,1 L9,5 L1,9" fill="none" stroke="#333" stroke-width="1.3"/>
+            </marker>
+            <marker id="triHollow2" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto">
+              <polygon points="1,1 11,6 1,11" fill="#ffffff" stroke="#333" stroke-width="1.3"/>
+            </marker>
+          </defs>
+
+          <!-- ==================== PV1: COMPONENTE EAP E SUAS 3 INSTÂNCIAS ==================== -->
+          <!-- ComponenteEap (Abstrata - Rosa) -->
+          <g transform="translate(650, 15)">
+            <rect width="310" height="115" fill="#f8cecc" stroke="#b85450" stroke-width="1.3"/>
+            <line x1="0" y1="34" x2="310" y2="34" stroke="#b85450" stroke-width="1"/>
+            <line x1="0" y1="78" x2="310" y2="78" stroke="#b85450" stroke-width="1"/>
+            <text x="155" y="12" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="155" y="22" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;abstract&gt;&gt;</text>
+            <text x="155" y="32" font-size="10.5" font-weight="bold" font-style="italic" text-anchor="middle" fill="#000">RecursoEtapa (ComponenteEap)</text>
+            <text x="8" y="47" font-size="9" fill="#111">- codigo : Long</text>
+            <text x="8" y="59" font-size="9" fill="#111">- descricao : String</text>
+            <text x="8" y="71" font-size="9" fill="#111">- liberada : boolean</text>
+            <text x="8" y="90" font-size="9" font-style="italic" fill="#111">+ alocarEtapa() : void</text>
+            <text x="8" y="102" font-size="9" font-style="italic" fill="#111">+ validarPrecedencias() : boolean</text>
+          </g>
+
+          <!-- MacroEtapa (Composite) -->
+          <g transform="translate(390, 22)">
+            <rect width="205" height="85" fill="#cfe2f3" stroke="#4a76a8" stroke-width="1.3"/>
+            <line x1="0" y1="26" x2="205" y2="26" stroke="#4a76a8" stroke-width="1"/>
+            <line x1="0" y1="54" x2="205" y2="54" stroke="#4a76a8" stroke-width="1"/>
+            <text x="102" y="12" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="102" y="23" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#000">MacroEtapaComposite</text>
+            <text x="8" y="40" font-size="9" fill="#111">- subEtapas : List&lt;RecursoEtapa&gt;</text>
+            <text x="8" y="68" font-size="9" fill="#111">+ adicionarSubEtapa(e : RecursoEtapa)</text>
+            <text x="8" y="80" font-size="9" fill="#111">+ consolidarProgresso() : double</text>
+          </g>
+
+          <!-- Instância 1: ItemObraSinapi (Verde Claro) -->
+          <g transform="translate(500, 175)">
+            <rect width="275" height="108" fill="#d9ead3" stroke="#6aa84f" stroke-width="1.3"/>
+            <line x1="0" y1="26" x2="275" y2="26" stroke="#6aa84f" stroke-width="1"/>
+            <line x1="0" y1="80" x2="275" y2="80" stroke="#6aa84f" stroke-width="1"/>
+            <text x="137" y="12" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="137" y="23" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#000">ItemObraSinapi (Concordia)</text>
+            <text x="8" y="39" font-size="9" fill="#111">- codigoSinapi : String</text>
+            <text x="8" y="51" font-size="9" fill="#111">- unidade : String</text>
+            <text x="8" y="63" font-size="9" fill="#111">- quantidadeTotal : double</text>
+            <text x="8" y="75" font-size="9" fill="#111">- precoUnitarioComBdi : double</text>
+            <text x="8" y="95" font-size="9" fill="#111">+ getValorTotalOrcado() : double</text>
+          </g>
+
+          <!-- Instância 2: UserStoryTask (Verde Claro) -->
+          <g transform="translate(800, 175)">
+            <rect width="275" height="108" fill="#d9ead3" stroke="#6aa84f" stroke-width="1.3"/>
+            <line x1="0" y1="26" x2="275" y2="26" stroke="#6aa84f" stroke-width="1"/>
+            <line x1="0" y1="80" x2="275" y2="80" stroke="#6aa84f" stroke-width="1"/>
+            <text x="137" y="12" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="137" y="23" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#000">UserStoryTask (DevFlow)</text>
+            <text x="8" y="39" font-size="9" fill="#111">- storyPoints : Integer</text>
+            <text x="8" y="51" font-size="9" fill="#111">- valorNegocio : Integer</text>
+            <text x="8" y="63" font-size="9" fill="#111">- squadResponsavel : String</text>
+            <text x="8" y="75" font-size="9" fill="#111">- dependeDeApiBackend : boolean</text>
+            <text x="8" y="95" font-size="9" fill="#111">+ validarCriteriosAceite() : boolean</text>
+          </g>
+
+          <!-- Instância 3: CapituloPesquisa (Verde Claro) -->
+          <g transform="translate(650, 315)">
+            <rect width="290" height="102" fill="#d9ead3" stroke="#6aa84f" stroke-width="1.3"/>
+            <line x1="0" y1="26" x2="290" y2="26" stroke="#6aa84f" stroke-width="1"/>
+            <line x1="0" y1="76" x2="290" y2="76" stroke="#6aa84f" stroke-width="1"/>
+            <text x="145" y="12" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="145" y="23" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#000">CapituloPesquisa (ThesisFlow)</text>
+            <text x="8" y="39" font-size="9" fill="#111">- metaPaginas : Integer</text>
+            <text x="8" y="51" font-size="9" fill="#111">- paginasRedigidas : Integer</text>
+            <text x="8" y="63" font-size="9" fill="#111">- requerComiteEtica : boolean</text>
+            <text x="8" y="91" font-size="9" fill="#111">+ isSecaoTeoricaIndependente() : boolean</text>
+          </g>
+
+          <!-- ==================== PV2: STRATEGY DE PROGRESSO E PESO ==================== -->
+          <!-- CalculoProgressoStrategy (Rosa - Interface) -->
+          <g transform="translate(30, 25)">
+            <rect width="315" height="98" fill="#f8cecc" stroke="#b85450" stroke-width="1.3"/>
+            <line x1="0" y1="34" x2="315" y2="34" stroke="#b85450" stroke-width="1"/>
+            <text x="157" y="12" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="157" y="22" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;interface&gt;&gt;</text>
+            <text x="157" y="32" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#000">RegraCalculoProgresso (Strategy)</text>
+            <text x="8" y="50" font-size="9" font-style="italic" fill="#111">+ calcularPercentual(e : RecursoEtapa, val : double) : double</text>
+            <text x="8" y="64" font-size="9" font-style="italic" fill="#111">+ calcularPesoRelativo(e : RecursoEtapa) : double</text>
+            <text x="8" y="78" font-size="9" font-style="italic" fill="#111">+ validarMedicao(val : double) : boolean</text>
+          </g>
+
+          <!-- 3 Implementações de RegraCalculoProgresso -->
+          <g transform="translate(15, 175)">
+            <rect width="145" height="75" fill="#d9ead3" stroke="#6aa84f" stroke-width="1.3"/>
+            <line x1="0" y1="24" x2="145" y2="24" stroke="#6aa84f" stroke-width="1"/>
+            <text x="72" y="11" font-size="8.5" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="72" y="21" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#000">RegraFinanceiraObra</text>
+            <text x="6" y="40" font-size="8.5" fill="#111">- TAXA_BDI_PADRAO : double</text>
+            <text x="6" y="55" font-size="8.5" fill="#111">+ calcularPorValorRS()</text>
+          </g>
+
+          <g transform="translate(170, 175)">
+            <rect width="145" height="75" fill="#d9ead3" stroke="#6aa84f" stroke-width="1.3"/>
+            <line x1="0" y1="24" x2="145" y2="24" stroke="#6aa84f" stroke-width="1"/>
+            <text x="72" y="11" font-size="8.5" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="72" y="21" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#000">RegraStoryPoints</text>
+            <text x="6" y="40" font-size="8.5" fill="#111">- VELOCITY_META : int</text>
+            <text x="6" y="55" font-size="8.5" fill="#111">+ calcularPorPontos()</text>
+          </g>
+
+          <g transform="translate(325, 175)">
+            <rect width="145" height="75" fill="#d9ead3" stroke="#6aa84f" stroke-width="1.3"/>
+            <line x1="0" y1="24" x2="145" y2="24" stroke="#6aa84f" stroke-width="1"/>
+            <text x="72" y="11" font-size="8.5" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="72" y="21" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#000">RegraMetaPaginas</text>
+            <text x="6" y="40" font-size="8.5" fill="#111">- PESO_CAPITULO : double</text>
+            <text x="6" y="55" font-size="8.5" fill="#111">+ calcularPorPaginas()</text>
+          </g>
+
+          <!-- ==================== PV3: STRATEGY DE RECOMENDAÇÃO ==================== -->
+          <!-- RecomendacaoAdiantamentoStrategy (Rosa - Interface) -->
+          <g transform="translate(30, 305)">
+            <rect width="380" height="92" fill="#f8cecc" stroke="#b85450" stroke-width="1.3"/>
+            <line x1="0" y1="34" x2="380" y2="34" stroke="#b85450" stroke-width="1"/>
+            <text x="190" y="12" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="190" y="22" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;interface&gt;&gt;</text>
+            <text x="190" y="32" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#000">RegraRecomendacaoAdiantamento (Strategy)</text>
+            <text x="8" y="50" font-size="9" font-style="italic" fill="#111">+ ranquearCandidatas(livres : List, atrasada : RecursoEtapa) : List</text>
+            <text x="8" y="64" font-size="9" font-style="italic" fill="#111">+ calcularScorePrioridade(candidata : RecursoEtapa) : double</text>
+            <text x="8" y="78" font-size="9" font-style="italic" fill="#111">+ verificarCompatibilidadeExecucao(a, b : RecursoEtapa) : boolean</text>
+          </g>
+
+          <!-- 3 Implementações de RecomendacaoAdiantamentoStrategy -->
+          <g transform="translate(15, 445)">
+            <rect width="175" height="75" fill="#d9ead3" stroke="#6aa84f" stroke-width="1.3"/>
+            <line x1="0" y1="24" x2="175" y2="24" stroke="#6aa84f" stroke-width="1"/>
+            <text x="87" y="11" font-size="8.5" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="87" y="21" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#000">RecomendacaoCanteiroObra</text>
+            <text x="6" y="40" font-size="8.5" fill="#111">+ priorizarMaiorValorRS()</text>
+            <text x="6" y="55" font-size="8.5" fill="#111">+ checarConflitoEspacoFisico()</text>
+          </g>
+
+          <g transform="translate(205, 445)">
+            <rect width="175" height="75" fill="#d9ead3" stroke="#6aa84f" stroke-width="1.3"/>
+            <line x1="0" y1="24" x2="175" y2="24" stroke="#6aa84f" stroke-width="1"/>
+            <text x="87" y="11" font-size="8.5" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="87" y="21" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#000">RecomendacaoSprintAgil</text>
+            <text x="6" y="40" font-size="8.5" fill="#111">+ priorizarValorNegocio()</text>
+            <text x="6" y="55" font-size="8.5" fill="#111">+ filtrarSemDependenciaBackend()</text>
+          </g>
+
+          <g transform="translate(395, 445)">
+            <rect width="175" height="75" fill="#d9ead3" stroke="#6aa84f" stroke-width="1.3"/>
+            <line x1="0" y1="24" x2="175" y2="24" stroke="#6aa84f" stroke-width="1"/>
+            <text x="87" y="11" font-size="8.5" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="87" y="21" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#000">RecomendacaoFrenteTeorica</text>
+            <text x="6" y="40" font-size="8.5" fill="#111">+ priorizarRevisaoLiteratura()</text>
+            <text x="6" y="55" font-size="8.5" fill="#111">+ filtrarSemComiteOuCluster()</text>
+          </g>
+
+          <!-- ==================== LINHAS DE HERANÇA E REALIZAÇÃO ==================== -->
+          <!-- Composite -> RecursoEtapa -->
+          <line x1="595" y1="65" x2="650" y2="65" stroke="#333" stroke-width="1.3" marker-end="url(#triHollow2)"/>
+
+          <!-- Subclasses de RecursoEtapa -->
+          <line x1="635" y1="175" x2="740" y2="130" stroke="#333" stroke-width="1.3" marker-end="url(#triHollow2)"/>
+          <line x1="920" y1="175" x2="860" y2="130" stroke="#333" stroke-width="1.3" marker-end="url(#triHollow2)"/>
+          <line x1="795" y1="315" x2="795" y2="130" stroke="#333" stroke-width="1.3" marker-end="url(#triHollow2)"/>
+
+          <!-- Subclasses de RegraCalculoProgresso -->
+          <line x1="87" y1="175" x2="145" y2="123" stroke="#333" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#triHollow2)"/>
+          <line x1="242" y1="175" x2="190" y2="123" stroke="#333" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#triHollow2)"/>
+          <line x1="395" y1="175" x2="250" y2="123" stroke="#333" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#triHollow2)"/>
+
+          <!-- Subclasses de RegraRecomendacaoAdiantamento -->
+          <line x1="102" y1="445" x2="175" y2="397" stroke="#333" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#triHollow2)"/>
+          <line x1="292" y1="445" x2="230" y2="397" stroke="#333" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#triHollow2)"/>
+          <line x1="482" y1="445" x2="295" y2="397" stroke="#333" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#triHollow2)"/>
+
+          <!-- Rótulo Grande Canto Direito Inferior (Idêntico ao Slide 8 do PDF) -->
+          <text x="860" y="485" font-size="33" font-weight="bold" text-anchor="middle" fill="#000">Pontos Flexíveis +</text>
+          <text x="860" y="528" font-size="33" font-weight="bold" text-anchor="middle" fill="#000">Instâncias</text>
+        </svg>
+      </div>
+      <div class="slide-footer-meta">
+        <span>Diagrama de Classes — Pontos Flexíveis (Recursos, Regras de Progresso e Estratégias de Recomendação)</span>
+        <span>Slide 7</span>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- SLIDE 8: DIAGRAMA DE CLASSES 3 — PONTOS FLEXÍVEIS + INSTÂNCIAS (PARTE 2) -->
+    <!-- (Modelo exato do Slide 9 do PDF: Builders, Relatórios e Notificações) -->
+    <!-- ========================================================== -->
+    <section class="slide diagram-slide">
+      <div class="svg-container">
+        <svg viewBox="0 0 1100 580" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+          <defs>
+            <marker id="arrow3" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+              <path d="M1,1 L9,5 L1,9" fill="none" stroke="#333" stroke-width="1.3"/>
+            </marker>
+            <marker id="triHollow3" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto">
+              <polygon points="1,1 11,6 1,11" fill="#ffffff" stroke="#333" stroke-width="1.3"/>
+            </marker>
+          </defs>
+
+          <!-- GeradorPlanoReprogramacao (Azul - Director) -->
+          <g transform="translate(65, 30)">
+            <rect width="350" height="80" fill="#cfe2f3" stroke="#4a76a8" stroke-width="1.3"/>
+            <line x1="0" y1="26" x2="350" y2="26" stroke="#4a76a8" stroke-width="1"/>
+            <text x="175" y="11" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="175" y="22" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#000">ImportadorCronogramaDirector</text>
+            <text x="10" y="44" font-size="9.5" fill="#111">+ construirCronograma(b : CronogramaBuilder) : Projeto</text>
+            <text x="10" y="61" font-size="9.5" fill="#111">+ montarPainelReprogramacao(etapa : RecursoEtapa) : PainelSugestoes</text>
+          </g>
+
+          <!-- PainelSugestoes Abstrato (Azul) -->
+          <g transform="translate(540, 20)">
+            <rect width="300" height="95" fill="#cfe2f3" stroke="#4a76a8" stroke-width="1.3"/>
+            <line x1="0" y1="32" x2="300" y2="32" stroke="#4a76a8" stroke-width="1"/>
+            <line x1="0" y1="70" x2="300" y2="70" stroke="#4a76a8" stroke-width="1"/>
+            <text x="150" y="11" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="150" y="20" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;abstract&gt;&gt;</text>
+            <text x="150" y="30" font-size="10.5" font-weight="bold" font-style="italic" text-anchor="middle" fill="#000">PainelSugestoesFrontend</text>
+            <text x="8" y="45" font-size="9" fill="#111">- projetoNome : String</text>
+            <text x="8" y="56" font-size="9" fill="#111">- etapaAtrasada : RecursoEtapa</text>
+            <text x="8" y="67" font-size="9" fill="#111">- etapasCandidatas : List</text>
+            <text x="8" y="85" font-size="9" font-style="italic" fill="#111">+ selecionarEtapaParaAdiantar(id : UUID) : void</text>
+          </g>
+
+          <!-- Subclasses de PainelSugestoes -->
+          <g transform="translate(420, 165)">
+            <rect width="160" height="50" fill="#fff2cc" stroke="#d6b656" stroke-width="1.3"/>
+            <text x="80" y="18" font-size="8.5" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="80" y="33" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#000">PainelTrilhaObra</text>
+          </g>
+          <g transform="translate(610, 165)">
+            <rect width="160" height="50" fill="#fff2cc" stroke="#d6b656" stroke-width="1.3"/>
+            <text x="80" y="18" font-size="8.5" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="80" y="33" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#000">PainelQuadrosSprint</text>
+          </g>
+          <g transform="translate(800, 165)">
+            <rect width="165" height="50" fill="#fff2cc" stroke="#d6b656" stroke-width="1.3"/>
+            <text x="82" y="18" font-size="8.5" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="82" y="33" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#000">PainelCapitulosTcc</text>
+          </g>
+
+          <!-- CronogramaBuilder Interface (Rosa) -->
+          <g transform="translate(390, 395)">
+            <rect width="340" height="105" fill="#f8cecc" stroke="#b85450" stroke-width="1.3"/>
+            <line x1="0" y1="34" x2="340" y2="34" stroke="#b85450" stroke-width="1"/>
+            <text x="170" y="12" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="170" y="22" font-size="9" text-anchor="middle" fill="#333">&lt;&lt;interface&gt;&gt;</text>
+            <text x="170" y="32" font-size="10.5" font-weight="bold" text-anchor="middle" fill="#000">CronogramaBuilder</text>
+            <text x="8" y="48" font-size="9" font-style="italic" fill="#111">+ buildCabecalhoProjeto(nome : String) : void</text>
+            <text x="8" y="61" font-size="9" font-style="italic" fill="#111">+ buildArvoreEap(dados : InputStream) : void</text>
+            <text x="8" y="74" font-size="9" font-style="italic" fill="#111">+ buildGrafoDependencias(regras : List) : void</text>
+            <text x="8" y="87" font-size="9" font-style="italic" fill="#111">+ getProjetoEstruturado() : Projeto</text>
+          </g>
+
+          <!-- 3 Implementações de CronogramaBuilder -->
+          <g transform="translate(240, 265)">
+            <rect width="190" height="58" fill="#d9ead3" stroke="#6aa84f" stroke-width="1.3"/>
+            <text x="95" y="20" font-size="8.5" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="95" y="36" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#000">PlanilhaSinapiBuilder</text>
+          </g>
+          <g transform="translate(465, 265)">
+            <rect width="190" height="58" fill="#d9ead3" stroke="#6aa84f" stroke-width="1.3"/>
+            <text x="95" y="20" font-size="8.5" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="95" y="36" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#000">BacklogJiraJsonBuilder</text>
+          </g>
+          <g transform="translate(690, 265)">
+            <rect width="195" height="58" fill="#d9ead3" stroke="#6aa84f" stroke-width="1.3"/>
+            <text x="97" y="20" font-size="8.5" text-anchor="middle" fill="#333">&lt;&lt;entity&gt;&gt;</text>
+            <text x="97" y="36" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#000">SumarioMarkdownTccBuilder</text>
+          </g>
+
+          <!-- Linhas -->
+          <line x1="415" y1="65" x2="540" y2="65" stroke="#333" stroke-width="1.2" marker-end="url(#arrow3)"/>
+          <line x1="200" y1="110" x2="390" y2="430" stroke="#333" stroke-width="1.2" marker-end="url(#arrow3)"/>
+          <line x1="500" y1="165" x2="610" y2="115" stroke="#333" stroke-width="1.2" marker-end="url(#triHollow3)"/>
+          <line x1="690" y1="165" x2="690" y2="115" stroke="#333" stroke-width="1.2" marker-end="url(#triHollow3)"/>
+          <line x1="880" y1="165" x2="770" y2="115" stroke="#333" stroke-width="1.2" marker-end="url(#triHollow3)"/>
+
+          <line x1="335" y1="323" x2="475" y2="395" stroke="#333" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#triHollow3)"/>
+          <line x1="560" y1="323" x2="560" y2="395" stroke="#333" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#triHollow3)"/>
+          <line x1="787" y1="323" x2="645" y2="395" stroke="#333" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#triHollow3)"/>
+
+          <!-- Título Grande inferior -->
+          <text x="550" y="552" font-size="26" font-weight="bold" text-anchor="middle" fill="#000">Importação de Cronograma e Painel de Reprogramação (Builder)</text>
+        </svg>
+      </div>
+      <div class="slide-footer-meta">
+        <span>Diagrama de Classes — Padrão Builder de Importação e Painel de Sugestões no Frontend</span>
+        <span>Slide 8</span>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- SLIDE 9: PADRÕES DE PROJETO (Modelo Slide 10 do PDF)       -->
+    <!-- ========================================================== -->
+    <section class="slide">
+      <h2 class="title-centered" style="color: #000000;">Padrões de Projeto</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li><em>Strategy</em> para as regras de cálculo de progresso e para a recomendação de adiantamento</li>
+          <li><em>Composite</em> para a estrutura hierárquica da EAP (MacroEtapa e RecursoEtapa)</li>
+          <li><em>Singleton</em> para os Repositories e Services gerenciadores do núcleo</li>
+          <li><em>Builder</em> para a importação do cronograma e montagem do painel de reprogramação para o frontend</li>
+          <li><em>Template Method</em> para o fluxo de medição, detecção de atraso e aplicação do adiantamento</li>
+        </ul>
+      </div>
+      <div class="slide-footer-meta">
+        <span>Padrões de Projeto (Design Patterns GoF)</span>
+        <span>Slide 9</span>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- SLIDE 10: DIAGRAMA DE SEQUÊNCIA 1 — REGISTRAR MEDIÇÃO      -->
+    <!-- (Modelo exato do Slide 11 do PDF)                          -->
+    <!-- ========================================================== -->
+    <section class="slide diagram-slide">
+      <h2 class="title-diagram">Diagr. de Sequência – registrar medição</h2>
+      <div class="svg-container">
+        <svg viewBox="0 0 1100 520" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+          <defs>
+            <marker id="seqSolid" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+              <polygon points="1,1 9,5 1,9" fill="#222"/>
+            </marker>
+            <marker id="seqOpen" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+              <path d="M1,1 L9,5 L1,9" fill="none" stroke="#222" stroke-width="1.3"/>
+            </marker>
+          </defs>
+
+          <!-- Moldura SD -->
+          <rect x="10" y="10" width="1080" height="495" fill="none" stroke="#444" stroke-width="1.2"/>
+          <polygon points="10,10 290,10 290,24 278,34 10,34" fill="#eeeeee" stroke="#444" stroke-width="1.2"/>
+          <text x="18" y="26" font-size="10.5" font-weight="bold" fill="#111">sd Framework Cronograma – DS Registrar Medição</text>
+
+          <!-- Lifelines (Boundary, Control, Control, Strategy, Entity, DAO) -->
+          <!-- 1. UIGerenciamentoMedicoes -->
+          <g transform="translate(115, 45)">
+            <line x1="-12" y1="8" x2="-12" y2="24" stroke="#222" stroke-width="1.8"/>
+            <line x1="-12" y1="16" x2="-2" y2="16" stroke="#222" stroke-width="1.8"/>
+            <circle cx="8" cy="16" r="10" fill="#ffffff" stroke="#222" stroke-width="1.8"/>
+            <text x="4" y="40" font-size="9.5" text-anchor="middle" fill="#000">: UIGerenciamentoMedicoes</text>
+          </g>
+          <line x1="115" y1="92" x2="115" y2="485" stroke="#555" stroke-width="1" stroke-dasharray="5,4"/>
+          <rect x="110" y="105" width="10" height="350" fill="#ffffff" stroke="#333" stroke-width="1"/>
+
+          <!-- 2. GerenciadorMedicoes -->
+          <g transform="translate(310, 45)">
+            <circle cx="0" cy="16" r="10" fill="#ffffff" stroke="#222" stroke-width="1.8"/>
+            <polygon points="0,3 -5,8 2,9" fill="#222"/>
+            <text x="0" y="40" font-size="9.5" text-anchor="middle" fill="#000">: GerenciadorMedicoes</text>
+          </g>
+          <line x1="310" y1="92" x2="310" y2="485" stroke="#555" stroke-width="1" stroke-dasharray="5,4"/>
+          <rect x="305" y="120" width="10" height="320" fill="#ffffff" stroke="#333" stroke-width="1"/>
+
+          <!-- 3. GerenciadorEtapas (Grafo) -->
+          <g transform="translate(510, 45)">
+            <circle cx="0" cy="16" r="10" fill="#ffffff" stroke="#222" stroke-width="1.8"/>
+            <polygon points="0,3 -5,8 2,9" fill="#222"/>
+            <text x="0" y="40" font-size="9.5" text-anchor="middle" fill="#000">: GerenciadorEtapas</text>
+          </g>
+          <line x1="510" y1="92" x2="510" y2="485" stroke="#555" stroke-width="1" stroke-dasharray="5,4"/>
+          <rect x="505" y="140" width="10" height="30" fill="#ffffff" stroke="#333" stroke-width="1"/>
+
+          <!-- 4. RegraCalculoProgresso (Hot Spot) -->
+          <g transform="translate(690, 45)">
+            <circle cx="0" cy="16" r="10" fill="#f8cecc" stroke="#b85450" stroke-width="1.8"/>
+            <line x1="-10" y1="26" x2="10" y2="26" stroke="#b85450" stroke-width="1.8"/>
+            <text x="0" y="40" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#900">: RegraCalculoProgresso</text>
+          </g>
+          <line x1="690" y1="92" x2="690" y2="485" stroke="#555" stroke-width="1" stroke-dasharray="5,4"/>
+          <rect x="685" y="215" width="10" height="30" fill="#f8cecc" stroke="#b85450" stroke-width="1"/>
+
+          <!-- 5. RecursoEtapa (EAP) -->
+          <g transform="translate(845, 45)">
+            <circle cx="0" cy="16" r="10" fill="#ffffff" stroke="#222" stroke-width="1.8"/>
+            <line x1="-10" y1="26" x2="10" y2="26" stroke="#222" stroke-width="1.8"/>
+            <text x="0" y="40" font-size="9.5" text-anchor="middle" fill="#000">: RecursoEtapa</text>
+          </g>
+          <line x1="845" y1="92" x2="845" y2="485" stroke="#555" stroke-width="1" stroke-dasharray="5,4"/>
+          <rect x="840" y="285" width="10" height="35" fill="#ffffff" stroke="#333" stroke-width="1"/>
+
+          <!-- 6. MedicaoRepository -->
+          <g transform="translate(980, 45)">
+            <circle cx="0" cy="16" r="10" fill="#ffffff" stroke="#222" stroke-width="1.8"/>
+            <line x1="-10" y1="26" x2="10" y2="26" stroke="#222" stroke-width="1.8"/>
+            <text x="0" y="40" font-size="9.5" text-anchor="middle" fill="#000">: MedicaoRepository</text>
+          </g>
+          <line x1="980" y1="92" x2="980" y2="485" stroke="#555" stroke-width="1" stroke-dasharray="5,4"/>
+          <rect x="975" y="355" width="10" height="25" fill="#ffffff" stroke="#333" stroke-width="1"/>
+
+          <!-- Mensagens -->
+          <!-- 1 -->
+          <line x1="20" y1="108" x2="110" y2="108" stroke="#222" stroke-width="1.2" marker-end="url(#seqSolid)"/>
+          <text x="65" y="102" font-size="9.5" text-anchor="middle">1: registrarMedicao() : void</text>
+
+          <!-- 1.1 -->
+          <line x1="120" y1="125" x2="305" y2="125" stroke="#222" stroke-width="1.2" marker-end="url(#seqSolid)"/>
+          <text x="212" y="119" font-size="9.5" text-anchor="middle">1.1: registrarMedicao(etapa, valor) : Comprovante</text>
+
+          <!-- 1.1.1 -->
+          <line x1="315" y1="145" x2="505" y2="145" stroke="#222" stroke-width="1.2" marker-end="url(#seqSolid)"/>
+          <text x="410" y="139" font-size="9.5" text-anchor="middle">1.1.1: liberada = validarPrecedencias(etapa) : boolean</text>
+
+          <!-- Moldura ALT -->
+          <rect x="285" y="178" width="725" height="245" fill="none" stroke="#444" stroke-width="1.1"/>
+          <polygon points="285,178 325,178 325,190 317,196 285,196" fill="#eeeeee" stroke="#444" stroke-width="1.1"/>
+          <text x="293" y="191" font-size="9.5" font-weight="bold">alt</text>
+          <text x="335" y="192" font-size="9.5">[liberada = true]</text>
+
+          <!-- 1.1.2 (Hot Spot call) -->
+          <line x1="315" y1="222" x2="685" y2="222" stroke="#900" stroke-width="1.3" marker-end="url(#seqSolid)"/>
+          <text x="500" y="216" font-size="9.5" font-weight="bold" fill="#900" text-anchor="middle">1.1.2: avanco = calcularPercentual(etapa, valor) : double</text>
+
+          <!-- Moldura LOOP -->
+          <rect x="300" y="258" width="565" height="72" fill="none" stroke="#555" stroke-width="1"/>
+          <polygon points="300,258 340,258 340,270 332,276 300,276" fill="#eeeeee" stroke="#555" stroke-width="1"/>
+          <text x="306" y="271" font-size="9" font-weight="bold">loop</text>
+          <text x="348" y="271" font-size="9">[foreach ancestral in arvoreEap]</text>
+
+          <!-- 1.1.3 -->
+          <line x1="315" y1="298" x2="840" y2="298" stroke="#222" stroke-width="1.2" marker-end="url(#seqSolid)"/>
+          <text x="575" y="292" font-size="9.5" text-anchor="middle">1.1.3: atualizarProgressoConsolidado(avanco) : void</text>
+
+          <!-- 1.1.4 -->
+          <line x1="315" y1="360" x2="975" y2="360" stroke="#222" stroke-width="1.2" marker-end="url(#seqSolid)"/>
+          <text x="645" y="354" font-size="9.5" text-anchor="middle">1.1.4: save(medicao) : void</text>
+
+          <!-- 1.1.5 Create Comprovante -->
+          <line x1="315" y1="398" x2="740" y2="398" stroke="#222" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#seqOpen)"/>
+          <text x="525" y="384" font-size="9" text-anchor="middle">&lt;&lt;create&gt;&gt;</text>
+          <text x="525" y="394" font-size="9.5" text-anchor="middle">1.1.5: comp = ComprovanteMedicao(medicao)</text>
+          <g transform="translate(765, 385)">
+            <circle cx="0" cy="10" r="8" fill="#ffffff" stroke="#222" stroke-width="1.5"/>
+            <line x1="-8" y1="18" x2="8" y2="18" stroke="#222" stroke-width="1.5"/>
+            <text x="0" y="30" font-size="8.5" text-anchor="middle">: Comprovante</text>
+          </g>
+
+          <!-- Retornos -->
+          <line x1="305" y1="435" x2="120" y2="435" stroke="#222" stroke-width="1.1" stroke-dasharray="4,3" marker-end="url(#seqOpen)"/>
+          <line x1="110" y1="450" x2="20" y2="450" stroke="#222" stroke-width="1.1" stroke-dasharray="4,3" marker-end="url(#seqOpen)"/>
+        </svg>
+      </div>
+      <div class="slide-footer-meta">
+        <span>Diagrama de Sequência — Registro de Medição e Propagação na EAP</span>
+        <span>Slide 10</span>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- SLIDE 11: DIAGRAMA DE SEQUÊNCIA 2 — VERIFICAR ATRASO E RECOMENDAR -->
+    <!-- (Modelo exato do Slide 12 do PDF)                          -->
+    <!-- ========================================================== -->
+    <section class="slide diagram-slide">
+      <h2 class="title-diagram">Diag. de Sequência – Verificar Prazo e Recomendar</h2>
+      <div class="svg-container">
+        <svg viewBox="0 0 1100 500" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+          <defs>
+            <marker id="seqSolid2" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+              <polygon points="1,1 9,5 1,9" fill="#222"/>
+            </marker>
+            <marker id="seqOpen2" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+              <path d="M1,1 L9,5 L1,9" fill="none" stroke="#222" stroke-width="1.3"/>
+            </marker>
+          </defs>
+
+          <!-- Moldura SD -->
+          <rect x="15" y="15" width="1070" height="460" fill="none" stroke="#444" stroke-width="1.2"/>
+          <polygon points="15,15 330,15 330,29 318,39 15,39" fill="#eeeeee" stroke="#444" stroke-width="1.2"/>
+          <text x="23" y="31" font-size="10.5" font-weight="bold" fill="#111">sd Framework Cronograma – DS Verificar Prazo e Recomendar</text>
+
+          <!-- Lifeline 1: VerificadorAtrasosERecomendacao -->
+          <g transform="translate(210, 60)">
+            <circle cx="0" cy="18" r="12" fill="#ffffff" stroke="#222" stroke-width="1.8"/>
+            <polygon points="0,3 -6,9 2,10" fill="#222"/>
+            <text x="0" y="45" font-size="10" text-anchor="middle" fill="#000">: VerificadorAtrasosERecomendacao</text>
+          </g>
+          <line x1="210" y1="112" x2="210" y2="455" stroke="#555" stroke-width="1" stroke-dasharray="5,4"/>
+          <rect x="205" y="135" width="10" height="290" fill="#ffffff" stroke="#333" stroke-width="1"/>
+
+          <!-- Lifeline 2: GerenciadorEtapas (Grafo) -->
+          <g transform="translate(495, 60)">
+            <circle cx="0" cy="18" r="12" fill="#ffffff" stroke="#222" stroke-width="1.8"/>
+            <polygon points="0,3 -6,9 2,10" fill="#222"/>
+            <text x="0" y="45" font-size="10" text-anchor="middle" fill="#000">: GerenciadorEtapas</text>
+          </g>
+          <line x1="495" y1="112" x2="495" y2="455" stroke="#555" stroke-width="1" stroke-dasharray="5,4"/>
+          <rect x="490" y="160" width="10" height="35" fill="#ffffff" stroke="#333" stroke-width="1"/>
+
+          <!-- Lifeline 3: RegraRecomendacaoAdiantamento (Hot Spot) -->
+          <g transform="translate(765, 60)">
+            <circle cx="0" cy="18" r="12" fill="#f8cecc" stroke="#b85450" stroke-width="1.8"/>
+            <line x1="-12" y1="30" x2="12" y2="30" stroke="#b85450" stroke-width="1.8"/>
+            <text x="0" y="45" font-size="10" font-weight="bold" text-anchor="middle" fill="#900">: RegraRecomendacaoAdiantamento</text>
+          </g>
+          <line x1="765" y1="112" x2="765" y2="455" stroke="#555" stroke-width="1" stroke-dasharray="5,4"/>
+          <rect x="760" y="230" width="10" height="145" fill="#f8cecc" stroke="#b85450" stroke-width="1"/>
+
+          <!-- Mensagem 1 -->
+          <line x1="25" y1="140" x2="205" y2="140" stroke="#222" stroke-width="1.3" marker-end="url(#seqSolid2)"/>
+          <text x="115" y="133" font-size="10" text-anchor="middle">1: verificarPrazo(etapa) : PlanoReprogramacao</text>
+
+          <!-- Mensagem 1.1 -->
+          <line x1="215" y1="168" x2="490" y2="168" stroke="#222" stroke-width="1.3" marker-end="url(#seqSolid2)"/>
+          <text x="352" y="161" font-size="10" text-anchor="middle">1.1: livres = listarEtapasIndependentesLiberadas(etapa) : List</text>
+
+          <!-- Mensagem 1.2 (Hot Spot) -->
+          <line x1="215" y1="238" x2="760" y2="238" stroke="#900" stroke-width="1.4" marker-end="url(#seqSolid2)"/>
+          <text x="488" y="230" font-size="10" font-weight="bold" fill="#900" text-anchor="middle">1.2: [atrasado = true] ranquearCandidatas(livres, etapa) : List</text>
+
+          <!-- Mensagem 1.2.1 Create PlanoReprogramacao -->
+          <line x1="770" y1="285" x2="955" y2="285" stroke="#222" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#seqOpen2)"/>
+          <text x="862" y="268" font-size="9.5" text-anchor="middle">&lt;&lt;create&gt;&gt;</text>
+          <text x="862" y="280" font-size="9.5" text-anchor="middle">1.2.1: PlanoReprogramacao(sugestoes)</text>
+
+          <!-- Lifeline 4 Criada Dinamicamente: PlanoReprogramacao -->
+          <g transform="translate(995, 270)">
+            <circle cx="0" cy="14" r="11" fill="#ffffff" stroke="#222" stroke-width="1.8"/>
+            <line x1="-11" y1="25" x2="11" y2="25" stroke="#222" stroke-width="1.8"/>
+            <text x="0" y="39" font-size="9.5" text-anchor="middle" fill="#000">: PlanoReprogramacao</text>
+          </g>
+          <line x1="995" y1="315" x2="995" y2="410" stroke="#555" stroke-width="1" stroke-dasharray="5,4"/>
+          <rect x="990" y="335" width="10" height="40" fill="#ffffff" stroke="#333" stroke-width="1"/>
+
+          <!-- Mensagem 1.2.2 -->
+          <line x1="770" y1="345" x2="990" y2="345" stroke="#222" stroke-width="1.3" marker-end="url(#seqSolid2)"/>
+          <text x="880" y="338" font-size="9.5" text-anchor="middle">1.2.2: disponibilizarOpcoesNoFrontend() : List</text>
+
+          <!-- Retorno final -->
+          <line x1="205" y1="415" x2="25" y2="415" stroke="#222" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#seqOpen2)"/>
+          <text x="115" y="408" font-size="9.5" text-anchor="middle">exibe sugestões para seleção do usuário</text>
+        </svg>
+      </div>
+      <div class="slide-footer-meta">
+        <span>Diagrama de Sequência — Verificação de Atraso e Disparo do Motor de Recomendação</span>
+        <span>Slide 11</span>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- SLIDE 12: (IV) INSTÂNCIA 1 — CONCORDIA (CONSTRUÇÃO CIVIL)  -->
+    <!-- (Modelo exato do Slide 13 do PDF)                          -->
+    <!-- ========================================================== -->
+    <section class="slide">
+      <h2 class="title-centered" style="color: #000000;">Instância 1 – Concordia (Construção Civil)</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li>Pontos variáveis
+            <ul class="bullet-sublist">
+              <li><strong>Recurso (PV1):</strong> Itens de composição analítica SINAPI são os recursos a serem gerenciados (com quantidade física, insumos, mão de obra e taxa de BDI)</li>
+              <li><strong>Cálculo de Progresso (PV2):</strong> Progresso e peso calculados pelo valor financeiro orçado em R$ (Curva S físico-financeira)</li>
+              <li><strong>Recomendação de Adiantamento (PV3):</strong> Quando uma etapa atrasa (ex.: falta de material), o sistema prioriza antecipar frentes liberadas com maior valor financeiro e sem concorrência de espaço físico no canteiro</li>
+              <li>Relações de precedência construtivas rígidas (fundação &rarr; estrutura &rarr; alvenaria &rarr; instalações)</li>
+              <li>Importação do orçamento e EAP através de planilha Excel SINAPI (<code>.xlsx</code>)</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div class="slide-footer-meta">
+        <span>Instância 1 — Aplicação da Fase 1 Adaptada</span>
+        <span>Slide 12</span>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- SLIDE 13: (IV) INSTÂNCIA 2 — DEVFLOW (SOFTWARE ÁGIL)       -->
+    <!-- (Modelo exato do Slide 14 do PDF)                          -->
+    <!-- ========================================================== -->
+    <section class="slide">
+      <h2 class="title-centered" style="color: #000000;">Instância 2 – DevFlow (Software Ágil)</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li>Pontos variáveis
+            <ul class="bullet-sublist">
+              <li><strong>Recurso (PV1):</strong> User Stories e Tarefas Técnicas são os recursos a serem controlados (com critérios de aceite, squad e branch associada)</li>
+              <li><strong>Cálculo de Progresso (PV2):</strong> Progresso e peso calculados sobre a estimativa em Story Points (Sequência Fibonacci) e horas da sprint (Burndown)</li>
+              <li><strong>Recomendação de Adiantamento (PV3):</strong> Caso uma tarefa de backend atrase e bloqueie a integração, o sistema sugere adiantar histórias independentes de maior valor de negócio para o cliente</li>
+              <li>Dependências entre tarefas de desenvolvimento (ex.: criar banco de dados &rarr; criar API no backend &rarr; integrar tela no frontend)</li>
+              <li>Importação do backlog através de arquivo JSON ou integração com Jira / GitHub Projects</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div class="slide-footer-meta">
+        <span>Instância 2 — Desenvolvimento de Software</span>
+        <span>Slide 13</span>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- SLIDE 14: (IV) INSTÂNCIA 3 — THESISFLOW (TCC / PESQUISA)   -->
+    <!-- (Modelo exato do Slide 15 do PDF)                          -->
+    <!-- ========================================================== -->
+    <section class="slide">
+      <h2 class="title-centered" style="color: #000000;">Instância 3 – ThesisFlow (TCC / Pesquisa)</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li>Pontos variáveis
+            <ul class="bullet-sublist">
+              <li><strong>Recurso (PV1):</strong> Seções da monografia e atividades de pesquisa (capítulos, revisão sistemática, coleta de campo e experimentos) são os recursos a serem controlados</li>
+              <li><strong>Cálculo de Progresso (PV2):</strong> Progresso e peso calculados sobre a meta de páginas redigidas e validadas pelo orientador em cada capítulo</li>
+              <li><strong>Recomendação de Adiantamento (PV3):</strong> Caso a aprovação do Comitê de Ética ou a execução de benchmarks atrase, o sistema prioriza antecipar capítulos teóricos independentes (Fundamentação, SLR e formatação ABNT/BibTeX)</li>
+              <li>Precedências metodológicas (aprovação de comitê &rarr; aplicação de questionário &rarr; análise de resultados)</li>
+              <li>Importação da estrutura da dissertação via arquivo Markdown ou JSON</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div class="slide-footer-meta">
+        <span>Instância 3 — Trabalho de Conclusão de Curso e Pesquisa</span>
+        <span>Slide 14</span>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- SLIDE 15: TABELA SÍNTESE DE INSTANCIAÇÃO DOS PONTOS VARIÁVEIS -->
+    <!-- ========================================================== -->
+    <section class="slide">
+      <h2 class="title-centered" style="color: #000000;">Resumo: Instanciação dos Pontos Variáveis</h2>
+      <div class="content-area" style="padding: 0;">
+        <table class="matrix">
+          <thead>
+            <tr>
+              <th style="width: 22%;">Ponto Variável (Domínio)</th>
+              <th style="width: 26%;">Instância 1: Concordia</th>
+              <th style="width: 26%;">Instância 2: DevFlow</th>
+              <th style="width: 26%;">Instância 3: ThesisFlow</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="hl-var">1. Recurso / Item da EAP<br><small>(RecursoEtapa)</small></td>
+              <td><strong>ItemObraSinapi</strong><br>Composição SINAPI, insumos, quantidade e BDI</td>
+              <td><strong>UserStoryTask</strong><br>História de usuário, critérios de aceite e squad</td>
+              <td><strong>CapituloPesquisa</strong><br>Seção da monografia, coleta e experimentos</td>
+            </tr>
+            <tr>
+              <td class="hl-var">2. Regra de Cálculo de Progresso<br><small>(RegraCalculoProgresso)</small></td>
+              <td><strong>RegraFinanceiraObra</strong><br>Ponderado pelo custo em R$ (Curva S)</td>
+              <td><strong>RegraStoryPoints</strong><br>Ponderado por Story Points / Velocity</td>
+              <td><strong>RegraMetaPaginas</strong><br>Ponderado por páginas escritas vs. planejadas</td>
+            </tr>
+            <tr>
+              <td class="hl-var">3. Estratégia de Recomendação<br><small>(RegraRecomendacaoAdiantamento)</small></td>
+              <td><strong>RecomendacaoCanteiroObra</strong><br>Maior peso financeiro em R$ sem conflito físico</td>
+              <td><strong>RecomendacaoSprintAgil</strong><br>Maior prioridade de negócio sem dependência de backend</td>
+              <td><strong>RecomendacaoFrenteTeorica</strong><br>Capítulos teóricos, revisão SLR e ABNT/BibTeX</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="slide-footer-meta">
+        <span>Mapeamento Direto Ponto Variável × Aplicação</span>
+        <span>Slide 15</span>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- BARRA DE CONTROLE -->
+  <div class="controls-bar">
+    <div>
+      <span id="counterText">Slide 01 de 15</span>
+    </div>
+    <div style="font-size: 0.82rem; color: #aaaaaa;">
+      Use <span class="kbd-tag">&larr;</span> <span class="kbd-tag">&rarr;</span> ou <span class="kbd-tag">Espaço</span> para passar os slides | <span class="kbd-tag">F</span> Tela Cheia
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+      <button class="btn-control" id="prevBtn" onclick="prevSlide()" disabled>&larr; Anterior</button>
+      <button class="btn-control" id="nextBtn" onclick="nextSlide()">Próximo &rarr;</button>
+    </div>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    let current = 0;
+
+    const counterText = document.getElementById('counterText');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    function update() {
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i === current);
+      });
+
+      const curStr = String(current + 1).padStart(2, '0');
+      const totStr = String(total).padStart(2, '0');
+      counterText.textContent = `Slide ${curStr} de ${totStr}`;
+
+      prevBtn.disabled = current === 0;
+      nextBtn.disabled = current === total - 1;
+    }
+
+    function nextSlide() {
+      if (current < total - 1) {
+        current++;
+        update();
+      }
+    }
+
+    function prevSlide() {
+      if (current > 0) {
+        current--;
+        update();
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'Home') {
+        current = 0;
+        update();
+      } else if (e.key === 'End') {
+        current = total - 1;
+        update();
+      } else if (e.key === 'f' || e.key === 'F') {
+        const stage = document.getElementById('slideStage');
+        if (!document.fullscreenElement) {
+          stage.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    });
+
+    update();
+  </script>
+</body>
+</html>

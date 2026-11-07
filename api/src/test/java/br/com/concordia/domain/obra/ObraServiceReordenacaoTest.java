@@ -5,7 +5,6 @@ import static org.mockito.Mockito.*;
 
 import br.com.concordia.domain.common.enums.UnidadeFederativa;
 import br.com.concordia.domain.empresa.EmpresaRepository;
-import br.com.concordia.domain.obra.dependencia.DependenciaEtapaRepository;
 import br.com.concordia.domain.obra.entities.EtapaObra;
 import br.com.concordia.domain.obra.entities.ItemEap;
 import br.com.concordia.domain.obra.entities.Obra;

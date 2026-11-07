@@ -1,8 +1,8 @@
 package br.com.concordia.domain.obra;
 
-import br.com.concordia.domain.obra.dependencia.DependenciaEtapaRepository;
-import br.com.concordia.domain.obra.dependencia.GrafoDependencias;
-import br.com.concordia.domain.obra.dependencia.RegraLiberacao;
+import br.com.concordia.domain.obra.dtos.ReprogramacaoSimplificadaOutput;
+import br.com.concordia.domain.obra.dtos.SugestaoAtrasoInput;
+import br.com.concordia.domain.obra.dtos.SugestaoEtapaOutput;
 import br.com.concordia.domain.obra.entities.DependenciaEtapa;
 import br.com.concordia.domain.obra.entities.ItemEap;
 import br.com.concordia.domain.obra.entities.Obra;
@@ -10,9 +10,8 @@ import br.com.concordia.domain.obra.ports.IaReprogramacaoClient;
 import br.com.concordia.domain.obra.ports.IaReprogramacaoClient.EtapaCandidata;
 import br.com.concordia.domain.obra.ports.IaReprogramacaoClient.RespostaIa;
 import br.com.concordia.domain.obra.ports.IaReprogramacaoClient.SugestaoIaResultado;
-import br.com.concordia.infrastructure.obra.dtos.ReprogramacaoSimplificadaResponse;
-import br.com.concordia.infrastructure.obra.dtos.SugestaoAtrasoRequest;
-import br.com.concordia.infrastructure.obra.dtos.SugestaoEtapaResponse;
+import br.com.concordia.domain.obra.valueobjects.GrafoDependencias;
+import br.com.concordia.domain.obra.valueobjects.RegraLiberacao;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.util.Comparator;
@@ -43,7 +42,7 @@ public class SugestaoAdiantamentoService {
         this.dependenciaRepository = dependenciaRepository;
     }
 
-    public ReprogramacaoSimplificadaResponse analisarAtraso(UUID obraId, SugestaoAtrasoRequest request) {
+    public ReprogramacaoSimplificadaOutput analisarAtraso(UUID obraId, SugestaoAtrasoInput input) {
         var obra = obraRepository
                 .findById(obraId)
                 .orElseThrow(() -> new EntityNotFoundException("Obra com ID %s não foi encontrada".formatted(obraId)));
@@ -53,12 +52,12 @@ public class SugestaoAdiantamentoService {
             throw new IllegalArgumentException("A obra não possui etapas cadastradas para análise.");
         }
 
-        ItemEap etapaAtrasada = identificarEtapaAtrasada(etapasOrdenadas, request.etapaId());
+        ItemEap etapaAtrasada = identificarEtapaAtrasada(etapasOrdenadas, input.etapaId());
         List<ItemEap> etapasDisponiveis = filtrarEtapasDisponiveisParaAdiantamento(
                 etapasOrdenadas, etapaAtrasada, dependenciaRepository.findByObraId(obraId));
 
         if (etapasDisponiveis.isEmpty()) {
-            return criarRespostaSemEtapasDisponiveis(etapaAtrasada, request);
+            return criarRespostaSemEtapasDisponiveis(etapaAtrasada, input);
         }
 
         EtapaCandidata atrasadaCandidata = converterParaCandidata(etapaAtrasada);
@@ -66,20 +65,20 @@ public class SugestaoAdiantamentoService {
                 etapasDisponiveis.stream().map(this::converterParaCandidata).toList();
 
         RespostaIa respostaIa =
-                iaClient.sugerirAdiantamento(atrasadaCandidata, request.motivo(), request.diasAtraso(), candidatas);
+                iaClient.sugerirAdiantamento(atrasadaCandidata, input.motivo(), input.diasAtraso(), candidatas);
 
         if (respostaIa == null || !respostaIa.disponivel()) {
             respostaIa = sugerirLocalmente(etapasDisponiveis);
         }
-        List<SugestaoEtapaResponse> sugestoes = correlacionarSugestoesComEtapas(respostaIa, etapasDisponiveis);
+        List<SugestaoEtapaOutput> sugestoes = correlacionarSugestoesComEtapas(respostaIa, etapasDisponiveis);
         String parecerDescritivo = definirParecerFinal(respostaIa, !sugestoes.isEmpty());
 
-        return new ReprogramacaoSimplificadaResponse(
+        return new ReprogramacaoSimplificadaOutput(
                 extrairIdEtapa(etapaAtrasada),
                 extrairCodigoEap(etapaAtrasada),
                 etapaAtrasada.getNome(),
-                request.motivo(),
-                request.diasAtraso(),
+                input.motivo(),
+                input.diasAtraso(),
                 parecerDescritivo,
                 sugestoes);
     }
@@ -126,8 +125,8 @@ public class SugestaoAdiantamentoService {
 
     private RespostaIa sugerirLocalmente(List<ItemEap> candidatas) {
         var sugestoes = candidatas.stream()
-                .sorted(Comparator.<ItemEap, BigDecimal>comparing(
-                                item -> item.getValorTotalOrcado() == null ? BigDecimal.ZERO : item.getValorTotalOrcado())
+                .sorted(Comparator.<ItemEap, BigDecimal>comparing(item ->
+                                item.getValorTotalOrcado() == null ? BigDecimal.ZERO : item.getValorTotalOrcado())
                         .reversed()
                         .thenComparing(ItemEap::getPosicao))
                 .limit(3)
@@ -144,7 +143,7 @@ public class SugestaoAdiantamentoService {
                 sugestoes);
     }
 
-    private List<SugestaoEtapaResponse> correlacionarSugestoesComEtapas(
+    private List<SugestaoEtapaOutput> correlacionarSugestoesComEtapas(
             RespostaIa respostaIa, List<ItemEap> etapasDisponiveis) {
         if (respostaIa == null
                 || respostaIa.sugestoes() == null
@@ -155,7 +154,7 @@ public class SugestaoAdiantamentoService {
         Map<UUID, ItemEap> mapaEtapasPorId = indexarEtapasPorIdentificador(etapasDisponiveis);
 
         return respostaIa.sugestoes().stream()
-                .map(sugestao -> montarSugestaoResponse(sugestao, mapaEtapasPorId.get(sugestao.etapaId())))
+                .map(sugestao -> montarSugestaoOutput(sugestao, mapaEtapasPorId.get(sugestao.etapaId())))
                 .flatMap(Optional::stream)
                 .toList();
     }
@@ -167,12 +166,12 @@ public class SugestaoAdiantamentoService {
                         this::extrairIdEtapa, Function.identity(), (existente, duplicado) -> existente));
     }
 
-    private Optional<SugestaoEtapaResponse> montarSugestaoResponse(
+    private Optional<SugestaoEtapaOutput> montarSugestaoOutput(
             SugestaoIaResultado sugestao, ItemEap itemCorrespondente) {
         if (itemCorrespondente == null) {
             return Optional.empty();
         }
-        return Optional.of(new SugestaoEtapaResponse(
+        return Optional.of(new SugestaoEtapaOutput(
                 extrairIdEtapa(itemCorrespondente),
                 extrairCodigoEap(itemCorrespondente),
                 itemCorrespondente.getNome(),
@@ -191,14 +190,14 @@ public class SugestaoAdiantamentoService {
                 : "A inteligência artificial analisou o cronograma e não conseguiu identificar etapas passíveis de adiantamento com segurança técnica para compensar este atraso.";
     }
 
-    private ReprogramacaoSimplificadaResponse criarRespostaSemEtapasDisponiveis(
-            ItemEap etapaAtrasada, SugestaoAtrasoRequest request) {
-        return new ReprogramacaoSimplificadaResponse(
+    private ReprogramacaoSimplificadaOutput criarRespostaSemEtapasDisponiveis(
+            ItemEap etapaAtrasada, SugestaoAtrasoInput input) {
+        return new ReprogramacaoSimplificadaOutput(
                 extrairIdEtapa(etapaAtrasada),
                 extrairCodigoEap(etapaAtrasada),
                 etapaAtrasada.getNome(),
-                request.motivo(),
-                request.diasAtraso(),
+                input.motivo(),
+                input.diasAtraso(),
                 "A obra não possui outras etapas disponíveis no cronograma para adiantamento.",
                 List.of());
     }

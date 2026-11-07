@@ -3,6 +3,7 @@ package br.com.concordia.domain.insumo;
 import br.com.concordia.domain.common.exceptions.ConflitoException;
 import br.com.concordia.domain.insumo.dtos.InsumoInput;
 import br.com.concordia.domain.insumo.dtos.InsumoOutput;
+import br.com.concordia.domain.insumo.entities.Insumo;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
@@ -31,9 +32,7 @@ public class InsumoService {
 
     @Transactional(readOnly = true)
     public InsumoOutput consultar(UUID id) {
-        var insumo = repository
-                .findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Empresa com ID %s não foi encontrada".formatted(id)));
+        var insumo = findInsumo(id);
         return mapper.toOutputDto(insumo);
     }
 
@@ -54,7 +53,7 @@ public class InsumoService {
     @Transactional
     public void deletar(UUID id) {
         if (!repository.existsById(id)) {
-            throw new EntityNotFoundException("Empresa com ID %s não foi encontrada".formatted(id));
+            throw new EntityNotFoundException("Insumo com ID %s não foi encontrado".formatted(id));
         }
         repository.deleteById(id);
     }
@@ -68,6 +67,6 @@ public class InsumoService {
     private @NonNull Insumo findInsumo(UUID id) {
         return repository
                 .findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Empresa com ID %s não foi encontrada".formatted(id)));
+                .orElseThrow(() -> new EntityNotFoundException("Insumo com ID %s não foi encontrado".formatted(id)));
     }
 }

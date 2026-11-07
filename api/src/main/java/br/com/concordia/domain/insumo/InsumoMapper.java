@@ -2,6 +2,7 @@ package br.com.concordia.domain.insumo;
 
 import br.com.concordia.domain.insumo.dtos.InsumoInput;
 import br.com.concordia.domain.insumo.dtos.InsumoOutput;
+import br.com.concordia.domain.insumo.entities.Insumo;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;

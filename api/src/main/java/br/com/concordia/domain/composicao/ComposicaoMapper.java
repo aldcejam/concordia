@@ -5,10 +5,13 @@ import br.com.concordia.domain.composicao.dtos.ComposicaoOutput;
 import br.com.concordia.domain.composicao.entities.Composicao;
 import java.util.List;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ComposicaoMapper {
+    @Mapping(target = "itens", ignore = true)
+    @Mapping(target = "adicionarItem", ignore = true)
     Composicao toEntity(ComposicaoInput request);
 
     ComposicaoOutput toOutputDto(Composicao composicao);

@@ -1,5 +1,6 @@
 package br.com.concordia.domain.insumo;
 
+import br.com.concordia.domain.insumo.entities.Insumo;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
